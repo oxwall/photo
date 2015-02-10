@@ -1,0 +1,103 @@
+{*
+
+/**
+ * This software is intended for use with Oxwall Free Community Software http://www.oxwall.org/ and is
+ * licensed under The BSD license.
+
+ * ---
+ * Copyright (c) 2011, Oxwall Foundation
+ * All rights reserved.
+
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+ * following conditions are met:
+ *
+ *  - Redistributions of source code must retain the above copyright notice, this list of conditions and
+ *  the following disclaimer.
+ *
+ *  - Redistributions in binary form must reproduce the above copyright notice, this list of conditions and
+ *  the following disclaimer in the documentation and/or other materials provided with the distribution.
+ *
+ *  - Neither the name of the Oxwall Foundation nor the names of its contributors may be used to endorse or promote products
+ *  derived from this software without specific prior written permission.
+
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ *
+ *
+ * @author Kairat Bakitow <kainisoft@gmail.com>
+ * @package ow_plugins.photo
+ * @since 1.6.1
+ */
+ 
+*}
+
+{$menu}
+
+{form name='configSaveForm'}
+    <table class="ow_table_1 ow_form ow_stdmargin">
+        <tr class="ow_tr_first">
+            <th class="ow_name ow_txtleft" colspan="3">
+                <span class="ow_section_icon ow_ic_up_arrow">{text key='photo+upload_settings'}</span>
+            </th>
+        </tr>
+        <tr class="ow_alt1 ow_tr_last">
+            <td class="ow_label">{label name='acceptedFilesize'}</td>
+            <td class="ow_value">{input name='acceptedFilesize' class='ow_settings_input'} Mb <span class="ow_small">{text key='photo+upload_ini_value' value=$iniValue}</span> {error name='acceptedFilesize'}</td>
+            <td class="ow_desc ow_small">{text key='photo+accepted_filesize_desc'}</td>
+        </tr>
+        <tr class="ow_tr_delimiter"><td colspan="3"></td></tr>
+        <tr class="ow_tr_first">
+            <th class="ow_name ow_txtleft" colspan="3">
+                <span class="ow_section_icon ow_ic_lock">{text key='photo+quotas'}</span>
+            </th>
+        </tr>
+        <tr class="{cycle values='ow_alt2, ow_alt1'}">
+            <td class="ow_label">{label name='albumQuota'}</td>
+            <td class="ow_value">{input name='albumQuota' class='ow_settings_input'} {error name='albumQuota'}</td>
+            <td class="ow_desc ow_small">{text key='photo+album_quota_desc'}</td>
+        </tr>
+        <tr class="{cycle values='ow_alt2, ow_alt1'}">
+            <td class="ow_label">{label name='userQuota'}</td>
+            <td class="ow_value">{input name='userQuota' class='ow_settings_input'} {error name='userQuota'}</td>
+            <td class="ow_desc ow_small">{text key='photo+user_quota_desc'}</td>
+        </tr>
+        <tr class="{cycle values='ow_alt2, ow_alt1'}">
+            <td class="ow_label">{label name='downloadAccept'}</td>
+            <td class="ow_value">{input name='downloadAccept' class='ow_settings_input'}</td>
+            <td class="ow_desc ow_small">&nbsp;</td>
+        </tr>
+        <tr class="{cycle values='ow_alt2, ow_alt1'} ow_tr_last">
+            <td class="ow_label">{label name='storeFullsize'}</td>
+            <td class="ow_value">{input name='storeFullsize' class='ow_settings_input'}</td>
+            <td class="ow_desc ow_small">&nbsp;</td>
+        </tr>
+        {foreach $extendedSettings as $section}
+            <tr class="ow_tr_delimiter"><td colspan="3"></td></tr>
+            <tr class="ow_tr_first">
+                <th class="ow_name ow_txtleft" colspan="3">
+                    <span class="ow_section_icon {$section.icon}">{text key=$section.section_lang}</span>
+                </th>
+            </tr>
+            {foreach $section.settings as $setting}
+                <tr class="{cycle values='ow_alt2, ow_alt1'}{if $setting@last} ow_tr_last{/if}">
+                    <td class="ow_label">{label name=$setting@key}</td>
+                    <td class="ow_value">{input name=$setting@key}</td>
+                    <td class="ow_desc ow_small">{desc name=$setting@key}</td>
+                </tr>
+            {/foreach}
+        {/foreach}
+    </table>
+    <div class="clearfix ow_stdmargin">
+        <div class="ow_right">
+            {submit name='save' class='ow_ic_save ow_positive'}
+        </div>
+    </div>
+{/form}

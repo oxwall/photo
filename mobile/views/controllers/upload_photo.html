@@ -1,0 +1,43 @@
+{if $auth_msg}
+<div class="owm_padding">
+    <div class="owm_info owm_anno">{$auth_msg}</div>
+</div>
+{else}
+<div class="owm_upload_photo">
+    {form name='upload-form'}
+    <div class="owm_upload_photo_browse_wrap clearfix owm_bg_color_3">
+		<div class="owm_upload_photo_left_label">
+			<span class="owm_upload_choose_label"><span>{text key='photo+mobile_choose_photo'}</span></span>
+			<span class="owm_upload_replace_label"><span>{text key='photo+mobile_replace_photo'}</span></span>
+		</div>
+		<div class="owm_upload_photo_right_label">
+			<span class="owm_upload_img_name_label"><img id="photo-file-prevew" style="height: 44px; display: none;" /><span></span></span>
+		</div>
+		<div class="owm_upload_photo_btn">
+			<a class="owm_upload_photo_choose_btn" href="javascript://">{input name='photo' accept='image/*' id='upload-file-field'}</a>
+		</div>
+    </div>
+    <div class="owm_input_wrap">
+        {input name='description'}
+    </div>
+    <div class="owm_upload_photo_album_wrap owm_input_wrap">
+		<div class="owm_fake_input">
+			{input name='album'}
+			{if $albums}
+                <div class="owm_choose_album owm_float_right">
+                    {text key='photo+choose_album'}
+                    <select id="album_select">
+                        <option value="" disabled="disabled" selected="selected">{text key='photo+choose_album'}</option>
+                        {foreach from=$albums item='a' name='album'}<option value="{$a.dto->name}">{$a.dto->name}</option>{/foreach}
+                    </select>
+                </div>
+            {/if}
+		</div>
+    </div>
+    <div class="owm_upload_photo_btn_wrap clearfix owm_input_wrap">
+        {*submit name='cancel' class='owm_float_left'*}
+        {submit name='submit' class='owm_float_right'}
+    </div>
+    {/form}
+</div>
+{/if}

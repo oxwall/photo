@@ -1,0 +1,53 @@
+.ow_photo_set_c_grid img,
+.ow_photo_set_p_grid img,
+.ow_photo_set_c_album img,
+.ow_photo_set_p_album img,
+.ow_photo_set_c_view img,
+.ow_photo_set_p_view img {
+    width: 100%;
+}
+.ow_photo_set_wrap {
+    position: relative;
+    cursor: pointer;
+}
+.ow_photo_set_wrap .ow_checkbox_cell {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+}
+.ow_photo_set_c_grid {
+    background: url(../images/photo_set_c_grid.jpg) center center no-repeat;
+    background-size: 100% auto;
+}
+.ow_photo_set_p_grid {
+    background: url(../images/photo_set_p_grid.jpg) center center no-repeat;
+    background-size: 100% auto;
+}
+.ow_photo_set_c_album {
+    background: url(../images/photo_set_c_album.jpg) center center no-repeat;
+    background-size: 100% auto;
+}
+.ow_photo_set_p_album {
+    background: url(../images/photo_set_p_album.jpg) center bottom no-repeat;
+    background-size: 100% auto;
+}
+.ow_photo_set_c_view {
+    background: url(../images/photo_set_c_view.jpg) center center no-repeat;
+    background-size: 100% auto;
+}
+.ow_photo_set_p_view {
+    background: url(../images/photo_set_p_view.jpg) center bottom no-repeat;
+    background-size: 100% auto;
+}
+.ow_checkbox_cell.ow_checkbox_cell_marked {
+    background-image: url(../images/checkbox_cell_marked.png);
+}
+.ow_checkbox_cell {
+    background-image: url(../images/checkbox_cell.png);
+    background-position: center center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    height: 16px;
+    margin: 0 auto;
+    width: 16px;
+}

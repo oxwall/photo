@@ -1,0 +1,156 @@
+{*
+
+/**
+ * This software is intended for use with Oxwall Free Community Software http://www.oxwall.org/ and is
+ * licensed under The BSD license.
+
+ * ---
+ * Copyright (c) 2011, Oxwall Foundation
+ * All rights reserved.
+
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+ * following conditions are met:
+ *
+ *  - Redistributions of source code must retain the above copyright notice, this list of conditions and
+ *  the following disclaimer.
+ *
+ *  - Redistributions in binary form must reproduce the above copyright notice, this list of conditions and
+ *  the following disclaimer in the documentation and/or other materials provided with the distribution.
+ *
+ *  - Neither the name of the Oxwall Foundation nor the names of its contributors may be used to endorse or promote products
+ *  derived from this software without specific prior written permission.
+
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ *
+ *
+ * @author Kairat Bakitow <kainisoft@gmail.com>
+ * @package ow_plugins.photo
+ * @since 1.6.1
+ */
+ 
+*}
+
+{if !empty($imgError)}
+    <div class="ow_nocontent">{$imgError}</div>
+{else}
+    <div id="set-as-album-cover" class="ow_box ow_wide ow_automargin ow_smallmargin clearfix ow_no_cap ow_break_word">
+        {form name="album-cover-maker"}
+            <div class="clearfix">
+                <div class="ow_left ow_superwide ow_center" style="width: 260px;">
+                    <h4>{text key='photo+cover_original'}</h4>
+                    <img width="220" class="ow_smallmargin crop_img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs%3D" alt="" />
+                    <br/>
+                    {submit name="save"}
+                </div>
+                <div class="ow_avatar_preview ow_right ow_supernarrow ow_center" style="width: 120px;">
+                    <h4>{text key='photo+cover_preview'}</h4>
+                    <div style="width: 120px; height: 120px; overflow: hidden">
+                        <img class="crop_preview" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs%3D" alt="" style="width: 120px;" />
+                    </div>
+                </div>
+            </div>
+        {/form}
+    </div>
+
+    <script>
+        var albumCoverMaker = (function( $ )
+        {
+            return {
+                init: function()
+                {
+                    var _elements = {}, _methods = {};
+                    _elements.content = $(document.getElementById('set-as-album-cover'));
+                    _elements.coverImg = $('.crop_img', _elements.content);
+                    _elements.coverPreview = $('.crop_preview', _elements.content);
+
+                    _methods.complete = function()
+                    {
+                        _elements.coverPreview.css({
+                            width: 120 + 'px',
+                            height: 'auto',
+                            marginLeft: 0,
+                            marginTop: 0
+                        });
+
+                        _elements.jcrop = $.Jcrop(_elements.coverImg, (function()
+                        {
+                            var photoWidth = _elements.coverImg.width(),
+                                minSize = Math.ceil(330 / (_elements.coverImg[0].naturalWidth / photoWidth));
+
+                            return {
+                                onChange: _methods.showPreview,
+                                onSelect: _methods.showPreview,
+                                aspectRatio: 1,
+                                minSize: [minSize, minSize]
+                            };
+                        })());
+                    };
+
+                    _methods.showPreview = function( coords )
+                    {
+                        var rx = 120 / coords.w;
+                        var ry = 120 / coords.h;
+
+                        if ( rx === Infinity || ry === Infinity )
+                        {
+                            _elements.coverPreview.css({
+                                width: 120 + 'px',
+                                height: 'auto',
+                                marginLeft: 0,
+                                marginTop: 0
+                            });
+                        }
+                        else
+                        {
+                            _elements.coverPreview.css({
+                                width: Math.round(rx * _elements.coverImg.width()) + 'px',
+                                height: Math.round(ry * _elements.coverImg.height()) + 'px',
+                                marginLeft: '-' + Math.round(rx * coords.x) + 'px',
+                                marginTop: '-' + Math.round(ry * coords.y) + 'px'
+                            });
+                        }
+                    };
+
+                    _elements.coverPreview[0].src = '{$coverUrl}';
+                    _elements.coverImg[0].src = '{$coverUrl}';
+                    _elements.coverImg[0].onerror = _methods.complete;
+
+                    +_elements.coverImg[0].naturalHeight !== 0 ? _methods.complete() : _elements.coverImg[0].onload = _methods.complete;
+
+                    window.owForms['album-cover-maker'].bind('submit', function( data )
+                    {
+                        data.coords = _elements.jcrop.tellSelect();
+                        data.view_size = _elements.coverImg.width();
+                    });
+
+                    window.owForms['album-cover-maker'].bind('success', function( data )
+                    {
+                        if ( data && data.result )
+                        {
+                            photoAlbum.setCoverUrl(data.url);
+                            window.albumCoverMakerFB.close();
+                        }
+                        else
+                        {
+                            alert(OW.getLanguageText('photo', 'no_photo_selected'));
+                        }
+                    });
+
+                    window.albumCoverMakerFB.bind('close', function()
+                    {
+                        _elements.jcrop.destroy();
+                    });
+                }
+            };
+        })(jQuery);
+    </script>
+{/if}

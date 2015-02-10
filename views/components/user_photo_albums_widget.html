@@ -1,0 +1,28 @@
+<div class="clearfix ow_lp_albums">	
+    {if $showTitles}
+	{foreach from=$albums item='album'}
+            <div class="clearfix ow_smallmargin">
+                <div class="ow_lp_wrapper">
+		   {capture name='url'}{url_for_route for="photo_user_album:[user=>`$user`, album=>`$album.dto->id`]"}{/capture}
+		   <a href="{$smarty.capture.url}"><img title="{$album.dto->name}" src="{$album.cover}" width="100" height="100" /></a>
+                </div>
+                <div class="ow_lp_label ow_small">
+                    <a href="{$smarty.capture.url}">{$album.dto->name}</a>
+                </div>
+            </div>
+	{foreachelse}
+	    <div class="ow_nocontent">{text key='photo+no_photo_found'}</div>
+	{/foreach}
+    {else}
+        <div class="ow_lp_photos ow_center">
+            {foreach from=$albums item='album'}
+                {capture name='url'}
+                    {url_for_route for="photo_user_album:[user=>`$user`, album=>`$album.dto->id`]"}
+                {/capture}
+                <a class="ow_lp_wrapper" href="{$smarty.capture.url}"><img title="{$album.dto->name}" src="{$album.cover}" /></a>
+            {foreachelse}
+                <div class="ow_nocontent">{text key='photo+no_photo_found'}</div>
+            {/foreach}
+    </div>
+{/if}
+</div>

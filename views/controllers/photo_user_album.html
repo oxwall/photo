@@ -1,0 +1,156 @@
+{*
+
+/**
+ * This software is intended for use with Oxwall Free Community Software http://www.oxwall.org/ and is
+ * licensed under The BSD license.
+
+ * ---
+ * Copyright (c) 2011, Oxwall Foundation
+ * All rights reserved.
+
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+ * following conditions are met:
+ *
+ *  - Redistributions of source code must retain the above copyright notice, this list of conditions and
+ *  the following disclaimer.
+ *
+ *  - Redistributions in binary form must reproduce the above copyright notice, this list of conditions and
+ *  the following disclaimer in the documentation and/or other materials provided with the distribution.
+ *
+ *  - Neither the name of the Oxwall Foundation nor the names of its contributors may be used to endorse or promote products
+ *  derived from this software without specific prior written permission.
+
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ *
+ *
+ * @author Kairat Bakitow <kainisoft@gmail.com>
+ * @package ow_plugins.photo
+ * @since 1.6.1
+ */
+ 
+*}
+
+{$pageHead}
+
+{if $isOwner || $isModerator}
+    <div id="album-edit" class="ow_photo_album_info_wrap clearfix">
+        <div class="ow_photo_album_toolbar ow_smallmargin clearfix">
+            <div class="ow_photo_album_btns ow_right clearfix edit_btn">
+                <ul class="ow_bl clearfix ow_small ow_right">
+                    <li>
+                        <a href="javascript://">
+                            {text key="photo+edit_album"}
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div style="display: none" class="ow_photo_album_btns_edit ow_right clearfix edit_done">
+                <ul class="ow_bl clearfix ow_small ow_right">
+                    <li>
+                        <a class="done" href="javascript://">
+                            {text key="photo+done"}
+                        </a>
+                    </li>
+                    {if $album->name != {text key="photo+newsfeed_album"}}
+                        <li>
+                            <a class="ow_mild_red delete_album" href="javascript://">
+                                {text key="photo+delete_album"}
+                            </a>
+                        </li>
+                    {/if}
+                </ul>
+            </div>
+        </div>
+        <div class="ow_photo_album_info">
+            <div class="ow_photo_album_cover ow_high1" style="background-image: url({$coverUrl})">
+                {if $isOwner}
+                    <img src="{$coverUrlOrig}" class="ow_hidden cover_orig" />
+                    {if empty($noCover)}
+                        <a class="ow_lbutton" href="javascript://" style="display: none">{text key="photo+edit_cover_label"}</a>
+                    {/if}
+                {/if}
+            </div>
+            <h3 class="ow_photo_album_name">{$album->name}</h3>
+            <div class="ow_photo_album_description">{$album->description}</div>
+            {form name="albumEditForm" style="display: none"}
+                    {input name="albumName"}{error name="albumName"}
+                {input name="desc"}
+            {/form}
+        </div>
+    </div>
+    <div id="photo-menu" style="display: none" class="ow_fw_menu ow_high2 clearfix ow_smallmargin">
+        <div style="padding-top: 4px; margin-right: 8px;" class="ow_left">
+            <input type="checkbox" value="1" name="selectAll" class="plan_id" />
+            <span style="vertical-align: top;">{text key="photo+check_all"}</span>
+        </div>
+        <ul class="ow_bl clearfix ow_small ow_left">
+            <li>
+                <a href="javascript://" class="ow_mild_red delete">
+                    {text key="photo+delete_selected"}
+                </a>
+            </li>
+        </ul>
+        {if $isOwner}
+            <div style="float: left;" class="ow_context_action_block ow_context_action_value_block clearfix">
+                <div class="ow_context_action">
+                    <a class="ow_context_action_value">{text key="photo+move_to_album"}</a><span class="ow_context_more"></span>               
+                    <div style="opacity: 1; top: 18px;" class="ow_tooltip ow_small ow_tooltip_top_right">
+                        <div class="ow_tooltip_tail">
+                            <span></span>
+                        </div>
+                        <div class="ow_tooltip_body">
+                            <ul class="ow_context_action_list ow_border">
+                                <li><a href="javascript://">{text key="photo+create_album"}</a></li>
+                                {if !empty($albumNameList)}
+                                    <li><div class="ow_console_divider"></div></li>
+                                    {foreach $albumNameList as $albumName}
+                                        <li><a href="javascript://" rel="{$albumName@key}">{$albumName}</a></li>
+                                    {/foreach}
+                                {/if}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <ul class="ow_bl clearfix ow_small ow_left">
+                <li class="ow_bl_disabled set_as_cover">
+                    <a href="javascript://">
+                        {text key="photo+set_as_cover_label"}
+                    </a>
+                    <div style="top: -27px; " class="ow_tip ow_tip_top">
+                        <div style="left: 16px;" class="ow_tip_arrow">
+                            <span></span>
+                        </div>
+                        <div class="ow_tip_box">
+                            <span style="white-space:nowrap; font-weight: normal; max-width: 200px;" class="ow_tip_title">
+                                {text key="photo+select_one_photo_warning"}
+                            </span>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        {/if}
+    </div>
+{else}
+    <div class="ow_photo_album_info_wrap clearfix">
+        <div class="ow_photo_album_info">
+            <div class="ow_photo_album_cover ow_high1" style="background-image: url({$coverUrl})">
+                <img src="{$coverUrlOrig}" class="ow_hidden" />
+            </div>
+            <h3 class="ow_photo_album_name">{$album->name}</h3>
+            <div class="ow_photo_album_description">{$album->description}</div>
+        </div>
+    </div>
+{/if}
+
+{component class="PHOTO_CMP_PhotoList" type="albumPhotos" albumId=$album->id}

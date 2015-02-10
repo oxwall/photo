@@ -1,0 +1,14 @@
+{foreach from=$albums item='album'}
+{capture assign='href'}{url_for_route for="photo_user_album:[user=>`$username`, album=>`$album.dto->id`]"}{/capture}
+<li class="owm_photo_album_list_item" data-ref="{$album.dto->id}">
+    <a href="{$href}" class="owm_photo_album_list_cont clearfix">
+        <span class="owm_float_left">
+            <span class="owm_photo_album_thumb" style="background-image: url({$album.cover})"></span>
+            <span class="owm_photo_album_name">{$album.dto->name|truncate:22}</span>
+        </span>
+        <span class="owm_float_right">
+            <span class="owm_photo_album_count">{$album.photo_count}</span>
+        </span>
+    </a>
+</li>
+{/foreach}

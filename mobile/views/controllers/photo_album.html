@@ -1,0 +1,19 @@
+<div class="owm_photo_block">
+    <div class="clearfix owm_align_right owm_padding owm_add_photo_wrap">
+        <a href="{$uploadUrl}" class="owm_add_photo"></a><span class="owm_add_photo_label">{text key='photo+upload_photos'}</span>
+    </div>
+    {if !empty($authError)}
+        <div class="owm_padding">
+            <div class="owm_info owm_anno">{$authError}</div>
+        </div>
+    {else}
+        <div class="owm_photo_list">
+            <div class="owm_photo_list_tr clearfix" id="photo-list-cont">{$photos}</div>
+        </div>
+        {if $loadMore}
+        <div class="owm_photo_list_load_more owm_bg_color_3">
+            <a href="javascript://" id="btn-photo-load-more"></a>
+        </div>
+        {/if}
+    {/if}
+</div>

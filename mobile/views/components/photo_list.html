@@ -1,0 +1,2 @@
+{capture assign='img'}data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=={/capture}
+{foreach from=$photos item='p'}{strip}<div class="owm_photo_list_item" data-ref="{$p.id}"><a href="{url_for_route for="view_photo:[id=>`$p.id`]"}" style="background-image: url({$p.url})"><img src="{$img}" /></a></div>{/strip}{/foreach}

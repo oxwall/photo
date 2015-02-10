@@ -1,0 +1,23 @@
+{if !empty($authError)}
+    <div class="owm_padding">
+        <div class="owm_info owm_anno">{$authError}</div>
+    </div>
+{else}
+    {if $albums}
+    <div class="owm_photo_album_list_wrap">
+        <div class="clearfix owm_align_right owm_padding owm_add_photo_wrap">
+            <a href="{$uploadUrl}" class="owm_add_photo"></a><span class="owm_add_photo_label">{text key='photo+upload_photos'}</span>
+        </div>
+        <ul id="album-list-cont">
+        {$albums}
+        </ul>
+    </div>
+    {if $loadMore}
+    <div class="owm_photo_list_load_more owm_bg_color_3">
+        <a href="javascript://" id="btn-photo-load-more"></a>
+    </div>
+    {/if}
+    {else}
+        <div class="ow_nocontent">{text key='photo+no_album_found'}</div>
+    {/if}
+{/if}

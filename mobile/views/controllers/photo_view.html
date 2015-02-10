@@ -1,0 +1,43 @@
+{style}
+{literal}
+    .owm_photo_stage { background-image: url({/literal}{$url}{literal}); }
+{/literal}
+{/style}
+
+<section>
+{if !empty($authError)}
+    <div class="owm_padding">
+        <div class="owm_info owm_anno">{$authError}</div>
+    </div>
+{else}
+    <div class="owm_photo_view">
+        <div class="owm_photo_bg">
+            <div class="owm_photo_holder">
+                <div class="owm_photo_stage"><img src="{$url}" /></div>
+                {if $nextPhoto}<a href="{url_for_route for="view_photo:[id=>`$nextPhoto`]"}" class="owm_photo_next"></a>{/if}
+                {if $previousPhoto}<a href="{url_for_route for="view_photo:[id=>`$previousPhoto`]"}" class="owm_photo_prev"></a>{/if}
+            </div>
+            <div class="owm_photo_info">
+                <div class="owm_photo_album_block clearfix">
+                    <div class="owm_photo_album owm_float_left">
+                        <a class="owm_photo_album_name" href="{$albumUrl}">{$album->name|truncate:60}</a>
+                        <span class="owm_photo_number">{$photoIndex}</span> / <span class="owm_photo_amount">{$photoCount}</span>
+                    </div>
+                    {if $fullsizeUrl}<a class="owm_photo_enlarge owm_float_right" href="{$fullsizeUrl}"></a>{/if}
+                </div>
+                <div class="owm_photo_author clearfix">
+                    <div class="owm_avatar owm_float_left">{decorator name='avatar_item' data=$avatar}</div>
+                    <div class="owm_photo_string">
+                        <div class="owm_photo_name"><a href="{$avatar.url}">{$avatar.title}</a></div>
+                        <div class="owm_photo_date">{format_date timestamp=$photo->addDatetime}</div>
+                    </div>
+                </div>
+                {if $photo->description}<div class="owm_photo_descr">{$photo->description}</div>{/if}
+            </div>
+        </div>
+
+        {$comments}
+
+    </div>
+{/if}
+</section>
