@@ -226,7 +226,7 @@ class ConfigSaveForm extends Form
 
         $acceptedFilesizeField = new TextField('acceptedFilesize');
         $acceptedFilesizeField->setRequired(true);
-        $sValidator = new FloatValidator(0.5, PHOTO_BOL_PhotoService::getInstance()->getMaxUploadFileSize());
+        $sValidator = new FloatValidator(0.5, PHOTO_BOL_PhotoService::getInstance()->getMaxUploadFileSize() / (1024 * 1024));
         $sValidator->setErrorMessage($language->text('photo', 'file_size_validation_error'));
         $acceptedFilesizeField->addValidator($sValidator);
         $this->addElement($acceptedFilesizeField->setLabel($language->text('photo', 'accepted_filesize')));
