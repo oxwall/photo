@@ -315,6 +315,7 @@ class PHOTO_CLASS_EventHandler
         
         $data = $createAlbumEvent->getData();
         $album = $this->albumService->findAlbumById($data['ablumId']);
+        
         $photos = PHOTO_BOL_PhotoDao::getInstance()->getAlbumAllPhotos($album->id);
         $photoList = array();
         
