@@ -1037,15 +1037,12 @@ final class PHOTO_BOL_PhotoService
     
     public function hashtagToDesc( $desc )
     {
-        if ( empty($desc) )
-        {
-            return '';
-        }
+        return preg_replace_callback(self::HASHTAG_PATTERN, 'PHOTO_BOL_PhotoService::tagReplace', $desc);
+    }
 
-        return preg_replace_callback(self::HASHTAG_PATTERN, function( $tag )
-        {
-            return '<a href="' . OW::getRouter()->urlForRoute('view_tagged_photo_list', array('tag' => $tag[0])) . '">' . $tag[0] . '</a>';
-        }, $desc);
+    private static function tagReplace( $tag )
+    {
+        return '<a href="' . OW::getRouter()->urlForRoute('view_tagged_photo_list', array('tag' => $tag[0])) . '">' . $tag[0] . '</a>';
     }
     
     public function findPhotoListByAlbumId( $albumId, $page, $limit, array $exclude = array() )
