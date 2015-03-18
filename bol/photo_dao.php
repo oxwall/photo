@@ -593,16 +593,22 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
      * @param $exclude
      * @return array of PHOTO_Bol_Photo
      */
-    public function getAlbumPhotos( $album, $page, $limit, $exclude )
+    public function getAlbumPhotos( $album, $page, $limit, $exclude, $status = PHOTO_BOL_PhotoDao::STATUS_APPROVED )
     {
         if ( !$album )
+        {
             return false;
+        }
 
         $first = ( $page - 1 ) * $limit;
 
         $example = new OW_Example();
         $example->andFieldEqual('albumId', $album);
-        $example->andFieldEqual('status', 'approved');
+        
+        if ( !empty($status) )
+        {
+            $example->andFieldEqual('status', $status);
+        }
 
         if ( $exclude )
         {
@@ -1397,25 +1403,32 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
         return $this->dbo->queryForList($sql, array_merge($condition['params'], array('tagId' => $tagId, 'first' => (int)$first, 'limit' => (int)$limit, 'everybody' => PHOTO_BOL_PhotoDao::PRIVACY_EVERYBODY, 'status' => 'approved')));
     }
     
-    public function findPhotoListByUserId( $userId, $first, $limit, $checkPrivacy = NULL, array $exclude = array() )
+    public function findPhotoListByUserId( $userId, $first, $limit, $checkPrivacy = NULL, array $exclude = array(), $status = PHOTO_BOL_PhotoDao::STATUS_APPROVED )
     {
         if ( empty($userId) )
         {
             return array();
         }
         
+        $statusSql = "1";
+        $params = array('userId' => $userId, 'first' => (int)$first, 'limit' => (int)$limit);
+        
+        if ( !empty($status) )
+        {
+            $params["status"] = $status;
+            $statusSql = "`p`.`status` = :status";
+        }
+        
         $sql = 'SELECT `p`.*, `a`.`userId`
             FROM `' . $this->getTableName() . '` AS `p`
                 INNER JOIN `' . PHOTO_BOL_PhotoAlbumDao::getInstance()->getTableName() . '` AS `a` ON (`p`.`albumId` = `a`.`id`)
-            WHERE `a`.`userId` = :userId AND `p`.`status` = :status' .
+            WHERE `a`.`userId` = :userId AND ' . $statusSql .
                 ($checkPrivacy !== NULL ? 
                     $checkPrivacy ? ' AND (`p`.`' . self::PRIVACY . '` = :everybody OR `p`.`' . self::PRIVACY . '` = :friends)' : 
                                     ' AND `p`.`' . self::PRIVACY . '` = :everybody' : '') . 
                 (count($exclude) !== 0 ? ' AND `p`.`id` NOT IN (' . implode(',', array_map('intval', array_unique($exclude))) . ')' : '') . '
             ORDER BY `p`.`id` DESC
             LIMIT :first, :limit';
-        
-        $params = array('userId' => $userId, 'first' => (int)$first, 'limit' => (int)$limit, 'status' => 'approved');
         
         if ( $checkPrivacy !== NULL )
         {
@@ -1497,7 +1510,7 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
         return $this->dbo->queryForList($sql, array('first' => (int)$first, 'limit' => (int)$limit, 'everybody' => self::PRIVACY_EVERYBODY, 'status' => 'approved'));
     }
     
-    public function findPhotoListByIdList( array $idList, $first, $limit )
+    public function findPhotoListByIdList( array $idList, $first, $limit, $status = PHOTO_BOL_PhotoDao::STATUS_APPROVED )
     {
         if ( count($idList) === 0 )
         {
@@ -1506,15 +1519,24 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
 
         $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition('searchByHashtag', array('photo' => 'p', 'album' => 'a'));
         
+        $params = array_merge($condition['params'], array('first' => $first, 'limit' => $limit));
+        $statusSql = "1";
+        
+        if ( !empty($status) )
+        {
+            $params["status"] = $status;
+            $statusSql = "`p`.`status` = :status";
+        }
+        
         $sql = 'SELECT `p`.*, `a`.`userId`
             FROM `' . $this->getTableName() . '` AS `p`
                 INNER JOIN `' . PHOTO_BOL_PhotoAlbumDao::getInstance()->getTableName() . '` AS `a` ON(`p`.`albumId` = `a`.`id`)
             ' . $condition['join'] . '
-            WHERE `p`.`id` IN (' . implode(',', array_map('intval', array_unique($idList))) . ') AND `p`.`status` = :status AND ' . $condition['where'] . '
+            WHERE `p`.`id` IN (' . implode(',', array_map('intval', array_unique($idList))) . ') AND ' . $statusSql . ' AND ' . $condition['where'] . '
             ORDER BY `p`.`id` DESC
             LIMIT :first, :limit';
         
-        return $this->dbo->queryForList($sql, array_merge($condition['params'], array('first' => $first, 'limit' => $limit, 'status' => 'approved')));
+        return $this->dbo->queryForList($sql, $params);
     }
     
     public function findPhotoList( $type, $page, $limit, $checkPrivacy = true, $exclude = null)

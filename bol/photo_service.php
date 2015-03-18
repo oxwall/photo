@@ -433,9 +433,9 @@ final class PHOTO_BOL_PhotoService
      * @param null $exclude
      * @return string
      */
-    public function getAlbumPhotos( $album, $page, $limit, $exclude = null )
+    public function getAlbumPhotos( $album, $page, $limit, $exclude = null, $status = PHOTO_BOL_PhotoDao::STATUS_APPROVED )
     {
-        $photos = $this->photoDao->getAlbumPhotos($album, $page, $limit, $exclude);
+        $photos = $this->photoDao->getAlbumPhotos($album, $page, $limit, $exclude, $status);
 
         $list = array();
 
@@ -1037,27 +1037,12 @@ final class PHOTO_BOL_PhotoService
     
     public function hashtagToDesc( $desc )
     {
-        if ( empty($desc) )
-        {
-            return '';
-        }
-        
-        $match = array();
+        return preg_replace_callback(self::HASHTAG_PATTERN, 'PHOTO_BOL_PhotoService::tagReplace', $desc);
+    }
 
-        if ( preg_match_all(self::HASHTAG_PATTERN, $desc, $match) )
-        {
-            $tarUrl = array();
-            $router = OW::getRouter();
-
-            foreach ( $match[0] as $tag )
-            {
-                $tarUrl[$tag] = '<a href="' . $router->urlForRoute('view_tagged_photo_list', array('tag' => $tag)) . '">' . $tag . '</a>';
-            }
-
-            return str_replace($match[0], $tarUrl, $desc);
-        }
-        
-        return $desc;
+    private static function tagReplace( $tag )
+    {
+        return '<a href="' . OW::getRouter()->urlForRoute('view_tagged_photo_list', array('tag' => $tag[0])) . '">' . $tag[0] . '</a>';
     }
     
     public function findPhotoListByAlbumId( $albumId, $page, $limit, array $exclude = array() )
@@ -1103,7 +1088,7 @@ final class PHOTO_BOL_PhotoService
         return $photos;
     }
     
-    public function findPhotoListByUserId( $userId, $page, $limit, array $exclude = array() )
+    public function findPhotoListByUserId( $userId, $page, $limit, array $exclude = array(), $status = PHOTO_BOL_PhotoDao::STATUS_APPROVED )
     {
         if ( empty($userId) )
         {
@@ -1111,7 +1096,7 @@ final class PHOTO_BOL_PhotoService
         }
         
         $first = ($page - 1) * $limit;
-        $photos = $this->photoDao->findPhotoListByUserId($userId, $first, $limit, $this->isCheckPrivacy($userId), $exclude);
+        $photos = $this->photoDao->findPhotoListByUserId($userId, $first, $limit, $this->isCheckPrivacy($userId), $exclude, $status);
         
         if ( $photos )
         {
@@ -1176,7 +1161,7 @@ final class PHOTO_BOL_PhotoService
         return $photos;
     }
     
-    public function findPhotoListByIdList(array $idList, $page, $limit )
+    public function findPhotoListByIdList(array $idList, $page, $limit, $status = PHOTO_BOL_PhotoDao::STATUS_APPROVED )
     {
         if ( count($idList) === 0 )
         {
@@ -1184,7 +1169,7 @@ final class PHOTO_BOL_PhotoService
         }
         
         $first = ($page - 1) * $limit;
-        $photos = $this->photoDao->findPhotoListByIdList($idList, $first, $limit);
+        $photos = $this->photoDao->findPhotoListByIdList($idList, $first, $limit, $status);
         
         if ( $photos )
         {
