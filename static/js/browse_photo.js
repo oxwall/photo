@@ -1031,10 +1031,22 @@
             {
                 var top = Math.min.apply(0, _vars.photoListOrder);
                 var left = _vars.photoListOrder.indexOf(top);
-                var img = photoItem.find('img')[0];
 
-                img.onload = img.onerror = function(){_methods.buildPhotoItem.complete(left, photoItem)};
-                img.src = photo.url;
+                if ( !$.browser.msie )
+                {
+                    photoItem.find('img')[0].src = photo.url;
+
+                    var img = new Image();
+                    img.onload = img.onerror = function(){_methods.buildPhotoItem.complete(left, photoItem)};
+                    img.src = photo.url;
+                }
+                else
+                {
+                    var img = photoItem.find('img')[0];
+                    img.onload = img.onerror = function(){_methods.buildPhotoItem.complete(left, photoItem)};
+                    img.src = photo.url;
+                }
+
                 photoItem.css({top: top + 'px', left: left / (_vars.level || 4) * 100 + '%'});
                 photoItem.appendTo(_elements.content);
             };
