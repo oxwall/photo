@@ -36,81 +36,89 @@
  * @package ow_plugins.photo
  * @since 1.6.1
  */
- 
+
 *}
 
 <div class="ow_btn_delimiter ow_right">
-    {if $isAuthenticated}
-        {if !empty($canUpload)}
-            {decorator name="button" class="ow_ic_add" id="add-new-photo-album" langLabel="photo+create_album"}
-            {script}
-                jQuery(function()
+    {if $isAuthenticated && $canUpload}
+        {decorator name="button" class="ow_ic_add" id="add-new-photo-album" langLabel="photo+create_album"}
+        {script}
+            jQuery(function()
+            {
+                var content = $(document.getElementById('add-new-photo-album-content'));
+
+                var albumName = new OwTextField('add-new-photo-album-name', 'add-new-photo-album-name', OW.getLanguageText('photo', 'album_name'));
+                var albumDesc = new OwTextArea('add-new-photo-album-desc', 'add-new-photo-album-desc', OW.getLanguageText('photo', 'album_desc'));
+
+                $('#add-new-photo-album').on('click', function()
                 {
-                    var content = $(document.getElementById('add-new-photo-album-content'));
-
-                    var albumName = new OwTextField('add-new-photo-album-name', 'add-new-photo-album-name', OW.getLanguageText('photo', 'album_name'));
-                    var albumDesc = new OwTextArea('add-new-photo-album-desc', 'add-new-photo-album-desc', OW.getLanguageText('photo', 'album_desc'));
-
-                    $('#add-new-photo-album').on('click', function()
+                    var fb = new OW_FloatBox(
                     {
-                        var fb = new OW_FloatBox(
-                        {
-                            $title: OW.getLanguageText('photo', 'create_album'),
-                            $contents: content,
-                            width: 500
-                        });
+                        $title: OW.getLanguageText('photo', 'create_album'),
+                        $contents: content,
+                        width: 500
+                    });
 
-                        fb.bind('show', function()
+                    fb.bind('show', function()
+                    {
+                        $('input.ow_ic_submit', content).off().on('click', function()
                         {
-                            $('input.ow_ic_submit', content).off().on('click', function()
+                            var value = albumName.getValue().trim();
+
+                            if ( value.length === 0 )
                             {
-                                var value = albumName.getValue().trim();
+                                $('span.ow_error', content).show();
+                                $(albumName.input).focus();
 
-                                if ( value.length === 0 )
+                                return;
+                            }
+                            else if ( value === OW.getLanguageText('photo', 'newsfeed_album') )
+                            {
+                                OW.error(OW.getLanguageText('photo', 'newsfeed_album_error_msg'));
+                                $('span.ow_error', content).show();
+                                $(albumName.input).focus();
+
+                                return;
+                            }
+
+                            fb.close();
+
+                            var ajaxUploadPhotoFB = OW.ajaxFloatBox("PHOTO_CMP_AjaxUpload", [0, albumName.getValue(), albumDesc.getValue()], {
+                                title: OW.getLanguageText('photo', 'upload_photos'),
+                                width: "746px"
+                            });
+
+                            ajaxUploadPhotoFB.bind("close", function()
+                            {
+                                if ( ajaxPhotoUploader.isHasData() )
                                 {
-                                    $('span.ow_error', content).show();
-                                    $(albumName.input).focus();
-
-                                    return;
+                                    return confirm(OW.getLanguageText('photo', 'close_alert'));
                                 }
-                                else if ( value === OW.getLanguageText('photo', 'newsfeed_album') )
-                                {
-                                    OW.error(OW.getLanguageText('photo', 'newsfeed_album_error_msg'));
-                                    $('span.ow_error', content).show();
-                                    $(albumName.input).focus();
-
-                                    return;
-                                }
-
-                                fb.close();
-
-                                var ajaxUploadPhotoFB = OW.ajaxFloatBox("PHOTO_CMP_AjaxUpload", [0, albumName.getValue(), albumDesc.getValue()], {
-                                    title: OW.getLanguageText('photo', 'upload_photos'),
-                                    width: "746px"
-                                });
-
-                                ajaxUploadPhotoFB.bind("close", function()
-                                {
-                                    if ( ajaxPhotoUploader.isHasData() )
-                                    {
-                                        return confirm(OW.getLanguageText('photo', 'close_alert'));
-                                    }
-                                });
                             });
                         });
+                    });
 
-                        fb.bind('close', function()
-                        {
-                            $('span.ow_error', content).hide();
-                        });
+                    fb.bind('close', function()
+                    {
+                        $('span.ow_error', content).hide();
                     });
                 });
-            {/script}
-        {else}
-            {decorator name="button" class="ow_ic_add" id="add-new-photo-album" langLabel="photo+create_album" onclick="{$url}();"}
-        {/if}
+            });
+        {/script}
 
-        {decorator name="button" class="ow_ic_add" id="btn-add-new-photo" langLabel="photo+upload_photos" onclick="{$url}();"}
+        {decorator name="button" class="ow_ic_add" id="add-new-photo-album" langLabel="photo+create_album" onclick="{$url}();"}
+    {elseif !empty($isPromo)}
+        {decorator name="button" class="ow_ic_add" id="add-new-photo-album" langLabel="photo+create_album"}
+        {decorator name="button" class="ow_ic_add" id="btn-add-new-photo" langLabel="photo+upload_photos"}
+
+        {script}
+        {literal}
+            $("#add-new-photo-album,#btn-add-new-photo").on("click", function()
+            {
+                OW.authorizationLimitedFloatbox({/literal}{$promoMsg}{literal});
+            });
+        {/literal}
+        {/script}
     {/if}
     <div class="ow_hidden">
         <div id="add-new-photo-album-content">
