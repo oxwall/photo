@@ -58,6 +58,16 @@ class PHOTO_CMP_PageHead extends OW_Component
             $language->addKeyForJs('photo', 'upload_photos');
             $language->addKeyForJs('photo', 'close_alert');
         }
+        else
+        {
+            $status = BOL_AuthorizationService::getInstance()->getActionStatus('photo', 'upload');
+
+            if ( $status['status'] != BOL_AuthorizationService::STATUS_DISABLED )
+            {
+                $this->assign('isPromo', true);
+                $this->assign('promoMsg', json_encode($status['msg']));
+            }
+        }
 
         $this->assign('isAuthenticated', $isAuthenticated);
         $this->assign('canUpload', $canUpload);
