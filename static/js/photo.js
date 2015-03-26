@@ -1108,29 +1108,29 @@
 
             if ( eventName  == 'base.comment_textarea_resize' )
             {
-                var textareas;
+                var textarea;
 
                 if ( !cmp.isMoved )
                 {
-                    textareas = $('textarea', scrollCont)[0];
+                    textarea = $('textarea', scrollCont)[0];
                 }
                 else
                 {
-                    textareas = $('textarea', appendTo)[0];
+                    textarea = $('textarea', appendTo)[0];
                 }
 
-                if (textareas.selectionStart || textareas.selectionStart == '0')
+                if ( textarea.selectionStart || textarea.selectionStart == '0' )
                 {
-                    _vars.curPos= textareas.selectionStart;
+                    _vars.curPos = textarea.selectionStart;
                 }
-                else if (document.selection)
+                else if ( document.selection )
                 {
-                    textareas.focus ();
+                    textarea.focus();
 
-                    var Sel = document.selection.createRange ();
+                    var sel = document.selection.createRange();
 
-                    Sel.moveStart ('character', -textareas .value.length);
-                    _vars.curPos= Sel.text.length;
+                    sel.moveStart('character', -textarea.value.length);
+                    _vars.curPos = sel.text.length;
                 }
             }
 
