@@ -35,7 +35,7 @@
 (function( window, $, params ) {'use strict';
 
     var _vars = $.extend({}, (params || {}),
-        {cache: {}, minSize: {width: 400, height: 400}, spacing: 30, infoBar: 400, cmpListForDeleting: [], fullScreen: (function()
+        {cache: {}, minSize: {width: 400, height: 400}, spacing: 30, infoBar: 400, cmpListForDeleting: [], curPos: 0, fullScreen: (function()
         {
             if ( !params.isEnableFullscreen )
             {
@@ -1106,6 +1106,34 @@
                 padding = parseInt(_elements.content.find('.ow_photoview_info').css('padding-top')),
                 appendTo = _elements.content.find('.ow_feed_comments_input_sticky');
 
+            if ( eventName  == 'base.comment_textarea_resize' )
+            {
+                var textareas;
+
+                if ( !cmp.isMoved )
+                {
+                    textareas = $('textarea', scrollCont)[0];
+                }
+                else
+                {
+                    textareas = $('textarea', appendTo)[0];
+                }
+
+                if (textareas.selectionStart || textareas.selectionStart == '0')
+                {
+                    _vars.curPos= textareas.selectionStart;
+                }
+                else if (document.selection)
+                {
+                    textareas.focus ();
+
+                    var Sel = document.selection.createRange ();
+
+                    Sel.moveStart ('character', -textareas .value.length);
+                    _vars.curPos= Sel.text.length;
+                }
+            }
+
             if ( !_vars.isClassic && _vars.layout !== 'page' )
             {
                 OW.addScroll(scrollCont, {autoReinitialise: true}).scrollToBottom();
@@ -2129,17 +2157,24 @@
             $.fn.extend({
                 photoFocus: function () {
                     this.each(function () {
-                        if ( document.selection )
+                        try
                         {
-                            var cursor = this.value.length;
+                            if(this.setSelectionRange)
+                            {
+                                this.focus();
+                                this.setSelectionRange(_vars.curPos, _vars.curPos);
+                            }
+                            else if (this.createTextRange)
+                            {
+                                var range = this.createTextRange();
 
-                            this.focus();
-                            this.setSelectionRange(cursor, cursor);
+                                range.collapse(true);
+                                range.moveEnd('character', _vars.curPos);
+                                range.moveStart('character', _vars.curPos);
+                                range.select();
+                            }
                         }
-                        else
-                        {
-                            $(this).focus();
-                        }
+                        catch ( e ){ }
                     });
 
                     return this;
