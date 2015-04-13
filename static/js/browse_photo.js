@@ -34,7 +34,7 @@
  */
 (function( $ ) {'use strict';
 
-    var _vars = $.extend({}, (browsePhotoParams || {}), {offset: 0, idList: [], modified: false}),
+    var _vars = $.extend({}, (browsePhotoParams || {}), {offset: 0, idList: [], modified: false, getListRequest: null}),
     _elements = {},
     _methods = {
         showPreloader: function()
@@ -51,7 +51,16 @@
             {
                 return;
             }
-            
+
+            if ( _elements.getListRequest && _elements.getListRequest.readyState !== 4 )
+            {
+                try
+                {
+                    _elements.getListRequest.abort();
+                }
+                catch ( e ) { }
+            }
+
             var data = {
                 ajaxFunc: _vars.action || 'getPhotoList',
                 listType: _vars.listType || 'latest', 
@@ -59,8 +68,8 @@
             };
             
             $.extend(data, _methods.getMoreData());
-            
-            $.ajax(
+
+            _elements.getListRequest = $.ajax(
             {
                 url: _vars.getPhotoURL,
                 dataType: 'json',
