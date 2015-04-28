@@ -85,7 +85,19 @@ class PHOTO_CTRL_Photo extends OW_ActionController
                             $ownerMode = $_POST['userId'] == OW::getUser()->getId();
                             break;
                         case 'getPhotoList':
-                            $ownerMode = !empty($_POST['userId']) && $_POST['userId'] == OW::getUser()->getId();
+                            if ( !empty($_POST['userId']) )
+                            {
+                                $ownerMode = $_POST['userId'] == OW::getUser()->getId();
+                            }
+                            elseif ( !empty($_POST['albumId']) )
+                            {
+                                $albumId = (int)$_POST['albumId'];
+                                $ownerMode = $this->photoAlbumService->isAlbumOwner($albumId, OW::getUser()->getId());
+                            }
+                            else
+                            {
+                                $ownerMode = false;
+                            }
                             break;
                         case 'ajaxDeletePhotos':
                         case 'ajaxMoverToAlbum':
