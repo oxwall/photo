@@ -62,6 +62,7 @@ class PHOTO_CLASS_EventHandler
     const EVENT_PHOTO_DELETE = 'photo.delete';
     const EVENT_ALBUM_PHOTOS_FIND = 'photo.album_photos_find';
     const EVENT_INIT_FLOATBOX = 'photo.init_floatbox';
+    const EVENT_GET_PHOTO_VIEW_STATUS = 'photo.get_photo_view_status';
     const EVENT_GET_ADDPHOTO_URL = 'photo.getAddPhotoURL';
     const EVENT_ON_PHOTO_CONTENT_UPDATE = 'photo.onUpdateContent';
 
@@ -693,7 +694,9 @@ class PHOTO_CLASS_EventHandler
         $language->addKeyForJs('photo', 'slideshow_interval');
         $language->addKeyForJs('photo', 'pending_approval');
 
-        $status = BOL_AuthorizationService::getInstance()->getActionStatus('photo', 'view');
+        $viewEvent = new OW_Event(self::EVENT_GET_PHOTO_VIEW_STATUS, $params);
+        OW::getEventManager()->trigger($viewEvent);
+        $photoViewStatus = $viewEvent->getData();
         
         $document->addScriptDeclarationBeforeIncludes(
             UTIL_JsGenerator::composeJsString('
@@ -712,7 +715,7 @@ class PHOTO_CLASS_EventHandler
                     'layout' => $layout,
                     'isClassic' => (bool)OW::getConfig()->getValue('photo', 'photo_view_classic'),
                     'urlHome' => OW_URL_HOME,
-                    'isDisabled' => $status['status'] == BOL_AuthorizationService::STATUS_DISABLED,
+                    'isDisabled' => empty($photoViewStatus['available']),
                     'isEnableFullscreen' => (bool)OW::getConfig()->getValue('photo', 'store_fullsize')
                 )
             )
@@ -720,7 +723,7 @@ class PHOTO_CLASS_EventHandler
         
         $document->addOnloadScript(';window.photoView.init();');
         
-        $cmp = new PHOTO_CMP_PhotoFloatbox($layout);
+        $cmp = new PHOTO_CMP_PhotoFloatbox($layout, $photoViewStatus);
         $document->appendBody($cmp->render());
         
         $isInitialized = TRUE;
@@ -1911,6 +1914,28 @@ class PHOTO_CLASS_EventHandler
         $this->photoService->updateFeedEntity($params['id']);
     }
 
+    public function getPhotoViewStatus( OW_Event $event )
+    {
+        $params = $event->getParams();
+        $modPermissions = OW::getUser()->isAuthorized('photo');
+
+        if ( $modPermissions || !empty($params['isOwner']) )
+        {
+            $event->setData(array('available' => true));
+        }
+        else
+        {
+            $status = BOL_AuthorizationService::getInstance()->getActionStatus('photo', 'view');
+
+            $event->setData(array(
+                'available' => $status['status'] == BOL_AuthorizationService::STATUS_AVAILABLE,
+                'msg' => $status['msg']
+            ));
+        }
+
+        return $event->getData();
+    }
+
     public function init()
     {
         $this->genericInit();
@@ -1948,6 +1973,7 @@ class PHOTO_CLASS_EventHandler
         $em->bind(self::EVENT_ENTITY_ALBUMS_DELETE, array($this, 'entityAlbumsDelete'));
         
         $em->bind(self::EVENT_INIT_FLOATBOX, array($this, 'initFloatbox'));
+        $em->bind(self::EVENT_GET_PHOTO_VIEW_STATUS, array($this, 'getPhotoViewStatus'));
 
         $em->bind('ads.enabled_plugins', array($this, 'adsEnabled'));
         $em->bind('admin.add_auth_labels', array($this, 'addAuthLabels'));

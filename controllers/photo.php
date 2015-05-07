@@ -107,6 +107,20 @@ class PHOTO_CTRL_Photo extends OW_ActionController
                         case 'setAsAvatar':
                             $ownerMode = $this->photoService->findPhotoOwner($_POST['entityId']) == OW::getUser()->getId();
                             break;
+                        case 'ajaxDeletePhoto':
+                            $photoId = (int)$_POST['entityId'];
+                            $ownerId = $this->photoService->findPhotoOwner($photoId);
+                            $ownerMode = $ownerId !== null && $ownerId == OW::getUser()->getId();
+                            break;
+                        case 'ajaxDeletePhotoAlbum':
+                            $albumId = (int)$_POST['entityId'];
+                            $ownerMode = $this->photoAlbumService->isAlbumOwner($albumId, OW::getUser()->getId());
+                            break;
+                        case 'getFloatbox':
+                            $photoId = (int)$_POST['photoId'];
+                            $ownerId = $this->photoService->findPhotoOwner($photoId);
+                            $ownerMode = $ownerId !== null && $ownerId == OW::getUser()->getId();
+                            break;
                         default:
                             $ownerMode = FALSE;
                             break;
