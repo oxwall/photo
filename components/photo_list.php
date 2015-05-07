@@ -125,7 +125,7 @@ class PHOTO_CMP_PhotoList extends OW_Component
         
         if ( $params['type'] != 'albums' )
         {
-            $event = new OW_Event(PHOTO_CLASS_EventHandler::EVENT_INIT_FLOATBOX);
+            $event = new OW_Event(PHOTO_CLASS_EventHandler::EVENT_INIT_FLOATBOX, $photoParams);
             OW::getEventManager()->trigger($event);
 
             $script = '$(document.getElementById("browse-photo")).on("click", ".ow_photo_item_wrap img", function( event )

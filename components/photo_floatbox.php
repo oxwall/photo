@@ -38,15 +38,22 @@
  */
 class PHOTO_CMP_PhotoFloatbox extends OW_Component
 {
-    public function __construct( $layout )
+    public function __construct( $layout, $params )
     {
         parent::__construct();
 
-        $status = BOL_AuthorizationService::getInstance()->getActionStatus('photo', 'view');
-        
-        if ( $status['status'] == BOL_AuthorizationService::STATUS_DISABLED )
+        if ( empty($params['available']) )
         {
-            $this->assign('authError', $status['msg']);
+            if ( !empty($params['msg']) )
+            {
+                $msg = $params['msg'];
+            }
+            else
+            {
+                $msg = OW::getLanguage()->text('base', 'authorization_failed_feedback');
+            }
+
+            $this->assign('authError', $msg);
 
             return;
         }
