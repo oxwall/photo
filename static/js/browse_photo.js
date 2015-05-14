@@ -1041,33 +1041,25 @@
                 var top = Math.min.apply(0, _vars.photoListOrder);
                 var left = _vars.photoListOrder.indexOf(top);
 
-                if ( !$.browser.msie )
-                {
-                    photoItem.find('img')[0].src = photo.url;
-
-                    var img = new Image();
-                    img.onload = img.onerror = function(){_methods.buildPhotoItem.complete(left, photoItem)};
-                    img.src = photo.url;
-                }
-                else
-                {
-                    var img = photoItem.find('img')[0];
-                    img.onload = img.onerror = function(){_methods.buildPhotoItem.complete(left, photoItem)};
-                    img.src = photo.url;
-                }
-
                 photoItem.css({top: top + 'px', left: left / (_vars.level || 4) * 100 + '%'});
+                photoItem.find('img').attr('src', photo.url);
                 photoItem.appendTo(_elements.content);
+                _elements.content.height(Math.max.apply(0, _vars.photoListOrder));
+
+                var img = new Image();
+                img.onload = img.onerror = function(){_methods.buildPhotoItem.complete(left, photoItem)};
+                img.src = photo.url;
             };
         }
     })();
     
     _methods.buildPhotoItem.complete = function( left, photoItem )
     {
-        _vars.photoListOrder[left] += photoItem.height() + 16;
-        _elements.content.height(Math.max.apply(0, _vars.photoListOrder));
         photoItem.fadeIn(100, function()
         {
+            _vars.photoListOrder[left] += photoItem.height() + 16;
+            _elements.content.height(Math.max.apply(0, _vars.photoListOrder));
+
             if ( _vars.data && _vars.data.photoList )
             {
                 _methods.buildPhotoItem(_vars.data.photoList.shift());
