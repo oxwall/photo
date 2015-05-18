@@ -613,6 +613,8 @@ class PHOTO_CTRL_Photo extends OW_ActionController
             
         if ( $photos )
         {
+            $unique = uniqid();
+
             foreach ( $photos as $key => $photo )
             {
                 $userIds[] = $photo['userId'];
@@ -620,6 +622,7 @@ class PHOTO_CTRL_Photo extends OW_ActionController
                 $entityIdList[] = $photo['id'];
                 
                 $photos[$key]['description'] = UTIL_HtmlTag::autoLink($photos[$key]['description']);
+                $photos[$key]['unique'] = $unique;
             }
 
             $displayNameList = BOL_UserService::getInstance()->getDisplayNamesForList($userIds);
@@ -643,7 +646,8 @@ class PHOTO_CTRL_Photo extends OW_ActionController
             'albumUrlList' => $albumUrlList,
             'rateInfo' => BOL_RateService::getInstance()->findRateInfoForEntityList('photo_rates', $entityIdList),
             'userScore' => BOL_RateService::getInstance()->findUserSocre(OW::getUser()->getId(), 'photo_rates', $entityIdList),
-            'commentCount' => BOL_CommentService::getInstance()->findCommentCountForEntityList('photo_comments', $entityIdList)
+            'commentCount' => BOL_CommentService::getInstance()->findCommentCountForEntityList('photo_comments', $entityIdList),
+            'unique' => $unique
         ));
     }
     
