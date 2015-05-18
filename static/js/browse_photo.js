@@ -34,7 +34,7 @@
  */
 (function( $ ) {'use strict';
 
-    var _vars = $.extend({}, (browsePhotoParams || {}), {offset: 0, idList: [], modified: false, getListRequest: null}),
+    var _vars = $.extend({}, (browsePhotoParams || {}), {offset: 0, idList: [], modified: false, getListRequest: null, uniqueList: null}),
     _elements = {},
     _methods = {
         showPreloader: function()
@@ -185,6 +185,7 @@
             }
             
             _vars.data = data;
+            _vars.uniqueList = data.unique;
             
             for ( var i = 1; i < _vars.data.photoList.length; i++ )
             {
@@ -209,6 +210,10 @@
                     _methods.bindUI();
                 }
 
+                return;
+            }
+            else if ( photo.unique != _vars.uniqueList )
+            {
                 return;
             }
 
@@ -886,6 +891,7 @@
                 resetPhotoListData: function()
                 {
                     _elements.listBtns.removeClass('active');
+                    _vars.uniqueList = null;
                     _vars.offset = 0;
                     _vars.preSearchVal = '';
                     _vars.photoListOrder = _vars.photoListOrder.map(Number.prototype.valueOf, 0);
@@ -1047,16 +1053,21 @@
                 _elements.content.height(Math.max.apply(0, _vars.photoListOrder));
 
                 var img = new Image();
-                img.onload = img.onerror = function(){_methods.buildPhotoItem.complete(left, photoItem)};
+                img.onload = img.onerror = function(){_methods.buildPhotoItem.complete(left, photoItem, photo)};
                 img.src = photo.url;
             };
         }
     })();
     
-    _methods.buildPhotoItem.complete = function( left, photoItem )
+    _methods.buildPhotoItem.complete = function( left, photoItem, photo )
     {
         photoItem.fadeIn(100, function()
         {
+            if ( photo.unique != _vars.uniqueList )
+            {
+                return;
+            }
+
             _vars.photoListOrder[left] += photoItem.height() + 16;
             _elements.content.height(Math.max.apply(0, _vars.photoListOrder));
 
