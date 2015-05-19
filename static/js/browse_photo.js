@@ -1022,7 +1022,10 @@
                 photoItem.appendTo(_elements.content);
                 photoItem.fadeIn(100, function()
                 {
-                    _methods.buildPhotoItem(_vars.data.photoList.shift());
+                    if ( _vars.data && _vars.data.photoList )
+                    {
+                        _methods.buildPhotoItem(_vars.data.photoList.shift());
+                    }
                 });
             };
         }
@@ -1063,7 +1066,7 @@
     {
         photoItem.fadeIn(100, function()
         {
-            if ( photo.unique != _vars.uniqueList )
+            if ( photo && photo.unique != _vars.uniqueList )
             {
                 return;
             }
