@@ -35,7 +35,7 @@
  * @since 1.7.5
  */
 
-class PHOTO_MCMP_IndexPhotoList extends OW_Component
+class PHOTO_MCMP_IndexPhotoList extends OW_MobileComponent
 {
     protected $visiblePhotoCount = 0;
     
