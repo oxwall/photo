@@ -30,7 +30,7 @@
  */
 
 /**
- * @author Egor Bulgakov <egor.bulgakov@gmail.com>
+ * @author Egor Bulgakov <egor.bulgakov@gmail.com>, Podyachev Evgeny <joker.OW2@gmail.com>
  * @package ow.plugin.photo.mobile.controllers
  * @since 1.6.0
  */
@@ -54,7 +54,7 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
         $this->photoAlbumService = PHOTO_BOL_PhotoAlbumService::getInstance();
     }
 
-    public function viewList()
+    public function viewList($params)
     {
         // is moderator
         $modPermissions = OW::getUser()->isAuthorized('photo');
@@ -67,13 +67,21 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
             return;
         }
 
+        $type = !empty($params['listType']) ? $params['listType'] : 'latest' ;
+        $limit = 12;
+        
+        $validLists = array('latest','toprated','featured');
+        
+        if ( !in_array($type, $validLists) )
+        {
+            $this->redirect(OW::getRouter()->urlForRoute('view_photo_list', array('listType' => 'latest')));
+        }
+        
         $menu = $this->getMenu();
-        $el = $menu->getElement('latest');
+        $el = $menu->getElement($type);
+        
         $el->setActive(true);
         $this->addComponent('menu', $menu);
-
-        $type = 'latest';
-        $limit = 12;
 
         $initialCmp = new PHOTO_MCMP_PhotoList($type, $limit, array());
         $this->addComponent('photos', $initialCmp);
@@ -107,65 +115,8 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
         OW::getDocument()->addOnloadScript($script);
 
         OW::getDocument()->setHeading(OW::getLanguage()->text('photo', 'page_title_browse_photos'));
-        OW::getDocument()->setTitle(OW::getLanguage()->text('photo', 'meta_title_photo_latest'));
-        OW::getDocument()->setDescription(OW::getLanguage()->text('photo', 'meta_description_photo_latest'));
-    }
-
-    public function viewToplist()
-    {
-        // is moderator
-        $modPermissions = OW::getUser()->isAuthorized('photo');
-
-        if ( !$modPermissions && !OW::getUser()->isAuthorized('photo', 'view') )
-        {
-            $status = BOL_AuthorizationService::getInstance()->getActionStatus('photo', 'view');
-            $this->assign('authError', $status['msg']);
-
-            return;
-        }
-
-        $menu = $this->getMenu();
-        $el = $menu->getElement('toprated');
-        $el->setActive(true);
-        $this->addComponent('menu', $menu);
-
-        $type = 'toprated';
-        $limit = 12;
-
-        $initialCmp = new PHOTO_MCMP_PhotoList($type, $limit, array());
-        $this->addComponent('photos', $initialCmp);
-
-        $checkPrivacy = !OW::getUser()->isAuthorized('photo');
-        $total = $this->photoService->countPhotos($type, $checkPrivacy);
-        $this->assign('loadMore', $total > $limit);
-        $this->assign('uploadUrl', OW::getRouter()->urlForRoute('photo_upload'));
-
-        $script = '
-        OWM.bind("photo.hide_load_more", function(){
-            $("#btn-photo-load-more").hide();
-        });
-
-        $("#btn-photo-load-more").click(function(){
-            var node = $(this);
-            node.addClass("owm_preloader");
-            var exclude = $("div.owm_photo_list_item").map(function(){ return $(this).data("ref"); }).get();
-            OWM.loadComponent(
-                "PHOTO_MCMP_PhotoList",
-                {type: "' . $type . '", count:' . $limit . ', exclude: exclude},
-                {
-                    onReady: function(html){
-                        $("#photo-list-cont").append(html);
-                        node.removeClass("owm_preloader");
-                    }
-                }
-            );
-        });';
-
-        OW::getDocument()->addOnloadScript($script);
-
-        OW::getDocument()->setHeading(OW::getLanguage()->text('photo', 'page_title_browse_photos'));
-        OW::getDocument()->setTitle(OW::getLanguage()->text('photo', 'meta_title_photo_latest'));
-        OW::getDocument()->setDescription(OW::getLanguage()->text('photo', 'meta_description_photo_latest'));
+        OW::getDocument()->setTitle(OW::getLanguage()->text('photo', 'meta_title_photo_'.$type));
+        OW::getDocument()->setDescription(OW::getLanguage()->text('photo', 'meta_description_photo_'.$type));
     }
 
     public function albums( array $params )
@@ -421,16 +372,26 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
 
         $item = new BASE_MenuItem();
         $item->setLabel($lang->text('photo', 'menu_latest'));
-        $item->setUrl(OW::getRouter()->urlForRoute('photo_list_index'));
+        $item->setUrl(OW::getRouter()->urlForRoute('view_photo_list', array('listType' => 'latest')));
         $item->setKey('latest');
         $item->setOrder(1);
         array_push($menuItems, $item);
-
+        
+        if ( PHOTO_BOL_PhotoService::getInstance()->countPhotos('featured') )
+        {
+            $item = new BASE_MenuItem();
+            $item->setLabel($lang->text('photo', 'menu_featured'));
+            $item->setUrl(OW::getRouter()->urlForRoute('view_photo_list', array('listType' => 'featured')));
+            $item->setKey('featured');
+            $item->setOrder(2);
+            array_push($menuItems, $item);
+        }
+        
         $item = new BASE_MenuItem();
         $item->setLabel($lang->text('photo', 'menu_toprated'));
         $item->setUrl(OW::getRouter()->urlForRoute('view_photo_list', array('listType' => 'toprated')));
         $item->setKey('toprated');
-        $item->setOrder(2);
+        $item->setOrder(3);
         array_push($menuItems, $item);
 
         return new BASE_MCMP_ContentMenu($menuItems);

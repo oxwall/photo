@@ -28,32 +28,8 @@
  * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-OW::getNavigation()->addMenuItem(OW_Navigation::MAIN, 'view_photo_list', 'photo', 'photo', OW_Navigation::VISIBLE_FOR_ALL);
-OW::getNavigation()->addMenuItem(OW_Navigation::MOBILE_TOP, 'photo_list_index', 'photo', 'mobile_photo', OW_Navigation::VISIBLE_FOR_ALL);
 
-$widgetService = BOL_ComponentAdminService::getInstance();
-
-try
-{
-    $widget = $widgetService->addWidget('PHOTO_CMP_PhotoListWidget', false);
-    $placeWidget = $widgetService->addWidgetToPlace($widget, BOL_ComponentAdminService::PLACE_INDEX);
-    $widgetService->addWidgetToPosition($placeWidget, BOL_ComponentService::SECTION_LEFT);
-}
-catch ( Exception $e )
-{
-    OW::getLogger()->addEntry(json_encode($e));
-}
-
-try
-{
-    $widget = $widgetService->addWidget('PHOTO_CMP_UserPhotoAlbumsWidget', false);
-    $placeWidget = $widgetService->addWidgetToPlace($widget, BOL_ComponentAdminService::PLACE_PROFILE);
-    $widgetService->addWidgetToPosition($placeWidget, BOL_ComponentService::SECTION_LEFT);
-}
-catch ( Exception $e )
-{
-    OW::getLogger()->addEntry(json_encode($e));
-}
+$widgetService = Updater::getWidgetService();
 
 try
 {
@@ -63,9 +39,5 @@ try
 }
 catch ( Exception $e )
 {
-    OW::getLogger()->addEntry(json_encode($e));
+    Updater::getLogger()->addEntry(json_encode($e));
 }
-
-require_once dirname(__FILE__) . DS .  'classes' . DS . 'credits.php';
-$credits = new PHOTO_CLASS_Credits();
-$credits->triggerCreditActionsAdd();
