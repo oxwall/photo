@@ -44,7 +44,7 @@ class PHOTO_MCMP_PhotoListWidget extends BASE_CLASS_Widget
         parent::__construct();
 
         $photoService = PHOTO_BOL_PhotoService::getInstance();
-        $num = isset($paramObj->customParamList['photoCount']) ? $paramObj->customParamList['photoCount'] : 8;
+        $num = !empty($paramObj->customParamList['photoCount']) ? $paramObj->customParamList['photoCount'] : 8;
 
         $cmpParams = array(
             'photoCount' => $num,
@@ -62,11 +62,10 @@ class PHOTO_MCMP_PhotoListWidget extends BASE_CLASS_Widget
         
         $items = array('latest', 'toprated');
         
-        // there is no featured photo list in mobile version
-        /* if ( $photoService->countPhotos('featured') )
+        if ( $photoService->countPhotos('featured') )
         {
             $items[] = 'featured';
-        } */
+        }
         
         $menuItems = $cmp->getMenuItems($items, $uniqId);
         $paramObj->standartParamList->capContent = (new BASE_MCMP_WidgetMenu($menuItems))->render();

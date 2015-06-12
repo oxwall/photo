@@ -77,13 +77,6 @@ class PHOTO_MCMP_IndexPhotoList extends OW_MobileComponent
         $menuItems = $this->getMenuItems($items, $uniqId);
         $this->assign('items', $menuItems);
 
-        if ( !$latest && !OW::getUser()->isAuthorized('photo', 'upload') )
-        {
-            $this->setVisible(false);
-
-            return;
-        }
-
         $this->assign('wrapBox', $wrap);
         $this->assign('boxType', $boxType);
         $this->assign('showTitle', $showTitle);
@@ -146,8 +139,7 @@ class PHOTO_MCMP_IndexPhotoList extends OW_MobileComponent
     {
         $lang = OW::getLanguage();
         
-        $items = array('latest', 'toprated');
-        $url = OW::getEventManager()->call('photo.getAddPhotoURL');
+        $items = array('latest', 'featured', 'toprated');
         $toolbars = array();
         foreach ( $items as $tbItem )
         {
@@ -157,7 +149,7 @@ class PHOTO_MCMP_IndexPhotoList extends OW_MobileComponent
                 'id' => "toolbar-photo-{$tbItem}-".$uniqId
             );
                 
-            if ( in_array($tbItem, array('toprated')) )
+            if ( in_array($tbItem, array('featured', 'toprated')) )
             {
                 $toolbars[$tbItem]['display'] = 'none';
             }

@@ -70,7 +70,7 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
         $type = !empty($params['listType']) ? $params['listType'] : 'latest' ;
         $limit = 12;
         
-        $validLists = array('latest','toprated');
+        $validLists = array('latest','toprated','featured');
         
         if ( !in_array($type, $validLists) )
         {
@@ -377,13 +377,23 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
         $item->setOrder(1);
         array_push($menuItems, $item);
         
+        if ( PHOTO_BOL_PhotoService::getInstance()->countPhotos('featured') )
+        {
+            $item = new BASE_MenuItem();
+            $item->setLabel($lang->text('photo', 'menu_featured'));
+            $item->setUrl(OW::getRouter()->urlForRoute('view_photo_list', array('listType' => 'featured')));
+            $item->setKey('featured');
+            $item->setOrder(2);
+            array_push($menuItems, $item);
+        }
+        
         $item = new BASE_MenuItem();
         $item->setLabel($lang->text('photo', 'menu_toprated'));
         $item->setUrl(OW::getRouter()->urlForRoute('view_photo_list', array('listType' => 'toprated')));
         $item->setKey('toprated');
-        $item->setOrder(2);
+        $item->setOrder(3);
         array_push($menuItems, $item);
-        
+
         return new BASE_MCMP_ContentMenu($menuItems);
     }
 }
