@@ -609,12 +609,12 @@ class PHOTO_CTRL_Photo extends OW_ActionController
     
     public function generatePhotoList( $photos )
     {
-        list($userIds, $userUrlList, $albumIdList, $albumUrlList, $displayNameList, $albumNameList, $entityIdList) = array_fill(0, 7, array());
-            
+        $userIds = $userUrlList = $albumIdList = $albumUrlList = $displayNameList = $albumNameList = $entityIdList = array();
+
+        $unique = uniqid(time(), true);
+
         if ( $photos )
         {
-            $unique = uniqid();
-
             foreach ( $photos as $key => $photo )
             {
                 $userIds[] = $photo['userId'];
