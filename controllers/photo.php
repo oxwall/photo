@@ -1030,34 +1030,32 @@ class PHOTO_CTRL_Photo extends OW_ActionController
                     );
                 }
             }
-            
-            $photo->albumId = $album->id;
-            $photo->description = htmlspecialchars(trim($values['photo-desc']));
 
-            if ( $this->photoService->updatePhoto($photo) )
+            $description = htmlspecialchars(trim($values['photo-desc']));
+
+            if ( $photo->description != $description )
             {
+                $photo->description = $description;
+                $this->photoService->updatePhoto($photo);
+
                 BOL_EntityTagDao::getInstance()->deleteItemsForEntityItem($photo->id, 'photo');
-                BOL_TagService::getInstance()->updateEntityTags(
-                    $photo->id,
-                    'photo',
-                    $this->photoService->descToHashtag($photo->description)
-                );
+                BOL_TagService::getInstance()->updateEntityTags($photo->id, 'photo', $this->photoService->descToHashtag($photo->description));
                 PHOTO_BOL_SearchService::getInstance()->deleteSearchItem(PHOTO_BOL_SearchService::ENTITY_TYPE_PHOTO, $photo->id);
                 PHOTO_BOL_SearchService::getInstance()->addSearchIndex(PHOTO_BOL_SearchService::ENTITY_TYPE_PHOTO, $photo->id, $photo->description);
-
-                $newPhoto = $this->photoService->findPhotoById($photo->id);
-
-                exit(json_encode(array(
-                    'result' => true,
-                    'id' => $photo->id,
-                    'description' => $photo->description,
-                    'albumName' => $album->name,
-                    'albumUrl' => OW::getRouter()->urlForRoute('photo_user_album', array('user' => OW::getUser()->getUserObject()->getUsername(), 'album' => $album->id)),
-                    'msg' => OW::getLanguage()->text('photo', 'photo_updated'),
-                    'msgApproval' => OW::getLanguage()->text('photo', 'photo_uploaded_pending_approval'),
-                    'photo' => get_object_vars($newPhoto)
-                )));
             }
+
+            $newPhoto = $this->photoService->findPhotoById($photo->id);
+
+            exit(json_encode(array(
+                'result' => true,
+                'id' => $photo->id,
+                'description' => $photo->description,
+                'albumName' => $album->name,
+                'albumUrl' => OW::getRouter()->urlForRoute('photo_user_album', array('user' => OW::getUser()->getUserObject()->getUsername(), 'album' => $album->id)),
+                'msg' => OW::getLanguage()->text('photo', 'photo_updated'),
+                'msgApproval' => OW::getLanguage()->text('photo', 'photo_uploaded_pending_approval'),
+                'photo' => get_object_vars($newPhoto)
+            )));
         }
         else
         {
