@@ -1031,9 +1031,13 @@ class PHOTO_CTRL_Photo extends OW_ActionController
                 }
             }
 
-            if ( strcasecmp($photo->description, htmlspecialchars(trim($values['photo-desc']))) !== 0 &&
-                $this->photoService->updatePhoto($photo) )
+            $description = htmlspecialchars(trim($values['photo-desc']));
+
+            if ( $photo->description != $description )
             {
+                $photo->description = $description;
+                $this->photoService->updatePhoto($photo);
+
                 BOL_EntityTagDao::getInstance()->deleteItemsForEntityItem($photo->id, 'photo');
                 BOL_TagService::getInstance()->updateEntityTags($photo->id, 'photo', $this->photoService->descToHashtag($photo->description));
                 PHOTO_BOL_SearchService::getInstance()->deleteSearchItem(PHOTO_BOL_SearchService::ENTITY_TYPE_PHOTO, $photo->id);
