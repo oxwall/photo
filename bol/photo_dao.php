@@ -1042,7 +1042,7 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
             switch ( $checkPrivacy )
             {
                 case TRUE:
-                    $query = ' AND `p`.`' . self::PRIVACY . '` = :everybody OR `p`.`' . self::PRIVACY . '` = :friends';
+                    $query = ' AND (`p`.`' . self::PRIVACY . '` = :everybody OR `p`.`' . self::PRIVACY . '` = :friends)';
                     $params['friends'] = self::PRIVACY_FRIENDS_ONLY;
                     $params['everybody'] = self::PRIVACY_EVERYBODY;
                     break;

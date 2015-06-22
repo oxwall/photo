@@ -34,7 +34,7 @@
  */
 (function( $ ) {'use strict';
 
-    var _vars = $.extend({}, (browsePhotoParams || {}), {offset: 0, idList: [], modified: false, getListRequest: null, uniqueList: null}),
+    var _vars = $.extend({}, (browsePhotoParams || {}), {offset: 0, idList: [], modified: false, getListRequest: null, uniqueList: null, hashtagPattern: /#(?:\w|[^\u0000-\u007F])+/g}),
     _elements = {},
     _methods = {
         showPreloader: function()
@@ -274,13 +274,24 @@
 
             return value;
         },
-        descToHashtag: function( description )
+        getHashtags: function( text )
         {
-            var url = '<a href="' + _vars.urlHome + 'photo/viewlist/tagged/{$tag}">{$tagLabel}</a>';
-            
-            return description.replace(/#(?:\w|[^\u0000-\u007F])+/g, function( str )
+            var result = {};
+
+            text.replace(_vars.hashtagPattern, function( str, offest )
             {
-                return (url.replace('{$tag}', encodeURIComponent(str))).replace('{$tagLabel}', str);
+                result[offest] = str;
+            });
+
+            return result;
+        },
+        descToHashtag: function( description, hashtags )
+        {
+            var url = '<a href="' + _vars.tagUrl + '">{$tagLabel}</a>';
+            
+            return description.replace(_vars.hashtagPattern, function( str, offest )
+            {
+                return (url.replace('-tag-', encodeURIComponent(hashtags[offest]))).replace('{$tagLabel}', str);
             }).replace(/\n/g, '<br>');
         },
         reorder: function()
@@ -339,11 +350,11 @@
         },
         setDescription: function( entity )
         {
-            var description
+            var description;
             
             if ( _vars.listType != 'albums' )
             {
-                description = _methods.descToHashtag(_methods.truncate(entity.description));
+                description = _methods.descToHashtag(_methods.truncate(entity.description), _methods.getHashtags(entity.description));
             }
             else
             {
