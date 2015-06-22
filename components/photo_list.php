@@ -92,7 +92,8 @@ class PHOTO_CMP_PhotoList extends OW_Component
             'getPhotoURL' => OW::getRouter()->urlFor('PHOTO_CTRL_Photo', 'ajaxResponder'),
             'listType' => $params['type'],
             'rateUserId' => OW::getUser()->getId(),
-            'urlHome' => OW_URL_HOME
+            'urlHome' => OW_URL_HOME,
+            'tagUrl' => OW::getRouter()->urlForRoute('view_tagged_photo_list', array('tag' => '-tag-'))
         );
         
         $contDefault = array(
