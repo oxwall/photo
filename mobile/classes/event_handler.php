@@ -96,11 +96,39 @@ class PHOTO_MCLASS_EventHandler
 
     public function onMobileTopMenuAddLink( BASE_CLASS_EventCollector $event )
     {
-        $event->add(array(
-            'prefix' => 'photo',
-            'key' => 'mobile_photo',
-            'url' => OW::getRouter()->urlForRoute('photo_upload')
-        ));
+        if ( OW::getUser()->isAuthenticated() && !OW::getUser()->isAuthorized('photo', 'upload') )
+        {
+            $id = uniqid('photo_add');
+            $status = BOL_AuthorizationService::getInstance()->getActionStatus('photo', 'upload');
+
+            OW::getDocument()->addScriptDeclaration(
+                UTIL_JsGenerator::composeJsString(
+                    ';$("#" + {$btn}).on("click", function()
+                    {
+                        OWM.showContent();
+                        OWM.authorizationLimitedFloatbox({$msg});
+                    });',
+                    array(
+                        'btn' => $id,
+                        'msg' => $status['msg']
+                    )
+                )
+            );
+
+            $event->add(array(
+                'prefix' => 'photo',
+                'key' => 'mobile_photo',
+                'id' => $id
+            ));
+        }
+        else
+        {
+            $event->add(array(
+                'prefix' => 'photo',
+                'key' => 'mobile_photo',
+                'url' => OW::getRouter()->urlForRoute('photo_upload')
+            ));
+        }
     }
 
     public function onNotificationRender( OW_Event $e )
