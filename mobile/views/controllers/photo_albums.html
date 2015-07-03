@@ -6,7 +6,11 @@
     {if $albums}
     <div class="owm_photo_album_list_wrap">
         <div class="clearfix owm_align_right owm_padding owm_add_photo_wrap">
-            <a href="{$uploadUrl}" class="owm_add_photo"></a><span class="owm_add_photo_label">{text key='photo+upload_photos'}</span>
+            {if !empty($uploadUrl)}
+                <a href="{$uploadUrl}" class="owm_add_photo"></a><span class="owm_add_photo_label">{text key='photo+upload_photos'}</span>
+            {elseif !empty($id)}
+                <a href="javascript://" class="owm_add_photo" id="{$id}"></a><span class="owm_add_photo_label">{text key='photo+upload_photos'}</span>
+            {/if}
         </div>
         <ul id="album-list-cont">
         {$albums}

@@ -1,6 +1,10 @@
 <div class="owm_photo_block">
     <div class="clearfix owm_align_right owm_padding owm_add_photo_wrap">
-        <a href="{$uploadUrl}" class="owm_add_photo"></a><span class="owm_add_photo_label">{text key='photo+upload_photos'}</span>
+        {if !empty($uploadUrl)}
+            <a href="{$uploadUrl}" class="owm_add_photo"></a><span class="owm_add_photo_label">{text key='photo+upload_photos'}</span>
+        {elseif !empty($id)}
+            <a href="javascript://" class="owm_add_photo" id="{$id}"></a><span class="owm_add_photo_label">{text key='photo+upload_photos'}</span>
+        {/if}
     </div>
     {if !empty($authError)}
         <div class="owm_padding">
