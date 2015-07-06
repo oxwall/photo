@@ -83,14 +83,15 @@
 
                         _elements.jcrop = $.Jcrop(_elements.coverImg, (function()
                         {
-                            var photoWidth = _elements.coverImg.width(),
+                            var photoWidth = _elements.coverImg.width(), photoHeight = _elements.coverImg.height(),
                                 minSize = Math.ceil(330 / (_elements.coverImg[0].naturalWidth / photoWidth));
 
                             return {
                                 onChange: _methods.showPreview,
                                 onSelect: _methods.showPreview,
                                 aspectRatio: 1,
-                                minSize: [minSize, minSize]
+                                minSize: [minSize, minSize],
+                                setSelect: _methods.getCropInitialSelection(photoWidth, photoHeight)
                             };
                         })());
                     };
@@ -120,13 +121,34 @@
                         }
                     };
 
+                    _methods.getCropInitialSelection = function( width, height ){
+                        var xC = width / 2, yC = height / 2;
+                        var halfSize = width < height ? width / 2 : height / 2;
+                        var padding = width < height ? width * 0.05 : height * 0.05;
+                        halfSize = halfSize - padding;
+
+                        var x1 = xC - halfSize, y1 = yC - halfSize;
+                        var x2 = xC + halfSize, y2 = yC + halfSize;
+
+                        return [x1, y1, x2, y2];
+                    };
+
                     _elements.coverPreview[0].src = '{$coverUrl}';
                     _elements.coverImg[0].src = '{$coverUrl}';
                     _elements.coverImg[0].onerror = _elements.coverImg[0].onload = _methods.complete;
 
                     window.owForms['album-cover-maker'].bind('submit', function( data )
                     {
-                        data.coords = _elements.jcrop.tellSelect();
+                        var coords = _elements.jcrop.tellSelect();
+
+                        if ( !coords.h || !coords.w )
+                        {
+                            OW.error(OW.getLanguageText('photo', 'no_photo_selected'));
+
+                            return false;
+                        }
+
+                        data.coords = coords;
                         data.view_size = _elements.coverImg.width();
                     });
 
