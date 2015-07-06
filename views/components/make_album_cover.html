@@ -122,9 +122,7 @@
 
                     _elements.coverPreview[0].src = '{$coverUrl}';
                     _elements.coverImg[0].src = '{$coverUrl}';
-                    _elements.coverImg[0].onerror = _methods.complete;
-
-                    +_elements.coverImg[0].naturalHeight !== 0 ? _methods.complete() : _elements.coverImg[0].onload = _methods.complete;
+                    _elements.coverImg[0].onerror = _elements.coverImg[0].onload = _methods.complete;
 
                     window.owForms['album-cover-maker'].bind('submit', function( data )
                     {
