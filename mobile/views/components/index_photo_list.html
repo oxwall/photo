@@ -1,0 +1,48 @@
+{capture assign='nocontent'}
+    <div class="owm_nocontent">{text key='photo+no_photo'}</div>
+{/capture}
+
+{capture assign='cmp'}
+    <div id="photo_list_cmp{$uniqId}">
+        <div class="owm_index_photo_list" id="{$items.latest.contId}">
+            {foreach from=$latest item='p'}     
+                <div class="owm_index_photo_item">
+                    <a {if !empty($p.title)} title="{$p.title}"{/if}  style="background-image: url({$p.url})" href="{url_for_route for="view_photo:[id=>`$p.id`]"}">
+                        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" />
+                    </a>
+                </div>
+            {foreachelse}
+                {$nocontent}
+            {/foreach}
+        </div>
+
+        {if $featured}
+            <div class="owm_index_photo_list" id="{$items.featured.contId}" style="display:none;">
+                {foreach from=$featured item='p'}
+                    <div class="owm_index_photo_item">
+                        <a {if !empty($p.title)} title="{$p.title}"{/if}  style="background-image: url({$p.url})" href="{url_for_route for="view_photo:[id=>`$p.id`]"}">
+                            <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" />
+                        </a>
+                    </div>
+                {foreachelse}
+                    {$nocontent}
+                {/foreach}
+            </div>
+        {/if}
+
+        <div class="owm_index_photo_list" id="{$items.toprated.contId}" style="display:none;">
+            {foreach from=$toprated item='p'}
+                <div class="owm_index_photo_item">
+                    <a {if !empty($p.title)} title="{$p.title}"{/if}  style="background-image: url({$p.url})" href="{url_for_route for="view_photo:[id=>`$p.id`]"}">
+                        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" />
+                    </a>
+                </div>
+            {foreachelse}
+                {$nocontent}
+            {/foreach}
+        </div>
+    </div>
+    
+{/capture}
+
+{$cmp}
