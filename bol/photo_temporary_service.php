@@ -80,7 +80,7 @@ final class PHOTO_BOL_PhotoTemporaryService
     {
         if ( !file_exists($source) || !$userId )
         {
-            return FALSE;
+            return false;
         }
         
         $tmpPhoto = new PHOTO_BOL_PhotoTemporary();

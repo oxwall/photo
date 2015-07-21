@@ -46,8 +46,6 @@
             <input type="file" name="file" accept="image/jpeg,image/png,image/gif" multiple />
         </form>
         <div id="slot-prototype" class="ow_photo_preview_edit">
-            <input type="hidden" name="slot" />
-            <input type="hidden" name="rotate" />
             <div class="ow_photo_preview_action">
                 <div class="ow_photo_preview_image ow_photo_preview_loading">
                     <div class="ow_photo_preview_image_filter"></div>
@@ -87,10 +85,17 @@
                     <div class="ow_dropdown_arrow_down upload_photo_spinner"></div>
                     {error name='album-name'}
                 </div>
-                <div class="new-album" style="display: none">
+                <div class="new-album ow_smallmargin" style="display: none">
                     {input name="album-name"}
                     {input name="description"}
                 </div>
+                {foreach $extendInputs as $input}
+                    <div id="{$input}" style="margin-bottom: 8px;">
+                        <div class="ow_smallmargin">
+                            {input name=$input}{label name=$input}<br />{error name=$input}
+                        </div>
+                    </div>
+                {/foreach}
             </div>
             <div class="ow_photo_upload_submit ow_right">
                 <span class="ow_button">

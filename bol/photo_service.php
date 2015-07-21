@@ -1003,7 +1003,7 @@ final class PHOTO_BOL_PhotoService
 
         if ( $convert )
         {
-            $accepted = floatval(OW::getConfig()->getValue('photo', 'accepted_filesize') * 1024 * 1024);
+            $accepted = (float)(OW::getConfig()->getValue('photo', 'accepted_filesize') * 1024 * 1024);
 
             return $accepted >= $maxSize ? $maxSize : $accepted;
         }

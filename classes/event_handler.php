@@ -80,6 +80,8 @@ class PHOTO_CLASS_EventHandler
     const EVENT_COLLECT_PHOTO_SUB_MENU = 'photo.collectSubMenu';
     
     const EVENT_SUGGEST_DEFAULT_ALBUM = 'photo.suggest_default_album';
+    const EVENT_ON_FORM_READY = 'photo.form_ready';
+    const EVENT_UPLOAD_PHOTO_FORM_COMPLETE = 'photo.upload_photo_form_complete';
 
     /**
      * @return PHOTO_CLASS_EventHandler
@@ -1694,10 +1696,11 @@ class PHOTO_CLASS_EventHandler
                 UTIL_JsGenerator::composeJsString(
                     ';window[{$addNewPhoto}] = function()
                     {
-                        OW.authorizationLimitedFloatbox('.json_encode($status['msg']).');
+                        OW.authorizationLimitedFloatbox({$msg});
                     }',
                     array(
-                        'addNewPhoto' => $id
+                        'addNewPhoto' => $id,
+                        'msg' => $status['msg']
                     )
                 )
             );
