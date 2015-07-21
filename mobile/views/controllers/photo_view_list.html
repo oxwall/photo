@@ -1,4 +1,4 @@
-<section>
+<div>
     <div class="owm_photo_block">
         {if !empty($authError)}
             <div class="owm_padding">
@@ -6,7 +6,11 @@
             </div>
         {else}
             <div class="clearfix">
-                <a href="{$uploadUrl}" class="owm_add_photo"></a>
+                {if !empty($uploadUrl)}
+                    <a href="{$uploadUrl}" class="owm_add_photo"></a>
+                {elseif !empty($id)}
+                    <a href="javascript://" class="owm_add_photo" id="{$id}"></a>
+                {/if}
                 {$menu}
             </div>
             <div class="owm_photo_list">
@@ -19,4 +23,4 @@
             {/if}
         {/if}
     </div>
-</section>
+</div>

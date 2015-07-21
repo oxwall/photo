@@ -89,7 +89,29 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
         $checkPrivacy = !OW::getUser()->isAuthorized('photo');
         $total = $this->photoService->countPhotos($type, $checkPrivacy);
         $this->assign('loadMore', $total > $limit);
-        $this->assign('uploadUrl', OW::getRouter()->urlForRoute('photo_upload'));
+
+        if ( OW::getUser()->isAuthenticated() && !OW::getUser()->isAuthorized('photo', 'upload') )
+        {
+            $id = uniqid('photo_add');
+            $status = BOL_AuthorizationService::getInstance()->getActionStatus('photo', 'upload');
+
+            OW::getDocument()->addScriptDeclaration(UTIL_JsGenerator::composeJsString(
+                ';$("#" + {$btn}).on("click", function()
+                {
+                    OWM.authorizationLimitedFloatbox({$msg});
+                });',
+                array(
+                    'btn' => $id,
+                    'msg' => $status['msg']
+                )
+            ));
+
+            $this->assign('id', $id);
+        }
+        else
+        {
+            $this->assign('uploadUrl', OW::getRouter()->urlForRoute('photo_upload'));
+        }
 
         $script = '
         OWM.bind("photo.hide_load_more", function(){
@@ -153,7 +175,29 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
 
         $total = $this->photoAlbumService->countUserAlbums($user->id);
         $this->assign('loadMore', $total > $limit);
-        $this->assign('uploadUrl', OW::getRouter()->urlForRoute('photo_upload'));
+
+        if ( OW::getUser()->isAuthenticated() && !OW::getUser()->isAuthorized('photo', 'upload') )
+        {
+            $id = uniqid('photo_add');
+            $status = BOL_AuthorizationService::getInstance()->getActionStatus('photo', 'upload');
+
+            OW::getDocument()->addScriptDeclaration(UTIL_JsGenerator::composeJsString(
+                ';$("#" + {$btn}).on("click", function()
+                {
+                    OWM.authorizationLimitedFloatbox({$msg});
+                });',
+                array(
+                    'btn' => $id,
+                    'msg' => $status['msg']
+                )
+            ));
+
+            $this->assign('id', $id);
+        }
+        else
+        {
+            $this->assign('uploadUrl', OW::getRouter()->urlForRoute('photo_upload'));
+        }
 
         $script = '
         OWM.bind("photo.hide_load_more", function(){
@@ -242,7 +286,28 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
 
         $total = $this->photoAlbumService->countAlbumPhotos($albumId);
         $this->assign('loadMore', $total > $limit);
-        $this->assign('uploadUrl', OW::getRouter()->urlForRoute('photo_upload_album', array('album' => $albumId)));
+        if ( OW::getUser()->isAuthenticated() && !OW::getUser()->isAuthorized('photo', 'upload') )
+        {
+            $id = uniqid('photo_add');
+            $status = BOL_AuthorizationService::getInstance()->getActionStatus('photo', 'upload');
+
+            OW::getDocument()->addScriptDeclaration(UTIL_JsGenerator::composeJsString(
+                ';$("#" + {$btn}).on("click", function()
+                {
+                    OWM.authorizationLimitedFloatbox({$msg});
+                });',
+                array(
+                    'btn' => $id,
+                    'msg' => $status['msg']
+                )
+            ));
+
+            $this->assign('id', $id);
+        }
+        else
+        {
+            $this->assign('uploadUrl', OW::getRouter()->urlForRoute('photo_upload_album', array('album' => $albumId)));
+        }
 
         $script = '
         OWM.bind("photo.hide_load_more", function(){
