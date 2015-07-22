@@ -620,10 +620,7 @@
     {
         return function( f )
         {
-            return function()
-            {
-                return f.apply(this, arguments);
-            }.bind(context);
+            return f.bind(context);
         };
     }
 
@@ -635,18 +632,5 @@
 
             return this;
         };
-    }
-
-    function invoke( after )
-    {
-        return function( f )
-        {
-            return function()
-            {
-                f.apply(this, arguments);
-
-                return after.apply(this, arguments);
-            };
-        }
     }
 }));
