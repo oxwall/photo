@@ -30,136 +30,72 @@
 /**
  * @author Kairat Bakitow <kainisoft@gmail.com>
  * @package ow_plugins.photo
- * @since 1.6.1
+ * @since 1.7.6
  */
-(function( window, $ ) {'use strict';
-
+(function( $, params, logic )
+{
     $.event.props.push('dataTransfer');
-    
-    var _vars = $.extend({}, (window.ajaxPhotoUploadParams || {}), {
-        isHTML5: window.hasOwnProperty('FormData'),
-        fileType: ['image/jpeg', 'image/png', 'image/gif'],
-        files: [],
-        UPLOAD_THREAD_COUNT: 3
-    }),
-    _elements = {},
-    _methods = {
-        isAvailableFileSize: function( size )
-        {
-            return +size <= _vars.maxFileSize;
-        },
-        isAvailableFileType: function( fileType )
-        {
-            return fileType.length && _vars.fileType.indexOf(fileType.toLowerCase()) !== -1;
-        },
-        createSlot: function()
-        {
-            var slotPrototype = _elements.slotPrototype.clone(true);
-            var id = 'slot-' + (++_elements.slotCounter);
-            
-            slotPrototype.attr('id', id).appendTo(_elements.slotArea);
-            _elements.slotData[id] = slotPrototype;
-            
-            return id;
-        },
-        destroySlot: function( slotId, id )
-        {
-            if ( !_methods.isSlotExist(slotId) )
-            {
-                return;
-            }
-            
-            _methods.afterUploadTask();
-            
-            _elements.slotData[slotId].animate({opacity: '0'}, 300, function()
-            {
-                if ( id != null )
-                {
-                    $.ajax(
-                    {
-                        url: _vars.deleteAction,
-                        data: {id: id},
-                        cache: false,
-                        type: 'POST'
-                    });
-                }
-                
-                _elements.slotData[slotId].remove();
-                _elements.descEditors[slotId].setValue('');
-                _elements.descEditors[slotId].clearHistory();
-                
-                delete _elements.slotData[slotId];
-                delete _elements.descEditors[slotId];
-                delete _elements.descCache[slotId];
-                delete _elements.relations[slotId];
-            });
-        },
-        updateSlot: function( slotId, fileUrl, id )
-        {
-            if ( !slotId || !fileUrl || !id || !_methods.isSlotExist(slotId) )
-            {
-                return;
-            }
-            
-            _methods.afterUploadTask();
-            
-            var slot = _elements.slotData[slotId];
-            
-            var rotateId = 'rotate[' + id + ']';
-            slot.find('[name="rotate"]').attr({id: rotateId, name: rotateId});
-            
-            var descId = 'desc[' + id + ']';
-            slot.find('textarea').attr({id: descId, name: descId});
-            
-            _elements.relations[slotId] = id;
-            
-            owForms['ajax-upload'].addElement(new OwFormElement(rotateId, rotateId));
-            owForms['ajax-upload'].addElement(new OwFormElement(descId, descId));
 
-            slot.find('.ow_photo_preview_x').on('click', function()
-            {
-                _methods.destroySlot(slotId, id);
-            });
-            slot.find('.ow_photo_preview_rotate').on('click', function()
-            {
-                var photo = slot.find('.ow_photo_preview_image'), _rotate;
-                var rotate = (_rotate = photo.data('rotate')) === undefined ? 90 : _rotate;
-                
-                photo.rotate(rotate);
-                slot.find('[name="' + rotateId + '"]').val(rotate);
-                photo.data('rotate', rotate += 90);
-            });
-            
-            var img = new Image();
-            
-            img.onload = function()
-            {
-                slot.find('.ow_photo_preview_image')
-                    .hide(0, function()
-                    {
-                        this.style.backgroundImage = 'url(' + img.src + ')';
-                        $(this).removeClass('ow_photo_preview_loading').fadeIn(300);
-                        
-                        OW.trigger('photo.onRenderUploadSlot', [_elements.descEditors[slotId]], slot);
-                    });
-            };
-            img.src = fileUrl;
-        },
-        initHashtagEditor: function( slotId )
+    var parameters = $.extend({
+        fileType: ['image/jpeg', 'image/png', 'image/gif']
+    }, params);
+
+    this.ajaxPhotoUploader = logic.call(this, $, parameters);
+}.call(window, jQuery, window.ajaxPhotoUploadParams, function( $, params, undf )
+{
+    var root = this, UPLOAD_THREAD_COUNT = 3;
+
+    var PhotoFile = (function()
+    {
+        var index = 0;
+
+        function PhotoFile( file )
         {
-            if ( !_methods.isSlotExist(slotId) )
+            if ( !(this instanceof PhotoFile) )
             {
-                return;
+                return new PhotoFile(file);
             }
-            
-            var slot = _elements.slotData[slotId];
-            var editor = _elements.descEditors[slotId] = CodeMirror.fromTextArea(slot.find('textarea')[0], {mode: "text/hashtag", lineWrapping: true, extraKeys: {Tab: false}});
+
+            if ( !(file instanceof File) )
+            {
+                throw new TypeError('"File" required');
+            }
+
+            this.node = $('#slot-prototype').clone();
+            this.file = file;
+            this.index = ++index;
+        }
+
+        PhotoFile.prototype.isAvailableFileSize = function()
+        {
+            return this.file.size <= params.maxFileSize;
+        };
+
+        PhotoFile.prototype.isAvailableFileType = function()
+        {
+            return params.fileType.indexOf(this.file.type.toLowerCase()) !== -1;
+        };
+
+        PhotoFile.prototype.createSlot = fluent(function()
+        {
+            this.node.attr('id', 'slot-' + this.index);
+            FileManager().node.append(this.node);
+        });
+
+        PhotoFile.prototype.initHashtagEditor = fluent(function()
+        {
+            var file = this;
+            var editor = this.editor = root.CodeMirror.fromTextArea(this.node.find('textarea')[0], {
+                mode: 'text/hashtag',
+                lineWrapping: true,
+                extraKeys: {Tab: false}
+            });
 
             editor.setValue(OW.getLanguageText('photo', 'describe_photo'));
             editor.on('blur', function( editor )
             {
-                var value = editor.getValue().trim(), lineCount;
-                
+                var value = file.description = editor.getValue().trim(), lineCount;
+
                 if ( value.length === 0 || value === OW.getLanguageText('photo', 'describe_photo') )
                 {
                     $(editor.display.wrapper).addClass('invitation');
@@ -177,7 +113,7 @@
                 else
                 {
                     var limit;
-                    
+
                     switch ( lineCount )
                     {
                         case 1: limit = 70; break;
@@ -190,37 +126,35 @@
                         editor.setValue(value.substring(0, limit) + '...');
                     }
                 }
-                
+
                 editor.setSize('100%', 58 + 'px');
-                
-                _elements.descCache[slotId] = value;
-                slot.find('.ow_photo_preview_image').removeClass('ow_photo_preview_image_active');
-                
-                if ( _elements.slotArea.find('.ow_photo_preview_image_active').length === 0 )
+                file.node.find('.ow_photo_preview_image').removeClass('ow_photo_preview_image_active');
+
+                if ( FileManager().node.find('.ow_photo_preview_image_active').length === 0 )
                 {
-                    _elements.slotArea.removeClass('ow_photo_preview_image_filtered');
+                    FileManager().node.removeClass('ow_photo_preview_image_filtered');
                 }
             });
             editor.on('focus', function( editor )
             {
                 $(editor.display.wrapper).removeClass('invitation');
-                
-                if ( _elements.descCache.hasOwnProperty(slotId) )
+
+                if ( file.description )
                 {
-                    editor.setValue(_elements.descCache[slotId]);
+                    editor.setValue(file.description);
                 }
                 else
                 {
                     var value = editor.getValue().trim();
-                
+
                     if ( value === OW.getLanguageText('photo', 'describe_photo') )
                     {
                         editor.setValue('');
                     }
                 }
-                
+
                 var height = editor.doc.height;
-                
+
                 switch ( true )
                 {
                     case height <= 42:
@@ -235,19 +169,19 @@
                         editor.scrollTo(0, 108);
                         break;
                 }
-                
+
                 setTimeout(function()
                 {
                     editor.setCursor(editor.lineCount(), 0);
                 }, 1);
-                 
-                _elements.slotArea.addClass('ow_photo_preview_image_filtered');
-                slot.find('.ow_photo_preview_image').addClass('ow_photo_preview_image_active');
+
+                FileManager().node.addClass('ow_photo_preview_image_filtered');
+                file.node.find('.ow_photo_preview_image').addClass('ow_photo_preview_image_active');
             });
             editor.on('change', function( editor )
             {
                 var height = editor.doc.height;
-                
+
                 switch ( true )
                 {
                     case height <= 42:
@@ -262,444 +196,441 @@
                 }
             });
             editor.setSize('100%', 58 + 'px');
-        },
-        isSlotExist: function( slotId )
+        });
+
+        PhotoFile.prototype.updateSlot = fluent(function( fileUrl, id )
         {
-            return slotId && _elements.slotData.hasOwnProperty(slotId);
-        },
-        pushFileList: function( files )
-        {
-            if ( !files || !(_vars.isHTML5 && (files instanceof FileList)) )
+            if ( !fileUrl || !id ) return;
+
+            this.id = id;
+
+            var self = bind(this);
+
+            this.node.find('.ow_photo_preview_x').on('click', self(this.destroySlot));
+            this.node.find('.ow_photo_preview_rotate').on('click', self(function()
             {
+                var rotate = (this.rotate || 0) + 90;
+                var rotateStr = 'rotate(' + rotate + 'deg)';
+
+                this.rotate = rotate;
+                this.node.find('.ow_photo_preview_image').css({
+                    "-ms-transform": rotateStr,
+                    "-webkit-transform": rotateStr,
+                    "transform": rotateStr
+                });
+            }));
+
+            var img = new Image();
+
+            img.onload = img.onerror = self(function()
+            {
+                 this.node.find('.ow_photo_preview_image')
+                    .hide(0, function()
+                    {
+                        $(this)
+                            .css('background-image', 'url(' + img.src + ')')
+                            .removeClass('ow_photo_preview_loading')
+                            .fadeIn(300);
+                    });
+                OW.trigger('photo.onRenderUploadSlot', [this.editor], this.node);
+            });
+            img.src = fileUrl;
+        });
+
+        PhotoFile.prototype.destroySlot = fluent(function()
+        {
+            this.node.animate({opacity: 0}, 300, function()
+            {
+                this.editor.setValue('');
+                this.editor.clearHistory();
+                this.node.remove();
+
+                var fileManager = FileManager();
+
+                if ( fileManager.cache.hasOwnProperty(this.index) )
+                {
+                    delete fileManager.cache[this.index];
+                }
+            }.bind(this));
+
+            if ( this.id !== undf )
+            {
+                $.ajax({
+                    url: params.deleteAction,
+                    data: {id: this.id},
+                    cache: false,
+                    type: 'POST'
+                });
+            }
+        });
+
+        return PhotoFile;
+    })();
+
+    var FileManager = (function()
+    {
+        var instance = null;
+
+        function FileManager()
+        {
+            if ( instance !== null )
+            {
+                return instance;
+            }
+
+            if ( !(this instanceof FileManager) )
+            {
+                return new FileManager();
+            }
+
+            this.node = $('#slot-area');
+            this.files = [];
+            this.cache = {};
+            this.isRunned = false;
+            instance = this;
+        }
+
+        FileManager.prototype.pushFiles = fluent(function( files )
+        {
+            if ( !files || !(files instanceof FileList) || files.length === 0 ) return;
+
+            this.files = this.files.concat([].slice.call(files));
+        });
+
+        FileManager.prototype.uploadFiles = fluent(function( count )
+        {
+            if ( this.isRunned ) return;
+
+            var files = this.files.splice(0, (+count || UPLOAD_THREAD_COUNT));
+
+            if ( files.length === 0 )
+            {
+                this.isRunned = false;
+
                 return;
             }
 
-            for ( var i = 0; i < files.length; i++ )
+            this.isRunned = true;
+            files.forEach(function( file )
             {
-                _vars.files.push(files.item(i));
-            }
+                this.upload(file);
+            }, this);
+        });
 
-            if ( !_vars.isRuning )
-            {
-                _methods.setIsRuning();
-                _methods.runAsyncUploadFile(_vars.UPLOAD_THREAD_COUNT);
-            }
-        },
-        runAsyncUploadFile: function( count )
+        FileManager.prototype.upload = fluent(function( file )
         {
-            count = isNaN(+count) ? 1 : count;
-            
-            for ( var i = 0; i < count; i++ )
+            if ( !file || !(file instanceof File) ) return;
+
+            var photoFile = PhotoFile(file), self = bind(this);
+
+            if ( !photoFile.isAvailableFileSize() )
             {
-                var file = _vars.files.shift();
-                
-                if ( file != null )
-                {
-                    _methods.uploadFile(file);
-                }
+                OW.error(OW.getLanguageText('photo', 'size_limit', {
+                    name: photoFile.file.name,
+                    size: (_vars.maxFileSize / 1048576)
+                }));
+                this.uploadNewOne();
             }
-        },
-        uploadFile: function( file )
-        {
-            var slotId;
-            
-            if ( _vars.isHTML5 )
+            else if ( !photoFile.isAvailableFileType() )
             {
-                var typeError;
+                OW.error(OW.getLanguageText('photo', 'type_error', {
+                    name: photoFile.file.name
+                }));
+                this.uploadNewOne();
+            }
+            else
+            {
+                var formData = new FormData();
 
-                if ( _methods.isAvailableFileSize(file.size) && (typeError = _methods.isAvailableFileType(file.type)) )
-                {
-                    var formData = new FormData();
+                formData.append('file', file);
 
-                    formData.append('file', file);
-
-                    $.ajax(
+                $.ajax({
+                    isPhotoUpload: true,
+                    url: params.actionUrl,
+                    data: formData,
+                    dataType: 'json',
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    type: 'POST',
+                    timeout: 60000,
+                    beforeSend: function( jqXHR, settings )
                     {
-                        isPhotoUpload: true,
-                        url: _vars.actionUrl,
-                        data: formData,
-                        cache: false,
-                        contentType: false,
-                        processData: false,
-                        type: 'POST',
-                        timeout: 60000,
-                        beforeSend: function( jqXHR, settings )
+                        photoFile.createSlot().initHashtagEditor();
+                    },
+                    success: self(function( data, textStatus, jqXHR )
+                    {
+                        if ( data && data.status )
                         {
-                            slotId = _methods.createSlot();
-                            _methods.initHashtagEditor(slotId);
-                        },
-                        success: function( response, textStatus, jqXHR )
-                        {
-                            _methods.requestSuccess(response, slotId);
-                        },
-                        error: function( jqXHR, textStatus, errorThrown )
-                        {
-                            OW.error(textStatus + ': ' + file.name);
-                            _methods.destroySlot(slotId);
-
-                            throw textStatus;
-                        },
-                        complete: function( jqXHR, textStatus )
-                        {
-                            if ( textStatus === 'success' && jqXHR.responseText.length === 0 )
+                            switch ( data.status )
                             {
-                                _methods.destroySlot(slotId);
+                                case 'success':
+                                    this.caching(
+                                        photoFile.updateSlot(data.fileUrl, data.id)
+                                    );
+                                    break;
+                                case 'error':
+                                default:
+                                    photoFile.destroySlot();
+
+                                    OW.error(data.msg);
+                                    break;
                             }
                         }
-                    });
-                }
-                else
-                {
-                    if ( typeError === undefined )
-                    {
-                        OW.error(OW.getLanguageText('photo', 'size_limit', {name: file.name, size: (_vars.maxFileSize / 1048576)}));
-                    }
-                    else
-                    {
-                        OW.error(OW.getLanguageText('photo', 'type_error', {name: file.name}));
-                    }
-                    
-                    _methods.afterUploadTask();
-                }
-            }
-            else
-            {
-                if ( file.search(/\.(?:jpe?g|png|gif)$/i) !== -1 )
-                {
-                    slotId = _methods.createSlot();
-
-                    _elements.dropArea.off('click').on('click', function(){alert(OW.getLanguageText('photo', 'please_wait'))});
-                    _elements.uploadForm.submit();
-                    _elements.iframeForm.off().load(function()
-                    {
-                        _elements.dropArea.off('click').on('click', function()
+                        else
                         {
-                            $('input:file', _elements.uploadForm).trigger('click');
-                        });
-                        
-                        _methods.requestSuccess($(this).contents().find('body').html(), slotId);
-                    });
-                }
-                else
-                {
-                    OW.error(OW.getLanguageText('photo', 'type_error', {name: file}));
-                    
-                    _methods.afterUploadTask();
-                }
-            }
-        },
-        requestSuccess: function( jsonStr, slotId )
-        {
-            if ( !jsonStr || !slotId )
-            {
-                return false;
-            }
-            
-            var data;
-                            
-            try
-            {
-                data = JSON.parse(jsonStr);
-            }
-            catch( e )
-            {
-                OW.error(e);
-                _methods.destroySlot(slotId);
-
-                return false;
-            }
-
-            if ( data && data.status )
-            {
-                switch ( data.status )
-                {
-                    case 'success':
-                        _methods.updateSlot(slotId, data.fileUrl, data.id);
-                        break;
-                    case 'error':
-                    default:
-                        _methods.destroySlot(slotId);
-
-                        OW.error(data.msg);
-                        break;
-                }
-            }
-            else
-            {
-                _methods.destroySlot(slotId);
-                OW.error(OW.getLanguageText('photo', 'not_all_photos_uploaded'));
-            }
-        },
-        showAlbumList: function()
-        {
-            _elements.albumList.show();
-            $('.upload_photo_spinner', _elements.albumForm).removeClass('ow_dropdown_arrow_down').addClass('ow_dropdown_arrow_up');
-        },
-        hideAlbumList: function()
-        {
-            _elements.albumList.hide();
-            $('.upload_photo_spinner', _elements.albumForm).removeClass('ow_dropdown_arrow_up').addClass('ow_dropdown_arrow_down');
-        },
-        setIsRuning: function()
-        {
-            _vars.isRuning = true;
-            OW.inProgressNode($(':submit', owForms['ajax-upload'].form));
-        },
-        afterUploadTask: function()
-        {
-            if ( _vars.files.length !== 0 )
-            {
-                setTimeout(function()
-                {
-                    _methods.runAsyncUploadFile();
-                }, 10);
-            }
-            else
-            {
-                _vars.isRuning = false;
-                OW.activateNode($(':submit', owForms['ajax-upload'].form));
-            }
-        }
-    };
-    
-    var _a = $('<a>', {class: 'ow_hidden ow_content a'}).appendTo(document.body);
-    OW.addCss('.cm-hashtag{cursor:pointer;color:' + _a.css('color') + '}');
-    _a.remove();
-    
-    window.ajaxPhotoUploader = Object.defineProperties({}, {
-        init: { value: function()
-        {
-            $.extend(_elements, {
-                dropArea: $('#drop-area').off(),
-                dropAreaLabel: $('#drop-area-label').off(),
-
-                slotArea: $('#slot-area').off(),
-                slotPrototype: $('#slot-prototype').removeAttr('id').off(),
-                slotData: {},
-                slotCounter: 0,
-
-                descEditors: {},
-                descCache: {},
-                relations: {},
-
-                uploadForm: $('#upload-form').off(),
-                iframeForm: $('#iframe_upload').off(),
-                albumForm: $('#photo-album-form').off()
-            });
-            
-            if ( !_vars.isHTML5 )
-            {
-                _elements.dropAreaLabel.html(OW.getLanguageText('photo', 'dnd_not_support'));
-            }
-            
-            _elements.dropArea.add(_elements.dropAreaLabel).on(
-                (function()
-                {
-                    var eventMap = {
-                        click: function()
-                        {
-                            $('input:file', _elements.uploadForm).trigger('click');
+                            photoFile.destroySlot();
+                            OW.error(OW.getLanguageText('photo', 'not_all_photos_uploaded'));
                         }
-                    };
-
-                    if ( _vars.isHTML5 )
+                    }),
+                    error: function( jqXHR, textStatus, errorThrown )
                     {
-                        eventMap.drop = function( event )
+                        OW.error(textStatus + ': ' + file.name);
+                        photoFile.destroySlot();
+
+                        throw textStatus;
+                    },
+                    complete: self(function( jqXHR, textStatus )
+                    {
+                        if ( textStatus === 'success' && jqXHR.responseText.length === 0 )
                         {
-                            _methods.pushFileList(event.dataTransfer.files);
+                            photoFile.destroySlot();
+                        }
 
-                            _elements.dropArea.css('border', 'none');
-                            _elements.dropAreaLabel.html(OW.getLanguageText('photo', 'dnd_support'));
+                        this.uploadNewOne();
+                    })
+                });
+            }
+        });
 
-                            return false;
-                        };
-                        eventMap.dragenter = function()
-                        {
-                            _elements.dropArea.css('border', '1px dashed #E8E8E8');
-                            _elements.dropAreaLabel.html(OW.getLanguageText('photo', 'drop_here'));
-                        };
-                        eventMap.dragleave = function()
-                        {
-                            _elements.dropArea.css('border', 'none');
-                            _elements.dropAreaLabel.html(OW.getLanguageText('photo', 'dnd_support'));
-                        };
-                    }
+        FileManager.prototype.uploadNewOne = fluent(function()
+        {
+            this.isRunned = false;
+            this.uploadFiles(1);
+        });
 
-                    return eventMap;
-                })()
-            );
-
-            $('input:file', _elements.uploadForm).on('change', function()
+        FileManager.prototype.caching = fluent(function( photoFile )
+        {
+            if ( !(photoFile instanceof PhotoFile) )
             {
-                if ( _vars.isHTML5 )
+                throw new TypeError('"PhotoFile" required');
+            }
+
+            this.cache[photoFile.index] = photoFile;
+        });
+
+        FileManager.prototype.hasFiles = function()
+        {
+            return root.Object.keys(this.cache).length !== 0;
+        };
+
+        FileManager.prototype.destroy = function()
+        {
+            instance = null;
+        };
+
+        return FileManager;
+    })();
+
+    var AlbumListManager = (function()
+    {
+        function AlbumListManager( form )
+        {
+            this.form = form;
+            this.albumList = $('.ow_dropdown_list', form);
+            this.albumInput = $('input[name="album"]', form);
+            this.spinner = $('.upload_photo_spinner', form);
+        }
+
+        AlbumListManager.prototype.bindEvents = fluent(function()
+        {
+            var self = bind(this);
+
+            this.spinner.add(this.albumInput).on('click', self(function( event )
+            {
+                if ( this.albumList.is(':visible') )
                 {
-                    _methods.pushFileList(this.files);
+                    this.hideAlbumList();
                 }
                 else
                 {
-                    _methods.setIsRuning();
-                    _methods.uploadFile(this.value);
-                }
-
-                return false;
-            });
-            
-            _elements.albumList = $('.ow_dropdown_list', _elements.albumForm);
-            _elements.albumInput = $('input[name="album"]', _elements.albumForm);
-
-            $('.upload_photo_spinner', _elements.albumForm).add(_elements.albumInput).on('click', function( event )
-            {
-                if ( _elements.albumList.is(':visible') )
-                {
-                    _methods.hideAlbumList();
-                }
-                else
-                {
-                    _methods.showAlbumList();
+                    this.showAlbumList();
                 }
 
                 event.stopPropagation();
-            });
+            }));
 
-            _elements.albumList.find('li').on('click', function()
+            this.albumList.find('li').on('click', self(function()
             {
-                _methods.hideAlbumList();
-                owForms['ajax-upload'].removeErrors();
-            })
-            .eq(0).on('click', function()
+                this.hideAlbumList();
+                root.owForms['ajax-upload'].removeErrors();
+            })).eq(0).on('click', self(function()
             {
-                $('.new-album', _elements.albumForm).show();
-                _elements.albumInput.val(OW.getLanguageText('photo', 'create_album'));
-                $('input[name="album-name"]', _elements.albumForm).val(OW.getLanguageText('photo', 'album_name'));
-                $('textarea', _elements.albumForm).val(OW.getLanguageText('photo', 'album_desc'));
-            })
-            .end().slice(2).on('click', function()
+                $('.new-album', this.form).show();
+                this.albumInput.val(root.OW.getLanguageText('photo', 'create_album'));
+                $('input[name="album-name"]', this.albumForm).val('');
+                $('textarea', this.albumForm).val('');
+            })).end().slice(2).on('click', self(function( event )
             {
-                $('.new-album', _elements.albumForm).hide();
-                _elements.albumInput.val($(this).html());
-                $('input[name="album-name"]', _elements.albumForm).val(_elements.albumInput.val());
-                $('textarea', _elements.albumForm).val('');
-            });
+                $('.new-album', this.albumForm).hide();
+                this.albumInput.val($(event.target).html());
+                $('input[name="album-name"]', this.albumForm).val(this.albumInput.val());
+                $('textarea', this.albumForm).val('');
+            }));
 
-            $(document).on('click',':not(#photo-album-list)', function()
+            $(root.document).on('click',':not(#photo-album-list)', self(function()
             {
-                if ( _elements.albumList.is(':visible') )
+                if ( this.albumList.is(':visible') )
                 {
-                    _methods.hideAlbumList();
+                    this.hideAlbumList();
                 }
-            });
-            
-            owForms['ajax-upload'].elements['album-name'].getValue = function()
+            }));
+        });
+
+        AlbumListManager.prototype.hideAlbumList = fluent(function()
+        {
+            this.albumList.hide();
+            this.spinner.removeClass('ow_dropdown_arrow_up').addClass('ow_dropdown_arrow_down');
+        });
+
+        AlbumListManager.prototype.showAlbumList = fluent(function()
+        {
+            this.albumList.show();
+            this.spinner.removeClass('ow_dropdown_arrow_down').addClass('ow_dropdown_arrow_up');
+        });
+
+        return AlbumListManager;
+    })();
+
+    root.OW.bind('base.onFormReady.ajax-upload', function()
+    {
+        var getValue = function( key )
+        {
+            return function()
             {
                 var value = this.input.value.trim();
-                
-                if ( value.length === 0 || value === OW.getLanguageText('photo', 'album_name') )
+
+                if ( value.length === 0 || value === OW.getLanguageText('photo', key).trim() )
                 {
                     return  '';
                 }
-                
-                return value;
-            };
-            
-            owForms['ajax-upload'].bind('submit', function( data )
-            {
-                var invitation = OW.getLanguageText('photo', 'describe_photo');
-                
-                $.each(_elements.relations, function( index )
-                {
-                    var value;
 
-                    if ( _elements.descCache.hasOwnProperty(index) )
-                    {
-                        value = _elements.descCache[index].trim();
-                    }
-                    else
-                    {
-                        value = _elements.descEditors[index].getValue().trim();
-                    }
-                    
-                    if ( value.length === 0 || value === invitation )
-                    {
-                        data['desc[' + +this + ']'] = '';
-                    }
-                    else
-                    {
-                        data['desc[' + +this + ']'] = value;
-                    }
-                });
-            });
-            $(owForms['ajax-upload'].elements['album-name'].input).on({
-                focus: function()
-                {
-                    $(this).removeClass('invitation');
-                    
-                    if ( this.value.trim() === OW.getLanguageText('photo', 'album_name') )
-                    {
-                        $(this).val('');
-                    }
-                },
-                blur: function()
-                {
-                    if ( this.value.trim().length === 0 )
-                    {
-                        $(this).addClass('invitation').val(OW.getLanguageText('photo', 'album_name'));
-                    }
-                }
-            });
-            
-            $(owForms['ajax-upload'].elements['description'].input).on({
-                focus: function()
-                {
-                    $(this).removeClass('invitation');
-                    
-                    if ( this.value.trim() === OW.getLanguageText('photo', 'album_desc') )
-                    {
-                        $(this).val('');
-                    }
-                },
-                blur: function()
-                {
-                    if ( this.value.trim().length === 0 )
-                    {
-                        $(this).addClass('invitation').val(OW.getLanguageText('photo', 'album_desc'));
-                    }
-                }
-            });
-            owForms['ajax-upload'].elements['description'].getValue = function()
-            {
-                var value = this.input.value.trim();
-                
-                if ( value.length === 0 || value === OW.getLanguageText('photo', 'album_desc') )
-                {
-                    return  '';
-                }
-                
                 return value;
             };
-            
+        };
+
+        this.getElement('album-name').getValue = getValue('album_name');
+        this.getElement('description').getValue = getValue('album_desc');
+
+        this.bind('submit', function( data )
+        {
+            var invitation = OW.getLanguageText('photo', 'describe_photo').trim();
+            var fileManager = FileManager();
+
+            root.Object.keys(fileManager.cache).forEach(function( index )
+            {
+                var file = this.cache[index];
+                var value = (file.description || file.editor.getValue()).trim();
+
+                if ( value.length === 0 || value === invitation )
+                {
+                    data['desc[' + file.id + ']'] = '';
+                }
+                else
+                {
+                    data['desc[' + file.id + ']'] = value;
+                }
+
+                data['rotate[' + file.id + ']'] = file.rotate;
+            }, fileManager);
+        });
+
+    });
+
+    var _a = $('<a>', {class: 'ow_hidden ow_content a'}).appendTo(root.document.body);
+    root.OW.addCss('.cm-hashtag{cursor:pointer;color:' + _a.css('color') + '}');
+    _a.remove();
+
+    return root.Object.freeze({
+        init: function()
+        {
+            var dropArea = $('#drop-area').off(),
+                dropAreaLabel = $('#drop-area-label').off(),
+                uploadInputFile = $('input:file', '#upload-form').off();
+
+            var fileManager = new FileManager();
+
+            dropArea.add(dropAreaLabel).on({
+                click: function()
+                {
+                    uploadInputFile.trigger('click');
+                },
+                drop: function( event )
+                {
+                    event.preventDefault();
+                    fileManager.pushFiles(event.dataTransfer.files).uploadFiles();
+
+                    dropArea.css('border', 'none');
+                    dropAreaLabel.html(OW.getLanguageText('photo', 'dnd_support'));
+                },
+                dragenter: function()
+                {
+                    dropArea.css('border', '1px dashed #E8E8E8');
+                    dropAreaLabel.html(OW.getLanguageText('photo', 'drop_here'));
+                },
+                dragleave: function()
+                {
+                    dropArea.css('border', 'none');
+                    dropAreaLabel.html(OW.getLanguageText('photo', 'dnd_support'));
+                }
+            });
+
+            uploadInputFile.on('change', function()
+            {
+                fileManager.pushFiles(this.files).uploadFiles();
+            });
+
+            var albumManager = new AlbumListManager($('#photo-album-form'));
+            albumManager.bindEvents();
+
             OW.bind('photo.onCloseUploaderFloatBox', function()
             {
-                _vars.files.length = 0;
-                _vars.isRuning = false;
+                fileManager.destroy();
             });
 
-            $.ajaxPrefilter(function(options, origOPtions, jqXHR)
+            $.ajaxPrefilter(function(options, origOptions, jqXHR)
             {
-                if ( _vars.isRuning && options.isPhotoUpload !== true )
+                if ( fileManager.isRunned && options.isPhotoUpload !== true )
                 {
                     jqXHR.abort();
 
-                    typeof origOPtions.success == 'function' && (origOPtions.success.call(options, {}));
-                    typeof origOPtions.complete == 'function' && (origOPtions.complete.call(options, {}));
+                    typeof origOptions.success == 'function' && (origOptions.success.call(options, {}));
+                    typeof origOptions.complete == 'function' && (origOptions.complete.call(options, {}));
 
                 }
             });
-        }},
-        isHasData: {value: function()
+        },
+        isHasData: function()
         {
-            return Object.keys(_elements.slotData).length !== 0 ||
-                owForms['ajax-upload'].elements['album-name'].getValue().trim().length !== 0 ||
-                owForms['ajax-upload'].elements['description'].getValue().trim().length !== 0;
-        }}
+            return FileManager().hasFiles();
+        }
     });
-})( window, window.jQuery );
+
+    function bind( context )
+    {
+        return function( f )
+        {
+            return f.bind(context);
+        };
+    }
+
+    function fluent( f )
+    {
+        return function()
+        {
+            f.apply(this, arguments);
+
+            return this;
+        };
+    }
+}));

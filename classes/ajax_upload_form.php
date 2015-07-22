@@ -36,85 +36,81 @@
  * @package ow_plugins.photo.classes
  * @since 1.6.1
  */
-class PHOTO_CLASS_AjaxUploadForm extends Form
+class PHOTO_CLASS_AjaxUploadForm extends PHOTO_CLASS_AbstractPhotoForm
 {
-    public function __construct( $entityType, $entityId, $albumId = NULL, $albumName = NULL, $albumDescription = NULL, $url = NULL )
+    const FORM_NAME = 'ajax-upload';
+    const ELEMENT_ALBUM = 'album';
+    const ELEMENT_ALBUM_NAME = 'album-name';
+    const ELEMENT_DESCRIPTION = 'description';
+
+    public function __construct( $entityType, $entityId, $albumId = null, $albumName = null, $albumDescription = null, $url = null, $data = null )
     {
-        parent::__construct('ajax-upload');
+        parent::__construct(self::FORM_NAME);
         
-        $this->setAjax(TRUE);
-        $this->setAjaxResetOnSuccess(FALSE);
+        $this->setAjax(true);
+        $this->setAjaxResetOnSuccess(false);
         $this->setAction(OW::getRouter()->urlForRoute('photo.ajax_upload_submit'));
-        $this->bindJsFunction('success', 
-            UTIL_JsGenerator::composeJsString('function( data )
+        $this->bindJsFunction(self::BIND_SUCCESS, UTIL_JsGenerator::composeJsString('function( data )
+        {
+            if ( data )
             {
-                if ( data )
+                if ( !data.result )
                 {
-                    if ( !data.result )
+                    if ( data.msg )
                     {
-                        if ( data.msg )
-                        {
-                            OW.error(data.msg);
-                        }
-                        else
-                        {
-                            OW.getLanguageText("photo", "photo_upload_error");
-                        }
+                        OW.error(data.msg);
                     }
                     else
                     {
-                        var url = {$url};
-                        
-                        if ( url )
-                        {
-                            window.location.href = url;
-                        }
-                        else if ( data.url )
-                        {
-                            window.location.href = data.url;
-                        }
+                        OW.getLanguageText("photo", "photo_upload_error");
                     }
                 }
                 else
                 {
-                    OW.error("Server error");
+                    var url = {$url};
+
+                    if ( url )
+                    {
+                        window.location.href = url;
+                    }
+                    else if ( data.url )
+                    {
+                        window.location.href = data.url;
+                    }
                 }
-            }', array(
-                'url' => $url
-            ))
-        );
+            }
+            else
+            {
+                OW.error("Server error");
+            }
+        }', array(
+            'url' => $url
+        )));
         
         $language = OW::getLanguage();
 
-        $albumField = new TextField('album');
+        $albumField = new TextField(self::ELEMENT_ALBUM);
         $albumField->setRequired();
-        $albumField->addAttribute('class', 'ow_dropdown_btn ow_inputready ow_cursor_pointer');
+        $albumField->addAttribute(FormElement::ATTR_CLASS, 'ow_dropdown_btn ow_inputready ow_cursor_pointer');
         $albumField->addAttribute('autocomplete', 'off');
-        $albumField->addAttribute('readonly');
+        $albumField->addAttribute(FormElement::ATTR_READONLY);
         
-        $albumNameField = new TextField('album-name');
+        $albumNameField = new TextField(self::ELEMENT_ALBUM_NAME);
         $albumNameField->setRequired();
-        $albumNameField->addValidator(new PHOTO_CLASS_AlbumNameValidator(FALSE));
-        $albumNameField->addAttribute('class', 'ow_smallmargin invitation');
+        $albumNameField->addValidator(new PHOTO_CLASS_AlbumNameValidator(false));
+        $albumNameField->addAttribute(FormElement::ATTR_CLASS, 'ow_smallmargin');
+        $albumNameField->addAttribute('placeholder', $language->text('photo', 'album_name'));
         $this->addElement($albumNameField);
         
-        $desc = new Textarea('description');
-        $desc->addAttribute('class', 'invitation');
-        
-        if ( !empty($albumDescription) )
-        {
-            $desc->setValue($albumDescription);
-        }
-        else
-        {
-            $desc->setValue($language->text('photo', 'album_desc'));
-        }
-        
+        $desc = new Textarea(self::ELEMENT_DESCRIPTION);
+        $desc->addAttribute('placeholder', $language->text('photo', 'album_desc'));
+        $desc->setValue(!empty($albumDescription) ? $albumDescription : null);
         $this->addElement($desc);
 
         $userId = OW::getUser()->getId();
+        $albumService = PHOTO_BOL_PhotoAlbumService::getInstance();
 
-        if ( !empty($albumId) && ($album = PHOTO_BOL_PhotoAlbumService::getInstance()->findAlbumById($albumId, $userId)) !== NULL && $album->userId == $userId && $album->name != trim(OW::getLanguage()->text('photo', 'newsfeed_album')) )
+        if ( !empty($albumId) && ($album = $albumService->findAlbumById($albumId)) !== null && $album->userId == $userId && !$albumService->isNewsfeedAlbum($album) )
         {
             $albumField->setValue($album->name);
             $albumNameField->setValue($album->name);
@@ -126,23 +122,22 @@ class PHOTO_CLASS_AjaxUploadForm extends Form
         }
         else
         {
-            $event = new BASE_CLASS_EventCollector(PHOTO_CLASS_EventHandler::EVENT_SUGGEST_DEFAULT_ALBUM, array(
+            $event = OW::getEventManager()->trigger(new BASE_CLASS_EventCollector(PHOTO_CLASS_EventHandler::EVENT_SUGGEST_DEFAULT_ALBUM, array(
                 'userId' => $userId,
                 'entityType' => $entityType,
                 'entityId' => $entityId
-            ));
-            OW::getEventManager()->trigger($event);
-            $data = $event->getData();
+            )));
+            $eventData = $event->getData();
 
-            if ( !empty($data) )
+            if ( !empty($eventData) )
             {
-                $albumField->setValue($data[0]);
-                $albumNameField->setValue($data[0]);
+                $value = array_shift($eventData);
+                $albumField->setValue($value);
+                $albumNameField->setValue($value);
             }
             else
             {
                 $albumField->setValue($language->text('photo', 'choose_existing_or_create'));
-                $albumNameField->setValue($language->text('photo', 'album_name'));
             }
         }
 
@@ -151,5 +146,16 @@ class PHOTO_CLASS_AjaxUploadForm extends Form
         $submit = new Submit('submit');
         $submit->addAttribute('class', 'ow_ic_submit ow_positive');
         $this->addElement($submit);
+
+        $this->triggerReady($data);
+    }
+
+    public function getOwnElements()
+    {
+        return array(
+            self::ELEMENT_ALBUM,
+            self::ELEMENT_ALBUM_NAME,
+            self::ELEMENT_DESCRIPTION
+        );
     }
 }

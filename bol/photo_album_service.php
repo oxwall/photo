@@ -665,6 +665,6 @@ final class PHOTO_BOL_PhotoAlbumService
             $album = $mixed;
         }
         
-        return !empty($album) && strcasecmp(trim(OW::getLanguage()->text('photo', 'newsfeed_album')), $album->name) === 0;
+        return !empty($album) && strcasecmp(trim(OW::getLanguage()->text('photo', 'newsfeed_album')), trim($album->name)) === 0;
     }
 }
