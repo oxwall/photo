@@ -220,11 +220,10 @@ class PHOTO_CTRL_AjaxUpload extends OW_ActionController
             }
         }
 
-        OW::getEventManager()->trigger(new OW_Event(PHOTO_CLASS_EventHandler::EVENT_UPLOAD_PHOTO_FORM_COMPLETE, array(
-            'form' => $form,
+        $form->triggerComplete(array(
             'album' => $album,
             'photos' => $photos
-        )));
+        ));
 
         $resp = $this->onSubmitComplete($entityType, $entityId, $album, $photos);
         

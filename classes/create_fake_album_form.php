@@ -116,9 +116,7 @@ class PHOTO_CLASS_CreateFakeAlbumForm extends PHOTO_CLASS_AbstractPhotoForm
         $submit->setValue($language->text('photo', 'add_photos'));
         $this->addElement($submit);
 
-        OW::getEventManager()->trigger(new OW_Event(PHOTO_CLASS_EventHandler::EVENT_ON_FORM_READY, array(
-            'form' => $this
-        )));
+        $this->triggerReady();
     }
 
     public function getOwnElements()

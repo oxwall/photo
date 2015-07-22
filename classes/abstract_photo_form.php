@@ -50,4 +50,18 @@ abstract class PHOTO_CLASS_AbstractPhotoForm extends Form
             array_merge(array('form_name'), $this->getOwnElements())
         );
     }
+
+    public function triggerReady( array $data = null )
+    {
+        OW::getEventManager()->trigger(
+            new OW_Event(PHOTO_CLASS_EventHandler::EVENT_ON_FORM_READY, array('form' => $this), $data)
+        );
+    }
+
+    public function triggerComplete( array $data = null )
+    {
+        OW::getEventManager()->trigger(
+            new OW_Event(PHOTO_CLASS_EventHandler::EVENT_ON_FORM_COMPLETE, array('form' => $this), $data)
+        );
+    }
 }

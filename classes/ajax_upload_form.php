@@ -147,9 +147,7 @@ class PHOTO_CLASS_AjaxUploadForm extends PHOTO_CLASS_AbstractPhotoForm
         $submit->addAttribute('class', 'ow_ic_submit ow_positive');
         $this->addElement($submit);
 
-        OW::getEventManager()->trigger(new OW_Event(PHOTO_CLASS_EventHandler::EVENT_ON_FORM_READY,
-            array('form' => $this), $data
-        ));
+        $this->triggerReady($data);
     }
 
     public function getOwnElements()
