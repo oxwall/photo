@@ -278,6 +278,11 @@
                 return instance;
             }
 
+            if ( !(this instanceof FileManager) )
+            {
+                return new FileManager();
+            }
+
             this.node = $('#slot-area');
             this.files = [];
             this.cache = {};
