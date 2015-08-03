@@ -1963,10 +1963,7 @@ class PHOTO_CLASS_EventHandler
     public function genericInit()
     {
         $em = OW::getEventManager();
-$em->bind(OW_EventManager::ON_FINALIZE, function()
-{
-    //OW::getDocument()->appendBody((new PHOTO_CMP_AjaxUpload())->render());
-});
+
         $em->bind(self::EVENT_ALBUM_ADD, array($this, 'albumAdd'));
         $em->bind(self::EVENT_ALBUM_FIND, array($this, 'albumFind'));
         $em->bind(self::EVENT_ALBUM_DELETE, array($this, 'albumDelete'));
