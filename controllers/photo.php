@@ -333,18 +333,19 @@ class PHOTO_CTRL_Photo extends OW_ActionController
      */
     public function userAlbum( array $params )
     {
-        if ( empty($params['user']) || ($userDto = BOL_UserService::getInstance()->findByUsername($params['user'])) === NULL )
-        {
-            throw new Redirect404Exception();
-        }
-
-        if ( empty($params['album']) || ($album = $this->photoAlbumService->findAlbumById($params['album'])) === NULL )
+        if (
+            empty($params['user']) || ($userDto = BOL_UserService::getInstance()->findByUsername($params['user'])) === null ||
+            empty($params['album']) || ($album = $this->photoAlbumService->findAlbumById($params['album'])) === null
+        )
         {
             throw new Redirect404Exception();
         }
 
         OW::getDocument()->setTitle(
-            OW::getLanguage()->text('photo', 'meta_title_photo_useralbum', array('displayName' => BOL_UserService::getInstance()->getDisplayName($userDto->id), 'albumName' => $album->name))
+            OW::getLanguage()->text('photo', 'meta_title_photo_useralbum', array(
+                'displayName' => BOL_UserService::getInstance()->getDisplayName($userDto->id),
+                'albumName' => $album->name
+            ))
         );
 
         $isOwner = $album->userId == OW::getUser()->getId();
@@ -353,25 +354,27 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         $this->assign('isModerator', $isModerator);
         $this->assign('isOwner', $isOwner);
         $this->assign('album', $album);
-        
-        if ( ($coverDto = PHOTO_BOL_PhotoAlbumCoverDao::getInstance()->findByAlbumId($album->id)) === NULL )
+
+        $coverDao = PHOTO_BOL_PhotoAlbumCoverDao::getInstance();
+
+        if ( ($coverDto = $coverDao->findByAlbumId($album->id)) === null )
         {
-            if ( ($photo = PHOTO_BOL_PhotoAlbumService::getInstance()->getLastPhotoByAlbumId($album->id)) === NULL )
+            if ( ($photo = $this->photoAlbumService->getLastPhotoByAlbumId($album->id)) === null )
             {
-                $this->assign('noCover', TRUE);
-                $coverUrl = PHOTO_BOL_PhotoAlbumCoverDao::getInstance()->getAlbumCoverDefaultUrl();
+                $this->assign('noCover', true);
+                $coverUrl = $coverDao->getAlbumCoverDefaultUrl();
             }
             else
             {
-                $coverUrl = PHOTO_BOL_PhotoDao::getInstance()->getPhotoUrlByType($photo->id, PHOTO_BOL_PhotoService::TYPE_MAIN, $photo->hash, !empty($photo->dimension) ? $photo->dimension : FALSE);
+                $coverUrl = PHOTO_BOL_PhotoDao::getInstance()->getPhotoUrlByType($photo->id, PHOTO_BOL_PhotoService::TYPE_MAIN, $photo->hash, !empty($photo->dimension) ? $photo->dimension : false);
             }
             
             $coverUrlOrig = $coverUrl;
         }
         else
         {
-            $coverUrl = PHOTO_BOL_PhotoAlbumCoverDao::getInstance()->getAlbumCoverUrlForCoverEntity($coverDto);
-            $coverUrlOrig = PHOTO_BOL_PhotoAlbumCoverDao::getInstance()->getAlbumCoverOrigUrlForCoverEntity($coverDto);
+            $coverUrl = $coverDao->getAlbumCoverUrlForCoverEntity($coverDto);
+            $coverUrlOrig = $coverDao->getAlbumCoverOrigUrlForCoverEntity($coverDto);
         }
         
         $this->assign('coverUrl', $coverUrl);
@@ -379,7 +382,10 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         
         if ( $isOwner || $isModerator )
         {
-            $this->addForm(new PHOTO_CLASS_AlbumEditForm($album->id));
+            $form = new PHOTO_CLASS_AlbumEditForm($album->id);
+            $this->addForm($form);
+            $this->assign('extendInputs', $form->getExtendElements());
+
             $exclude = array($album->id);
             $newsfeedAlbum = PHOTO_BOL_PhotoAlbumService::getInstance()->getNewsfeedAlbum($album->userId);
             
@@ -392,32 +398,14 @@ class PHOTO_CTRL_Photo extends OW_ActionController
             $this->assign('albumNameList', $albumNameList);
             
             OW::getDocument()->addScriptDeclarationBeforeIncludes(
-                UTIL_JsGenerator::composeJsString(';
-                    window.albumParams = Object.defineProperties({}, {
-                        url: {
-                            value: {$url},
-                            enumerable: true
-                        },
-                        album: {
-                            value: {$album},
-                            enumerable: true
-                        },
-                        isClassic: {
-                            value: {$isClassic},
-                            enumerable: true
-                        },
-                        albumNameList: {
-                            value: {$albumNameList},
-                            enumerable: true
-                        }
-                    });',
-                    array(
+                UTIL_JsGenerator::composeJsString(';window.albumParams = Object.freeze({$params});', array(
+                    'params' => array(
                         'url' => OW::getRouter()->urlFor('PHOTO_CTRL_Photo', 'ajaxResponder'),
                         'album' => $album,
                         'isClassic' => (bool)OW::getConfig()->getValue('photo', 'photo_list_view_classic'),
                         'albumNameList' => array_values($albumNameList)
                     )
-                )
+                ))
             );
 
             OW::getDocument()->addScript(OW::getPluginManager()->getPlugin('photo')->getStaticJsUrl() . 'album.js');
@@ -518,7 +506,17 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         $event = new OW_Event('photo.onReadyResponse', $_POST, $result);
         OW::getEventManager()->trigger($event);
         $result = $event->getData();
-        
+
+        $document = OW::getDocument();
+
+        $result['scripts'] = array(
+            'beforeIncludes' => $document->getScriptBeforeIncludes(),
+            'scriptFiles' => $document->getScripts(),
+            'onloadScript' => $document->getOnloadScript(),
+            'styleDeclarations' => $document->getStyleDeclarations(),
+            'styleSheets' => $document->getStyleSheets()
+        );
+
         header('Content-Type: application/json');
         exit(json_encode($result));
     }
@@ -922,20 +920,19 @@ class PHOTO_CTRL_Photo extends OW_ActionController
     {
         if ( !OW::getRequest()->isAjax() || empty($_POST['album-id']) )
         {
-            exit(json_encode(array('result' => FALSE)));
+            exit(json_encode(array('result' => false)));
         }
-        
-        $albumService = PHOTO_BOL_PhotoAlbumService::getInstance();
+
         $form = new PHOTO_CLASS_AlbumEditForm($_POST['album-id']);
         
         if ( !$form->isValid($_POST) )
         {
-            exit(json_encode(array('result' => FALSE)));
+            exit(json_encode(array('result' => false)));
         }
         
         $values = $form->getValues();
         $albumId = (int)$values['album-id'];
-        $album = $albumService->findAlbumById($albumId);
+        $album = $this->photoAlbumService->findAlbumById($albumId);
 
         if ( $album )
         {
@@ -951,18 +948,20 @@ class PHOTO_CTRL_Photo extends OW_ActionController
                 $album->privacy = in_array($values['privacy'], array('everybody', 'friends_only', 'only_for_me')) ? $values['privacy'] : 'everybody';
             }
 
-            if ( $albumService->updateAlbum($album) )
+            if ( $this->photoAlbumService->updateAlbum($album) )
             {
-                exit(json_encode(array('result' => TRUE, 'id' => $album->id)));
+                $form->triggerComplete(array('album' => $album));
+
+                exit(json_encode(array('result' => true, 'id' => $album->id)));
             }
         }
 
-        exit(json_encode(array('result' => FALSE)));
+        exit(json_encode(array('result' => true)));
     }
     
     public function ajaxUpdatePhoto()
     {
-         if ( !OW::getRequest()->isAjax() )
+        if ( !OW::getRequest()->isAjax() || empty($_POST['photoId']) )
         {
             exit();
         }

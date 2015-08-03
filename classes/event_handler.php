@@ -82,6 +82,7 @@ class PHOTO_CLASS_EventHandler
     const EVENT_SUGGEST_DEFAULT_ALBUM = 'photo.suggest_default_album';
     const EVENT_ON_FORM_READY = 'photo.form_ready';
     const EVENT_ON_FORM_COMPLETE = 'photo.form_complete';
+    const EVENT_GET_UPLOAD_DATA = 'photo.upload_data';
 
     /**
      * @return PHOTO_CLASS_EventHandler
@@ -1683,10 +1684,13 @@ class PHOTO_CLASS_EventHandler
         $id = uniqid('addNewPhoto');
         
         $params = $event->getParams();
-        $albumId = !empty($params['albumId']) ? (int)$params['albumId'] : NULL;
-        $albumName = !empty($params['albumName']) ? $params['albumName'] : NULL;
-        $albumDescription = !empty($params['albumDescription']) ? $params['albumDescription'] : NULL;
-        $url = !empty($params['url']) ? $params['url'] : NULL;
+        $albumId = !empty($params['albumId']) ? (int)$params['albumId'] : null;
+        $albumName = !empty($params['albumName']) ? $params['albumName'] : null;
+        $albumDescription = !empty($params['albumDescription']) ? $params['albumDescription'] : null;
+        $url = !empty($params['url']) ? $params['url'] : null;
+        $data = $event->getData();
+
+        $extraEventData = OW::getEventManager()->trigger(new OW_Event(self::EVENT_GET_UPLOAD_DATA, $params, $data));
         
         if ( !OW::getUser()->isAuthorized('photo', 'upload') )
         {
@@ -1708,10 +1712,9 @@ class PHOTO_CLASS_EventHandler
         else
         {
             OW::getDocument()->addScriptDeclaration(
-                UTIL_JsGenerator::composeJsString(
-                    ';window[{$addNewPhoto}] = function()
+                UTIL_JsGenerator::composeJsString(';window[{$addNewPhoto}] = function()
                     {
-                        var ajaxUploadPhotoFB = OW.ajaxFloatBox("PHOTO_CMP_AjaxUpload", [{$albumId}, {$albumName}, {$albumDescription}, {$url}], {
+                        var ajaxUploadPhotoFB = OW.ajaxFloatBox("PHOTO_CMP_AjaxUpload", [{$albumId}, {$albumName}, {$albumDescription}, {$url}, {$data}], {
                             $title: {$title},
                             width: "746px"
                         });
@@ -1735,6 +1738,7 @@ class PHOTO_CLASS_EventHandler
                         'albumName' => $albumName,
                         'albumDescription' => $albumDescription,
                         'url' => $url,
+                        'data' => $extraEventData->getData(),
                         'title' => OW::getLanguage()->text('photo', 'upload_photos'),
                         'close_alert' => OW::getLanguage()->text('photo', 'close_alert')
                     )
@@ -1959,7 +1963,10 @@ class PHOTO_CLASS_EventHandler
     public function genericInit()
     {
         $em = OW::getEventManager();
-
+$em->bind(OW_EventManager::ON_FINALIZE, function()
+{
+    //OW::getDocument()->appendBody((new PHOTO_CMP_AjaxUpload())->render());
+});
         $em->bind(self::EVENT_ALBUM_ADD, array($this, 'albumAdd'));
         $em->bind(self::EVENT_ALBUM_FIND, array($this, 'albumFind'));
         $em->bind(self::EVENT_ALBUM_DELETE, array($this, 'albumDelete'));

@@ -208,7 +208,7 @@ class PHOTO_CTRL_AjaxUpload extends OW_ActionController
             }
                 
             $tmpId = $tmpPhoto['dto']->id;
-            $angel = (($rotate = (int)$_POST['rotate'][$tmpId]) > 0) ? fmod($rotate, 360) : 0;
+            $angel = isset($_POST['rotate'][$tmpId]) ? fmod((int) $_POST['rotate'][$tmpId], 360) : 0;
             
             $photo = $photoTmpService->moveTemporaryPhoto($tmpId, $album->id, !empty($_POST['desc'][$tmpId]) ? $_POST['desc'][$tmpId] : '', NULL, $angel);
             $photoTmpService->deleteTemporaryPhoto($tmpId);

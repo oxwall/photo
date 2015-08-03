@@ -106,20 +106,23 @@ class PHOTO_CMP_PhotoList extends OW_Component
         $document = OW::getDocument();
         
         $document->addScriptDeclarationBeforeIncludes(
-            ';window.browsePhotoParams = ' . json_encode(array_merge($photoDefault, $photoParams)) . ';'
+            UTIL_JsGenerator::composeJsString(';window.browsePhotoParams = Object.freeze({$params});', array(
+                'params' => array_merge($photoDefault, $photoParams)
+            ))
         );
         $document->addOnloadScript(';window.browsePhoto.init();');
         
         $document->addScriptDeclarationBeforeIncludes(
             ';window.photoContextActionParams = ' . json_encode(array_merge($contDefault, $contParams))
         );
-        $document->addOnloadScript(';window.photoContextAction.init();');
+        //$document->addOnloadScript(';window.photoContextAction.init();');
         
         $this->assign('isClassicMode', $photoParams['classicMode']);
         $this->assign('hasSideBar', $hasSideBar);
         $this->assign('type', $params['type']);
         
         $document->addStyleSheet($plugin->getStaticCssUrl() . 'browse_photo.css');
+        $document->addScript($plugin->getStaticJsUrl() . 'utils.js');
         $document->addScript($plugin->getStaticJsUrl() . 'browse_photo.js');
         
         $language = OW::getLanguage();
@@ -132,13 +135,13 @@ class PHOTO_CMP_PhotoList extends OW_Component
             $script = '$(document.getElementById("browse-photo")).on("click", ".ow_photo_item_wrap img", function( event )
             {
                 var data = $(this).closest(".ow_photo_item_wrap").data(), _data = {};
-                
+
                 if ( data.dimension && data.dimension.length )
                 {
                     try
                     {
                         var dimension = JSON.parse(data.dimension);
-                        
+
                         _data.main = dimension.main;
                     }
                     catch( e )
@@ -150,13 +153,13 @@ class PHOTO_CMP_PhotoList extends OW_Component
                 {
                     _data.main = [this.naturalWidth, this.naturalHeight];
                 }
-                
+
                 _data.mainUrl = data.photoUrl;
-                
+
                 photoView.setId(data.photoId, data.listType, browsePhoto.getMoreData(), _data);
             });';
             $document->addOnloadScript($script);
-        
+
             $language->addKeyForJs('photo', 'tb_edit_photo');
             $language->addKeyForJs('photo', 'confirm_delete');
             $language->addKeyForJs('photo', 'mark_featured');

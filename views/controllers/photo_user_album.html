@@ -83,8 +83,16 @@
             <h3 class="ow_photo_album_name">{$album->name}</h3>
             <div class="ow_photo_album_description">{$album->description}</div>
             {form name="albumEditForm" style="display: none"}
-                    {input name="albumName"}{error name="albumName"}
-                {input name="desc"}
+                {input name="albumName"}{error name="albumName"}
+                {input name="desc" class='ow_smallmargin'}
+
+                {foreach $extendInputs as $input}
+                    <div id="{$input}" class="ow_smallmargin">
+                        <div class="ow_smallmargin">
+                            {input name=$input}{label name=$input}<br />{error name=$input}
+                        </div>
+                    </div>
+                {/foreach}
             {/form}
         </div>
     </div>
@@ -149,6 +157,8 @@
             </div>
             <h3 class="ow_photo_album_name">{$album->name}</h3>
             <div class="ow_photo_album_description">{$album->description}</div>
+
+            {add_content key='photo.view_album' album=$album}
         </div>
     </div>
 {/if}
