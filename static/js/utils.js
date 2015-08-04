@@ -1,6 +1,7 @@
 window.photoUtils = Object.freeze({
     extend: function( ctor, superCtor )
     {
+        ctor._super = superCtor;
         ctor.prototype = Object.create(superCtor.prototype, {
             constructor: {
                 value: ctor,

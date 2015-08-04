@@ -73,7 +73,7 @@
 
         function Slot( photo, listType )
         {
-            BaseObject.call(this);
+            Slot._super.call(this);
 
             this.node = $('#browse-photo-item-prototype').clone();
             this.node.attr('id', 'photo-item-' + photo.id);
@@ -311,7 +311,7 @@
                 return instance;
             }
 
-            BaseObject.call(this);
+            SlotManager._super.call(this);
 
             this.list = new List(this);
             this.request = null;
@@ -557,7 +557,7 @@
                 return instance;
             }
 
-            BaseObject.call(this);
+            List._super.call(this);
 
             this.slotManager = slotManager;
 
@@ -684,7 +684,7 @@
                 return new SearchResultItem(searchEngine, type);
             }
 
-            BaseObject.call(this);
+            SearchResultItem._super.call(this);
 
             this.searchEngine = searchEngine;
             this.data = {};
@@ -761,7 +761,7 @@
 
         function SearchEngine()
         {
-            BaseObject.call(this);
+            SearchEngine._super.call(this);
 
             this.searchBox = document.getElementById('photo-list-search');
             this.searchResultList = $('.ow_searchbar_ac', this.searchBox);
