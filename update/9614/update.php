@@ -29,39 +29,4 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- *
- *
- * @author Kairat Bakitow <kainisoft@gmail.com>
- * @package ow.plugin.photo.classes
- * @since 1.7.6
- */
-abstract class PHOTO_CLASS_AbstractPhotoForm extends Form
-{
-    /**
-     * @return array
-     */
-    abstract public function getOwnElements();
-
-    public function getExtendedElements()
-    {
-        return array_diff(
-            array_keys($this->getElements()),
-            array_merge(array('form_name'), $this->getOwnElements())
-        );
-    }
-
-    public function triggerReady( array $data = null )
-    {
-        OW::getEventManager()->trigger(
-            new OW_Event(PHOTO_CLASS_EventHandler::EVENT_ON_FORM_READY, array('form' => $this), $data)
-        );
-    }
-
-    public function triggerComplete( array $data = null )
-    {
-        OW::getEventManager()->trigger(
-            new OW_Event(PHOTO_CLASS_EventHandler::EVENT_ON_FORM_COMPLETE, array('form' => $this), $data)
-        );
-    }
-}
+Updater::getLanguageService()->importPrefixFromZip(__DIR__ . DS . 'langs.zip', 'photo');

@@ -82,6 +82,8 @@ class PHOTO_CLASS_EventHandler
     const EVENT_SUGGEST_DEFAULT_ALBUM = 'photo.suggest_default_album';
     const EVENT_ON_FORM_READY = 'photo.form_ready';
     const EVENT_ON_FORM_COMPLETE = 'photo.form_complete';
+    const EVENT_GET_UPLOAD_DATA = 'photo.upload_data';
+    const EVENT_GET_ALBUM_COVER_URL = 'photo.get_cover';
 
     /**
      * @return PHOTO_CLASS_EventHandler
@@ -679,6 +681,7 @@ class PHOTO_CLASS_EventHandler
         $document->addStyleSheet($plugin->getStaticCssUrl() . 'photo_floatbox.css');
         $document->addScript(OW::getPluginManager()->getPlugin('base')->getStaticJsUrl() . 'jquery-ui.min.js');
         $document->addScript($plugin->getStaticJsUrl() . 'slider.min.js', 'text/javascript', 1000000);
+        $document->addScript($plugin->getStaticJsUrl() . 'utils.js');
         $document->addScript($plugin->getStaticJsUrl() . 'photo.js');
 
         $language = OW::getLanguage();
@@ -1683,10 +1686,13 @@ class PHOTO_CLASS_EventHandler
         $id = uniqid('addNewPhoto');
         
         $params = $event->getParams();
-        $albumId = !empty($params['albumId']) ? (int)$params['albumId'] : NULL;
-        $albumName = !empty($params['albumName']) ? $params['albumName'] : NULL;
-        $albumDescription = !empty($params['albumDescription']) ? $params['albumDescription'] : NULL;
-        $url = !empty($params['url']) ? $params['url'] : NULL;
+        $albumId = !empty($params['albumId']) ? (int)$params['albumId'] : null;
+        $albumName = !empty($params['albumName']) ? $params['albumName'] : null;
+        $albumDescription = !empty($params['albumDescription']) ? $params['albumDescription'] : null;
+        $url = !empty($params['url']) ? $params['url'] : null;
+        $data = $event->getData();
+
+        $extraEventData = OW::getEventManager()->trigger(new OW_Event(self::EVENT_GET_UPLOAD_DATA, $params, $data));
         
         if ( !OW::getUser()->isAuthorized('photo', 'upload') )
         {
@@ -1708,11 +1714,10 @@ class PHOTO_CLASS_EventHandler
         else
         {
             OW::getDocument()->addScriptDeclaration(
-                UTIL_JsGenerator::composeJsString(
-                    ';window[{$addNewPhoto}] = function()
+                UTIL_JsGenerator::composeJsString(';window[{$addNewPhoto}] = function()
                     {
-                        var ajaxUploadPhotoFB = OW.ajaxFloatBox("PHOTO_CMP_AjaxUpload", [{$albumId}, {$albumName}, {$albumDescription}, {$url}], {
-                            $title: {$title},
+                        var ajaxUploadPhotoFB = OW.ajaxFloatBox("PHOTO_CMP_AjaxUpload", [{$albumId}, {$albumName}, {$albumDescription}, {$url}, {$data}], {
+                            title: {$title},
                             width: "746px"
                         });
 
@@ -1735,6 +1740,7 @@ class PHOTO_CLASS_EventHandler
                         'albumName' => $albumName,
                         'albumDescription' => $albumDescription,
                         'url' => $url,
+                        'data' => $extraEventData->getData(),
                         'title' => OW::getLanguage()->text('photo', 'upload_photos'),
                         'close_alert' => OW::getLanguage()->text('photo', 'close_alert')
                     )
@@ -1939,6 +1945,39 @@ class PHOTO_CLASS_EventHandler
         return $event->getData();
     }
 
+    public function getAlbumCoverUrl( OW_Event $event )
+    {
+        $params = $event->getParams();
+        $albumId = $params['albumId'];
+        $coverDao = PHOTO_BOL_PhotoAlbumCoverDao::getInstance();
+
+        if ( ($coverDto = $coverDao->findByAlbumId($albumId)) === null )
+        {
+            if ( ($photo = $this->albumService->getLastPhotoByAlbumId($albumId)) === null )
+            {
+                $coverUrl = $coverDao->getAlbumCoverDefaultUrl();
+            }
+            else
+            {
+                $coverUrl = $this->photoService->getPhotoUrlByType($photo->id, PHOTO_BOL_PhotoService::TYPE_MAIN, $photo->hash, !empty($photo->dimension) ? $photo->dimension : false);
+            }
+
+            $coverUrlOrig = $coverUrl;
+        }
+        else
+        {
+            $coverUrl = $coverDao->getAlbumCoverUrlForCoverEntity($coverDto);
+            $coverUrlOrig = $coverDao->getAlbumCoverOrigUrlForCoverEntity($coverDto);
+        }
+
+        $event->setData(array(
+            'coverUrl' => $coverUrl,
+            'coverUrlOrig' => $coverUrlOrig
+        ));
+
+        return $event->getData();
+    }
+
     public function init()
     {
         $this->genericInit();
@@ -2010,6 +2049,8 @@ class PHOTO_CLASS_EventHandler
         $em->bind('feed.before_content_add', array($this, 'feedBeforeStatusUpdate'));
         $em->bind(self::EVENT_BACKGROUND_LOAD_PHOTO, array($this, 'backgroundLoadPhoto'));
         $em->bind(self::EVENT_ON_PHOTO_CONTENT_UPDATE, array($this, 'onUpdateContent'));
+
+        $em->bind(self::EVENT_GET_ALBUM_COVER_URL, array($this, 'getAlbumCoverUrl'));
 
         PHOTO_CLASS_ContentProvider::getInstance()->init();
     }

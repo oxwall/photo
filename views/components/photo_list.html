@@ -58,7 +58,7 @@
                         <a href="javascript://"><b></b></a>
                     </div>
                     <div style="display: none" class="ow_photo_item_info_album">
-                        {text key='photo+album'}:
+                        {text key='photo+album'}:<span class="ow_photo_icon"></span>
                         '<a href="javascript://"><b></b></a>'
                     </div>
                     <div class="ow_rates_wrap ow_small">
@@ -105,7 +105,7 @@
                         <a href="javascript://"></a>
                     </div>
                     <div style="display: none" class="ow_photo_item_info_album">
-                        {text key='photo+album'}:
+                        {text key='photo+album'}:<span class="ow_photo_icon"></span>
                         '<a href="javascript://"></a>'
                     </div>
                     <div class="ow_rates_wrap ow_small">
@@ -141,4 +141,7 @@
         </div>
     </div>
     <iframe name="photo-downloader"  style="display:none;"></iframe>
+    <li id="search-no-items" class="browse-photo-search clearfix">
+        <span style="line-height: 20px;">{text key='photo+search_result_empty'}</span>
+    </li>
 </div>

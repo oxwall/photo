@@ -106,12 +106,16 @@ class PHOTO_CMP_PhotoList extends OW_Component
         $document = OW::getDocument();
         
         $document->addScriptDeclarationBeforeIncludes(
-            ';window.browsePhotoParams = ' . json_encode(array_merge($photoDefault, $photoParams)) . ';'
+            UTIL_JsGenerator::composeJsString(';window.browsePhotoParams = Object.freeze({$params});', array(
+                'params' => array_merge($photoDefault, $photoParams)
+            ))
         );
         $document->addOnloadScript(';window.browsePhoto.init();');
-        
+
         $document->addScriptDeclarationBeforeIncludes(
-            ';window.photoContextActionParams = ' . json_encode(array_merge($contDefault, $contParams))
+            UTIL_JsGenerator::composeJsString(';window.photoContextActionParams = Object.freeze({$params});', array(
+                'params' => array_merge($contDefault, $contParams)
+            ))
         );
         $document->addOnloadScript(';window.photoContextAction.init();');
         
@@ -120,6 +124,7 @@ class PHOTO_CMP_PhotoList extends OW_Component
         $this->assign('type', $params['type']);
         
         $document->addStyleSheet($plugin->getStaticCssUrl() . 'browse_photo.css');
+        $document->addScript($plugin->getStaticJsUrl() . 'utils.js');
         $document->addScript($plugin->getStaticJsUrl() . 'browse_photo.js');
         
         $language = OW::getLanguage();
@@ -129,34 +134,6 @@ class PHOTO_CMP_PhotoList extends OW_Component
             $event = new OW_Event(PHOTO_CLASS_EventHandler::EVENT_INIT_FLOATBOX, $photoParams);
             OW::getEventManager()->trigger($event);
 
-            $script = '$(document.getElementById("browse-photo")).on("click", ".ow_photo_item_wrap img", function( event )
-            {
-                var data = $(this).closest(".ow_photo_item_wrap").data(), _data = {};
-                
-                if ( data.dimension && data.dimension.length )
-                {
-                    try
-                    {
-                        var dimension = JSON.parse(data.dimension);
-                        
-                        _data.main = dimension.main;
-                    }
-                    catch( e )
-                    {
-                        _data.main = [this.naturalWidth, this.naturalHeight];
-                    }
-                }
-                else
-                {
-                    _data.main = [this.naturalWidth, this.naturalHeight];
-                }
-                
-                _data.mainUrl = data.photoUrl;
-                
-                photoView.setId(data.photoId, data.listType, browsePhoto.getMoreData(), _data);
-            });';
-            $document->addOnloadScript($script);
-        
             $language->addKeyForJs('photo', 'tb_edit_photo');
             $language->addKeyForJs('photo', 'confirm_delete');
             $language->addKeyForJs('photo', 'mark_featured');
@@ -183,6 +160,7 @@ class PHOTO_CMP_PhotoList extends OW_Component
             $language->addKeyForJs('photo', 'album_delete_not_allowed');
             $language->addKeyForJs('photo', 'newsfeed_album');
             $language->addKeyForJs('photo', 'are_you_sure');
+            $language->addKeyForJs('photo', 'album_description');
         }
         
         $language->addKeyForJs('photo', 'no_items');

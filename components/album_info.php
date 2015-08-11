@@ -30,38 +30,26 @@
  */
 
 /**
- *
+ * AJAX Upload photo component
  *
  * @author Kairat Bakitow <kainisoft@gmail.com>
- * @package ow.plugin.photo.classes
+ * @package ow.plugin.photo.components
  * @since 1.7.6
  */
-abstract class PHOTO_CLASS_AbstractPhotoForm extends Form
+class PHOTO_CMP_AlbumInfo extends OW_Component
 {
-    /**
-     * @return array
-     */
-    abstract public function getOwnElements();
-
-    public function getExtendedElements()
+    public function __construct( $params )
     {
-        return array_diff(
-            array_keys($this->getElements()),
-            array_merge(array('form_name'), $this->getOwnElements())
-        );
-    }
+        parent::__construct();
 
-    public function triggerReady( array $data = null )
-    {
-        OW::getEventManager()->trigger(
-            new OW_Event(PHOTO_CLASS_EventHandler::EVENT_ON_FORM_READY, array('form' => $this), $data)
+        $album = $params['album'];
+        $coverEvent = OW::getEventManager()->trigger(
+            new OW_Event(PHOTO_CLASS_EventHandler::EVENT_GET_ALBUM_COVER_URL, array('albumId' => $album->id))
         );
-    }
+        $coverData = $coverEvent->getData();
 
-    public function triggerComplete( array $data = null )
-    {
-        OW::getEventManager()->trigger(
-            new OW_Event(PHOTO_CLASS_EventHandler::EVENT_ON_FORM_COMPLETE, array('form' => $this), $data)
-        );
+        $this->assign('album', $album);
+        $this->assign('coverUrl', $coverData['coverUrl']);
+        $this->assign('coverUrlOrig', $coverData['coverUrlOrig']);
     }
 }
