@@ -150,17 +150,7 @@
         {/if}
     </div>
 {else}
-    <div class="ow_photo_album_info_wrap clearfix">
-        <div class="ow_photo_album_info">
-            <div class="ow_photo_album_cover ow_high1" style="background-image: url({$coverUrl})">
-                <img src="{$coverUrlOrig}" class="ow_hidden" />
-            </div>
-            <h3 class="ow_photo_album_name">{$album->name}</h3>
-            <div class="ow_photo_album_description">{$album->description}</div>
-
-            {add_content key='photo.view_album' album=$album}
-        </div>
-    </div>
+    {component class='PHOTO_CMP_AlbumInfo' album=$album}
 {/if}
 
 {component class="PHOTO_CMP_PhotoList" type="albumPhotos" albumId=$album->id}

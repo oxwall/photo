@@ -39,7 +39,7 @@
     switch ( params.listType )
     {
         case 'albums':
-            actionStr = 'setURL,setDescription,bindEvents';
+            actionStr = 'setURL,setDescription';
             break;
         case 'albumPhotos':
             actionStr = 'setRate,setCommentCount,setDescription,bindEvents';
@@ -92,9 +92,9 @@
 
         Slot.prototype.setURL = utils.fluent(function()
         {
-            this.node.on('click', this.self(function()
+            this.node.off().on('click', this.self(function()
             {
-                window.location = this.data.url;
+                window.location = this.data.albumUrl;
             }));
         });
 
@@ -108,7 +108,10 @@
             }
             else
             {
-                description = utils.truncate(data.name, 50) + '&nbsp;(' + (data.count || 0) + ')';
+                description = OW.getLanguageText('photo', 'album_description', {
+                    desc: utils.truncate(data.name, 50),
+                    count: data.count || 0
+                });
             }
 
             var event = {text: description};
@@ -160,7 +163,7 @@
 
             if ( !event.canRate ) return;
 
-            $('.rate_item', this.node).on('click', function( event )
+            $('.rate_item', this.node).off().on('click', function( event )
             {
                 event.stopPropagation();
 
@@ -254,44 +257,44 @@
 
         Slot.prototype.setUserInfo = utils.fluent(function()
         {
+            var user = this.node.find('.ow_photo_by_user').show()
+                .find('a').attr('href', this.data.userUrl);
+
             if ( params.classicMode )
             {
-                this.node.find('.ow_photo_by_user').show()
-                    .find('a').attr('href', this.data.userUrl)
-                    .find('b').html(this.data.userName);
+                user.find('b').html(this.data.userName);
             }
             else
             {
-                this.node.find('.ow_photo_by_user').show()
-                    .find('a').attr('href', this.data.userUrl).html(this.data.userName);
+                user.html(this.data.userName);
             }
         });
 
         Slot.prototype.bindEvents = utils.fluent(function()
         {
-            this.node.on('click', this.self(function()
+            this.node.off().on('click', this.self(function()
             {
                 var data = this.data,
                     img = this.node.find('img')[0],
-                    _data = {mainUrl: data.url};
+                    dim = {mainUrl: data.url};
 
                 if ( data.dimension && data.dimension.length )
                 {
                     try
                     {
-                        _data.main = JSON.parse(data.dimension).main;
+                        dim.main = JSON.parse(data.dimension).main;
                     }
                     catch( e )
                     {
-                        _data.main = [img.naturalWidth, img.naturalHeight];
+                        dim.main = [img.naturalWidth, img.naturalHeight];
                     }
                 }
                 else
                 {
-                    _data.main = [img.naturalWidth, img.naturalHeight];
+                    dim.main = [img.naturalWidth, img.naturalHeight];
                 }
 
-                photoView.setId(data.id, data.listType, {}, _data);
+                photoView.setId(data.id, data.listType, {}, dim, data);
             }));
         });
 
@@ -309,6 +312,11 @@
             if ( instance !== undf )
             {
                 return instance;
+            }
+
+            if ( !(this instanceof SlotManager) )
+            {
+                return new SlotManager();
             }
 
             SlotManager._super.call(this);
@@ -385,17 +393,17 @@
             {
                 case 'albums':
                 case 'userPhotos':
-                    return $.extend({}, (this.modified ? {offset: 1, idList: this.idList} : {}), {
+                    return $.extend({}, (this.modified ? {offset: 1, idList: Object.keys(this.cache)} : {}), {
                         userId: params.userId
                     });
                 case 'albumPhotos':
-                    return $.extend({}, (this.modified ? {offset: 1, idList: this.idList} : {}), {
+                    return $.extend({}, (this.modified ? {offset: 1, idList: Object.keys(this.cache)} : {}), {
                         albumId: params.albumId
                     });
                 default:
                     if ( ['user', 'hash', 'desc', 'all', 'tag'].indexOf(this.listType) !== -1 )
                     {
-                        return {searchVal: ''};
+                        return {searchVal: SearchEngine().getSearchValue()};
                     }
 
                     return {};
@@ -404,7 +412,7 @@
 
         SlotManager.prototype.buildSlotList = utils.fluent(function( data )
         {
-            if ( !data || !data.photoList || data.photoList.length === 0 )
+            if ( !data || !Array.isArray(data.photoList) || data.photoList.length === 0 )
             {
                 this.list.hideLoader();
 
@@ -443,7 +451,45 @@
             OW.trigger('photo.onRenderPhotoItem', [slot], slotItem.node);
 
             this.list.buildByMode(slotItem);
+            this.cache[slotItem.data.id] = slotItem;
         });
+
+        SlotManager.prototype.removePhotoItems = function( idList )
+        {
+            if ( !Array.isArray(idList) || idList.length === 0 )
+            {
+                return false;
+            }
+
+            var removed = idList.reduce(this.self(function( result, item )
+            {
+                if ( this.cache.hasOwnProperty(item) )
+                {
+                    var slot = this.cache[item];
+
+                    result.push(slot.data.id);
+                    slot.node.remove();
+                    delete this.cache[item];
+                }
+
+                return result;
+            }), []);
+
+            if ( removed.length !== 0 )
+            {
+                this.modified = true;
+                this.list.reorder();
+
+                if ( this.isTimeToLoad() )
+                {
+                    this.load();
+                }
+
+                OW.trigger('photo.onRemovePhotoItems', {removed: removed});
+            }
+
+            return removed;
+        };
 
         SlotManager.prototype.getSlotData = function( slot )
         {
@@ -451,8 +497,6 @@
             {
                 throw new TypeError('"Slot" required');
             }
-
-            this.idList.push(slot.id);
 
             return params.actions.reduce(this.self(function( data, action )
             {
@@ -469,9 +513,6 @@
                     case 'setRate':
                         data.rateInfo = this.data.rateInfo[slot.id];
                         data.userScore = this.data.userScore[slot.id];
-                        break;
-                    case 'setURL':
-                        data.url = this.data.photoUrlList[slot.id];
                         break;
                     case 'setCommentCount':
                         data.commentCount = this.data.commentCount[slot.id];
@@ -522,7 +563,7 @@
 
         SlotManager.prototype.backgroundLoad = utils.fluent(function( list )
         {
-            if ( list.length === 0 ) return;
+            if ( !Array.isArray(list) || list.length === 0 ) return;
 
             list.forEach(function( photo )
             {
@@ -538,7 +579,32 @@
             this.data = this.uniqueList = null;
             this.offset = 0;
             this.isCompleted = false;
-            this.idList = []
+            this.cache = {};
+        });
+
+        SlotManager.prototype.updateSlot = utils.fluent(function( slotId, data )
+        {
+            if ( !this.cache.hasOwnProperty(slotId) ) return;
+
+            this.cache[slotId].setInfo(data);
+        });
+
+        SlotManager.prototype.updateRate = utils.fluent(function( data )
+        {
+            var keys = ['entityId', 'userScore', 'avgScore', 'ratesCount'];
+            var values = utils.getObjectValue(keys, data);
+
+            if ( keys.length !== Object.keys(values).length ) return;
+
+            this.updateSlot(values.entityId, {
+                userScore: values.userScore,
+                rateInfo: values
+            });
+        });
+
+        SlotManager.prototype.updateAlbumPhotos = utils.fluent(function( photoId )
+        {
+
         });
 
         return SlotManager;
@@ -546,15 +612,20 @@
 
     var List = (function( BaseObject )
     {
-        var instance;
+        var instance, SLOT_OFFSET = 16;
 
         utils.extend(List, BaseObject);
 
         function List( slotManager )
         {
-            if ( instance )
+            if ( instance !== undf )
             {
                 return instance;
+            }
+
+            if ( !(this instanceof List) )
+            {
+                return new List(slotManager);
             }
 
             List._super.call(this);
@@ -596,10 +667,7 @@
                     slot.appendTo(this.content);
                     slot.node.fadeIn(100, this.self(function()
                     {
-                        if ( this.slotManager.data && this.slotManager.data.photoList )
-                        {
-                            this.slotManager.buildPhotoItem(this.slotManager.data.photoList.shift());
-                        }
+                        this.slotManager.buildNewOne();
                     }));
                 };
             }
@@ -647,10 +715,27 @@
 
                 var offset = this.getOffset();
 
-                this.photoListOrder[offset.left] += slot.node.height() + 16;
+                this.photoListOrder[offset.left] += slot.node.height() + SLOT_OFFSET;
                 this.content.height(Math.max.apply(Math, this.photoListOrder));
                 this.slotManager.buildNewOne();
             }));
+        });
+
+        List.prototype.reorder = utils.fluent(function()
+        {
+            if ( params.classicMode ) return;
+
+            this.photoListOrder = this.photoListOrder.map(Number.prototype.valueOf, 0);
+
+            $('.ow_photo_item_wrap', this.content).each(this.self(function( index, node )
+            {
+                var self = $(node), offset = this.getOffset();
+
+                self.css({top: offset.top + 'px', left: offset.left / (params.level || 4) * 100 + '%'});
+                this.photoListOrder[offset.left] += self.height() + SLOT_OFFSET;
+            }));
+
+            this.content.height(Math.max.apply(Math, this.photoListOrder));
         });
 
         List.prototype.reset = utils.fluent(function()
@@ -1003,6 +1088,11 @@
             SlotManager().load({listType: listType});
         });
 
+        SearchEngine.prototype.getSearchValue = function()
+        {
+            return this.searchVal || '';
+        };
+
         SearchEngine.prototype.resetPhotoListData = utils.fluent(function()
         {
             this.listBtns.removeClass('active');
@@ -1048,12 +1138,53 @@
 
             slotManager.load();
 
-            if ( ['albums', 'userPhotos', 'albumPhotos'].indexOf(params.listType) )
+            if ( ['albums', 'userPhotos', 'albumPhotos'].indexOf(params.listType) === -1 )
             {
                 var searchEngine = new SearchEngine();
 
                 searchEngine.init();
             }
+
+            OW.bind('photo.onSetRate', function( data )
+            {
+                slotManager.updateRate(data);
+            });
+
+            OW.bind('photo.updateAlbumPhotos', function( photoId )
+            {
+                SlotManager().updateAlbumPhotos(photoId);
+            });
+
+            var updateCommentCount = function( data )
+            {
+                slotManager.updateSlot(data.entityId, data);
+            };
+
+            OW.bind('base.comment_delete', updateCommentCount);
+            OW.bind('base.comment_added', updateCommentCount);
+            OW.bind('photo.onBeforeLoadFromCache', function()
+            {
+                OW.bind('base.comment_delete', updateCommentCount);
+                OW.bind('base.comment_added', updateCommentCount);
+            });
+        },
+        getMoreData: function()
+        {
+            return SlotManager().getMoreData();
+        },
+        reorder: function()
+        {
+            List().reorder();
+        },
+        removePhotoItems: function( idList )
+        {
+            SlotManager().removePhotoItems(idList);
+        },
+        updateSlot: function( slotId, data )
+        {
+            OW.trigger('photo.onUpdateSlot', [slotId, data]);
+
+            SlotManager().updateSlot(slotId, data);
         }
     });
 }));
@@ -1070,10 +1201,8 @@
 /**
  * @author Kairat Bakitow <kainisoft@gmail.com>
  * @package ow_plugins.photo
- * @since 1.6.1
+ * @since 1.7.6
  */
-
-
 (function( root, $ )
 {
     var _params = {};
@@ -1101,13 +1230,15 @@
                 }
             });
         },
-        deletePhoto: function( photoId )
+        deletePhoto: function( slot )
         {
             if ( !confirm(OW.getLanguageText('photo', 'confirm_delete')) )
             {
                 return false;
             }
-            
+
+            var photoId = slot.id;
+
             _methods.sendRequest('ajaxDeletePhoto', photoId, function( data )
             {
                 if ( window.hasOwnProperty('photoAlbum') )
@@ -1119,7 +1250,7 @@
                 {
                     OW.info(data.msg);
 
-                    browsePhoto.removePhotoItems(['photo-item-' + photoId]);
+                    browsePhoto.removePhotoItems([photoId]);
                 } 
                 else if ( data.hasOwnProperty('error') )
                 {
@@ -1127,9 +1258,10 @@
                 }
             });
         },
-        editPhoto: function( photoId )
+        editPhoto: function( slot )
         {
-            var editFB = OW.ajaxFloatBox('PHOTO_CMP_EditPhoto', {photoId: photoId}, {width: 580, iconClass: 'ow_ic_edit', title: OW.getLanguageText('photo', 'tb_edit_photo'),
+            var photoId = slot.id;
+            var editFB = OW.ajaxFloatBox('PHOTO_CMP_EditPhoto', {photoId: photoId}, {iconClass: 'ow_ic_edit', title: OW.getLanguageText('photo', 'tb_edit_photo'),
                 onLoad: function()
                 {
                     owForms['photo-edit-form'].bind("success", function( data )
@@ -1141,12 +1273,12 @@
                             if ( data.photo.status !== 'approved' )
                             {
                                 OW.info(data.msgApproval);
-                                browsePhoto.removePhotoItems(['photo-item-' + photoId]);
+                                browsePhoto.removePhotoItems([photoId]);
                             }
                             else
                             {
                                 OW.info(data.msg);
-                                browsePhoto.updateSlot('photo-item-' + data.id, data);
+                                browsePhoto.updateSlot(data.id, data);
                             }
 
                             browsePhoto.reorder();
@@ -1161,17 +1293,18 @@
                 }}
             );
         },
-        saveAsAvatar: function( photoId )
+        saveAsAvatar: function( slot )
         {
             document.avatarFloatBox = OW.ajaxFloatBox(
                 "BASE_CMP_AvatarChange",
-                { params : { step: 2, entityType : 'photo_album', entityId : '', id : photoId } },
+                { params : { step: 2, entityType : 'photo_album', entityId : '', id : slot.id } },
                 { width : 749, title : OW.getLanguageText('base', 'avatar_change') }
             );
         },
-        saveAsCover: function( photoId )
+        saveAsCover: function( slot )
         {
-            var img, item = document.getElementById('photo-item-' + photoId), data = $(item).data(), dim;
+            var photoId = slot.id;
+            var img, item = $('#photo-item-' + photoId), dim;
             
             if ( _params.isClassic )
             {
@@ -1182,11 +1315,11 @@
                 img = $('img', item)[0];
             }
             
-            if ( data.dimension && data.dimension.length )
+            if ( slot.dimension && slot.dimension.length )
             {
                 try
                 {
-                    var dimension = JSON.parse(data.dimension);
+                    var dimension = JSON.parse(slot.dimension);
 
                     dim = dimension.main;
                 }
@@ -1216,26 +1349,24 @@
                 }
             });
         },
-        editAlbum: function( event )
+        editAlbum: function( slot )
         {
-            var url = $(this).closest('.ow_photo_item_wrap').data('url') + '#edit';
-            
-            window.location = url;
+            window.location = slot.albumUrl + '#edit';
         },
-        deleteAlbum: function( albumId )
+        deleteAlbum: function( album )
         {
             if ( !confirm(OW.getLanguageText('photo', 'are_you_sure')) )
             {
                 return;
             }
 
-            _methods.sendRequest('ajaxDeletePhotoAlbum', albumId, function( data )
+            _methods.sendRequest('ajaxDeletePhotoAlbum', album.id, function( data )
             {
                 if ( data.result )
                 {
                     OW.info(data.msg);
 
-                    browsePhoto.removePhotoItems(['photo-item-' + albumId]);
+                    browsePhoto.removePhotoItems([album.id]);
                 }
                 else
                 {
@@ -1250,18 +1381,19 @@
                 }
             });
         },
-        call: function( event )
+        call: function( action, slot )
         {
-            var closest = $(this).closest('.ow_photo_item_wrap');
-            
-            _methods[event.data.action].apply(closest, [+closest.data('photoId')]);
+            if ( _methods.hasOwnProperty(action) )
+            {
+                _methods[action](slot);
+            }
             
             event.stopPropagation();
         },
         createElement: function( action, html, style )
         {
-            return $('<li/>', {"class": style || ''}).html(
-                $('<a/>', {href : 'javascript://'}).on('click', {action: action}, _methods.call).html(html)
+            return $('<li/>').addClass([style || '', action].join(' ')).append(
+                $('<a/>', {href : 'javascript://'}).data('action', action).html(html)
             );
         },
         init: function()
@@ -1273,22 +1405,28 @@
                 case 'albums':
                     if ( _params.isOwner )
                     {
-                        _contextList.push($('<li/>').html($('<a/>').html(OW.getLanguageText('photo', 'edit_album')).on('mouseup', _methods.editAlbum)));
+                        _contextList.push(_methods.createElement('editAlbum', OW.getLanguageText('photo', 'edit_album')));
                         _contextList.push(_methods.createElement('deleteAlbum', OW.getLanguageText('photo', 'delete_album'), 'delete_album'));
                     }
                     break;
                 default:
-                    
                     if ( _params.downloadAccept === true )
                     {
-                        _contextList.push($('<li/>').html($('<a/>', {"class": 'download', href : 'javascript://', 'target': 'photo-downloader'}).html(OW.getLanguageText('photo', 'download_photo'))));
+                        var element  = _methods.createElement('downloadPhoto', OW.getLanguageText('photo', 'download_photo'));
+
+                        element.find('a').attr('target', 'photo-downloader').addClass('download');
+                        _contextList.push(element);
                     }
 
                     if ( _params.isOwner )
                     {
                         _contextList.push(_methods.createElement('deletePhoto', OW.getLanguageText('photo', 'delete_photo')));
                         _contextList.push(_methods.createElement('editPhoto', OW.getLanguageText('photo', 'tb_edit_photo')));
-                        _contextList.push($('<li/>', {"class": 'ow_context_action_divider_wrap'}).html($('<a/>', {"class": 'ow_context_action_divider'})));
+
+                        var divider = _methods.createElement('divider', '', 'ow_context_action_divider_wrap');
+
+                        divider.find('a').addClass('ow_context_action_divider');
+                        _contextList.push(divider);
                         _contextList.push(_methods.createElement('saveAsAvatar', OW.getLanguageText('photo', 'save_as_avatar')));
 
                         if ( _params.hasOwnProperty('albumId') && +_params.albumId > 0 )
@@ -1304,40 +1442,50 @@
                     break;
             }
             
-            var event = {buttons:[]};
+            var event = {buttons: [], actions: {}};
             OW.trigger('photo.collectMenuItems', [event]);
+            $.extend(_methods, event.actions);
             
             if ( _contextList.length === 0 && event.buttons.length === 0 )
             {
                 return;
             }
 
-            var list = $('<ul>', {"class": 'ow_context_action_list'});
+            var list = $('<ul>').addClass('ow_context_action_list');
 
             _contextList.concat(event.buttons).forEach(function(item)
             {
                 item.appendTo(list);
             });
 
-            _params.contextAction = $('<div>', {"class": 'ow_photo_context_action'}).on('click', function( event )
+            _params.contextAction = $('<div>').addClass('ow_photo_context_action').on('click', function( event )
             {
                 event.stopImmediatePropagation();
             });
             _params.contextActionPrototype = $(document.getElementById('context-action-prototype')).removeAttr('id');
             _params.contextActionPrototype.find('.ow_tooltip_body').append(list);
             
-            OW.bind('photo.onRenderPhotoItem', function( album )
+            OW.bind('photo.onRenderPhotoItem', function( slot )
             {
                 var self = $(this);
                 var prototype = _params.contextActionPrototype.clone(true);
 
-                prototype.find('.download').attr('href', _params.downloadUrl.replace(':id', self.data('photoId')));
+                prototype.find('.download').attr('href', _params.downloadUrl.replace(':id', slot.id));
 
-                if ( _params.listType == 'albums' && album.name.trim() == OW.getLanguageText('photo', 'newsfeed_album').trim() )
+                if ( _params.listType == 'albums' && slot.name.trim() == OW.getLanguageText('photo', 'newsfeed_album').trim() )
                 {
                     prototype.find('.delete_album').remove();
                 }
-                
+
+                prototype.find('.ow_tooltip_body a').on('click', function()
+                {
+                    var action = $(this).data('action');
+
+                    _methods.call(action, slot);
+                });
+
+                OW.trigger('photo.contextActionReady', [prototype, slot]);
+
                 var contextAction = _params.contextAction.clone(true);
                 contextAction.append(prototype);
                 
@@ -1353,9 +1501,9 @@
         }
     };
     
-    root.photoContextAction = Object.defineProperties({},
-    {
-        init: {value: _methods.init}
+    root.photoContextAction = Object.freeze({
+        init: _methods.init,
+        createElement: _methods.createElement
     });
     
 })( window, jQuery );

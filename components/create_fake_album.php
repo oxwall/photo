@@ -45,6 +45,6 @@ class PHOTO_CMP_CreateFakeAlbum extends OW_Component
         $form = new PHOTO_CLASS_CreateFakeAlbumForm();
         $this->addForm($form);
 
-        $this->assign('extendInputs', $form->getExtendElements());
+        $this->assign('extendInputs', $form->getExtendedElements());
     }
 }

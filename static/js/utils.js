@@ -36,7 +36,7 @@ window.photoUtils = Object.freeze({
 
         value = String(value);
         limit = +limit || 50;
-        ended = ended || '...';
+        ended = ended === undefined ? '...' : ended;
 
         var parts;
 
@@ -105,7 +105,6 @@ window.photoUtils = Object.freeze({
                 if (markup.onloadScript)
                 {
                     OW.addScript(markup.onloadScript);
-                    options.onLoad();
                 }
             });
         }
@@ -115,8 +114,31 @@ window.photoUtils = Object.freeze({
             {
                 OW.addScript(markup.onloadScript);
             }
-
-            options.onLoad();
         }
+    },
+
+    getObjectType: function( o )
+    {
+        return Object.prototype.toString.call(o).slice(8, -1);
+    },
+
+    getObjectValue: function( keys, object )
+    {
+        if ( !Array.isArray(keys) || this.getObjectType(object) !== 'Object' )
+        {
+            return {};
+        }
+
+        return keys.reduce(function( result, key )
+        {
+            var value = object[key];
+
+            if ( value !== undefined )
+            {
+                result[key] = value;
+            }
+
+            return result;
+        }, {});
     }
 });

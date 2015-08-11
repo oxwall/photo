@@ -355,36 +355,19 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         $this->assign('isOwner', $isOwner);
         $this->assign('album', $album);
 
-        $coverDao = PHOTO_BOL_PhotoAlbumCoverDao::getInstance();
-
-        if ( ($coverDto = $coverDao->findByAlbumId($album->id)) === null )
-        {
-            if ( ($photo = $this->photoAlbumService->getLastPhotoByAlbumId($album->id)) === null )
-            {
-                $this->assign('noCover', true);
-                $coverUrl = $coverDao->getAlbumCoverDefaultUrl();
-            }
-            else
-            {
-                $coverUrl = PHOTO_BOL_PhotoDao::getInstance()->getPhotoUrlByType($photo->id, PHOTO_BOL_PhotoService::TYPE_MAIN, $photo->hash, !empty($photo->dimension) ? $photo->dimension : false);
-            }
-            
-            $coverUrlOrig = $coverUrl;
-        }
-        else
-        {
-            $coverUrl = $coverDao->getAlbumCoverUrlForCoverEntity($coverDto);
-            $coverUrlOrig = $coverDao->getAlbumCoverOrigUrlForCoverEntity($coverDto);
-        }
+        $coverEvent = OW::getEventManager()->trigger(
+            new OW_Event(PHOTO_CLASS_EventHandler::EVENT_GET_ALBUM_COVER_URL, array('albumId' => $album->id))
+        );
+        $coverData = $coverEvent->getData();
         
-        $this->assign('coverUrl', $coverUrl);
-        $this->assign('coverUrlOrig', $coverUrlOrig);
+        $this->assign('coverUrl', $coverData['coverUrl']);
+        $this->assign('coverUrlOrig', $coverData['coverUrlOrig']);
         
         if ( $isOwner || $isModerator )
         {
             $form = new PHOTO_CLASS_AlbumEditForm($album->id);
             $this->addForm($form);
-            $this->assign('extendInputs', $form->getExtendElements());
+            $this->assign('extendInputs', $form->getExtendedElements());
 
             $exclude = array($album->id);
             $newsfeedAlbum = PHOTO_BOL_PhotoAlbumService::getInstance()->getNewsfeedAlbum($album->userId);
@@ -544,7 +527,7 @@ class PHOTO_CTRL_Photo extends OW_ActionController
             {
                 $albums[$key]['name'] = UTIL_HtmlTag::autoLink($album['name']);
                 $albums[$key]['count'] = $this->photoAlbumService->countAlbumPhotos($album['id']);
-                $albumUrlList[$album['id']] = OW::getRouter()->urlForRoute('photo_user_album', array('user' => $username, 'album' => $album['id']));
+                $albums[$key]['albumUrl'] = OW::getRouter()->urlForRoute('photo_user_album', array('user' => $username, 'album' => $album['id']));
             }
         }
         
