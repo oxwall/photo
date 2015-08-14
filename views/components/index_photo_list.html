@@ -19,7 +19,7 @@
         <div class="ow_lp_photos ow_center" id="{$items.latest.contId}">
             {foreach from=$latest item='p'}
                 <a class="ow_lp_wrapper" rel="{$p.id}" href="{url_for_route for="view_photo:[id=>`$p.id`]"}" list-type="latest">
-                   <div class="ow_photo_item_widget" style="background-image: url({$p.url});" ></div>
+                   <div class="ow_photo_item_widget{if !empty($p.class)} {$p.class}{/if}" style="background-image: url({$p.url});" data-url="{$p.url}"></div>
                 </a>
             {foreachelse}
                 {$nocontent}
@@ -30,7 +30,7 @@
             <div class="ow_lp_photos ow_center" id="{$items.featured.contId}" style="display: none">
                 {foreach from=$featured item='p'}
                     <a class="ow_lp_wrapper" rel="{$p.id}" href="{url_for_route for="view_photo:[id=>`$p.id`]"}" list-type="featured">
-                       <div class="ow_photo_item_widget" style="background-image: url({$p.url});" ></div>
+                       <div class="ow_photo_item_widget{if !empty($p.class)} {$p.class}{/if}" style="background-image: url({$p.url});" data-url="{$p.url}"></div>
                     </a>
                 {foreachelse}
                     {$nocontent}
@@ -41,7 +41,7 @@
         <div class="ow_lp_photos ow_center" id="{$items.toprated.contId}" style="display: none">
             {foreach from=$toprated item='p'}
                 <a class="ow_lp_wrapper" rel="{$p.id}" href="{url_for_route for="view_photo:[id=>`$p.id`]"}" list-type="toprated">
-                   <div class="ow_photo_item_widget" style="background-image: url({$p.url});" ></div>
+                   <div class="ow_photo_item_widget{if !empty($p.class)} {$p.class}{/if}" style="background-image: url({$p.url});" data-url="{$p.url}"></div>
                 </a>
             {foreachelse}
                 {$nocontent}

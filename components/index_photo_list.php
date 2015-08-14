@@ -32,9 +32,9 @@
 /**
  * Index photo list component
  *
- * @authors Egor Bulgakov <egor.bulgakov@gmail.com>, Kairat Bakitow <kainisoft@gmail.com>
+ * @authors Kairat Bakitow <kainisoft@gmail.com>
  * @package ow.plugin.photo.components
- * @since 1.5.3
+ * @since 1.7.6
  */
 class PHOTO_CMP_IndexPhotoList extends OW_Component
 {
@@ -57,19 +57,35 @@ class PHOTO_CMP_IndexPhotoList extends OW_Component
 
             return;
         }
-
+OW::getThemeManager()->getSelectedTheme()->getImagesDir() . 'ic_lock.svg';
         $photoService = PHOTO_BOL_PhotoService::getInstance();
 
         $latest = $photoService->findPhotoList('latest', 1, $photoCount, NULL, PHOTO_BOL_PhotoService::TYPE_PREVIEW);
-        $this->assign('latest', $latest);
-
         $featured = $photoService->findPhotoList('featured', 1, $photoCount, NULL, PHOTO_BOL_PhotoService::TYPE_PREVIEW);
-        $this->assign('featured', $featured);
+        $topRated = $photoService->findPhotoList('toprated', 1, $photoCount, NULL, PHOTO_BOL_PhotoService::TYPE_PREVIEW);
 
-        $toprated = $photoService->findPhotoList('toprated', 1, $photoCount, NULL, PHOTO_BOL_PhotoService::TYPE_PREVIEW);
-        $this->assign('toprated', $toprated);
+        $event = OW::getEventManager()->trigger(
+            new OW_Event('photo.onIndexWidgetListReady', array(
+                'latest' => $latest,
+                'featured' => $featured,
+                'topRated' => $topRated
+            ))
+        );
+        $data = $event->getData();
+
+        if ( is_array($data) )
+        {
+            $latest = $data['latest'];
+            $featured = $data['featured'];
+            $topRated = $data['topRated'];
+        }
+
+        $this->assign('latest', $latest);
+        $this->assign('featured', $featured);
+        $this->assign('toprated', $topRated);
 
         $items = array('latest', 'toprated');
+
         if ( $featured )
         {
             $items[] = 'featured';
@@ -104,7 +120,7 @@ class PHOTO_CMP_IndexPhotoList extends OW_Component
         $arr = array();
         $dimension = array();
         
-        foreach ( array_merge($latest, $toprated, $featured) as $photo )
+        foreach ( array_merge($latest, $topRated, $featured) as $photo )
         {
             if ( in_array($photo['id'], $arr) )
             {
@@ -119,14 +135,16 @@ class PHOTO_CMP_IndexPhotoList extends OW_Component
             $arr[] = $photo['id'];
         }
         
-        OW::getDocument()->addOnloadScript(';$(".ow_lp_photos a.ow_lp_wrapper").on("click", function(e)
+        OW::getDocument()->addOnloadScript(UTIL_JsGenerator::composeJsString(';
+            $(".ow_lp_photos a.ow_lp_wrapper").on("click", function(e)
             {
                 e.preventDefault();
-                var dimension = ' .  json_encode($dimension) . ', _data = {};
+                var dimension = {$dimension}, _data = {};
                 var photoId = $(this).attr("rel");
                 var listType = $(this).attr("list-type");
                 var img = new Image();
-                img.src = $(this).find("div")[0].style.backgroundImage.slice(4, -1).replace(/"|\'/g,"");
+                var photos = {$photos};
+                img.src = $(this).find("div").attr("data-url");
                 
                 if ( dimension.hasOwnProperty(photoId) && dimension[photoId].main )
                 {
@@ -138,10 +156,31 @@ class PHOTO_CMP_IndexPhotoList extends OW_Component
                 }
 
                 _data.mainUrl = img.src;
+
+                var photoList = photos[listType], photo;
+
+                for ( var i = 0, j = photoList.length; i < j; i++ )
+                {
+                    var tmpPhoto = photoList[i];
+
+                    if ( tmpPhoto.id == photoId )
+                    {
+                        photo = tmpPhoto;
+
+                        break;
+                    }
+                }
                 
-                photoView.setId(photoId, listType, null, _data);
-            });'
-        );
+                photoView.setId(photoId, listType, null, _data, photo);
+            });', array(
+                'dimension' => $dimension,
+                'photos' => array(
+                    'latest' => $latest,
+                    'featured' => $featured,
+                    'toprated' => $topRated
+                )
+            )
+        ));
 
         $this->assign('uniqId', $uniqId);
 

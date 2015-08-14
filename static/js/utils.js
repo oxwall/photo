@@ -117,6 +117,11 @@ window.photoUtils = Object.freeze({
         }
     },
 
+    isEmptyArray: function( arr )
+    {
+        return !Array.isArray(arr) || arr.length === 0;
+    },
+
     getObjectType: function( o )
     {
         return Object.prototype.toString.call(o).slice(8, -1);
