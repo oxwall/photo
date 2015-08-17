@@ -2669,7 +2669,7 @@
             }
             
             var event = {buttons: [], actions: {}};
-            OW.trigger('photo.collectMenuItems', [event]);
+            OW.trigger('photo.collectMenuItems', [event, _params.listType]);
             $.extend(_methods, event.actions);
             
             if ( _contextList.length === 0 && event.buttons.length === 0 )
@@ -2711,6 +2711,8 @@
                 });
 
                 OW.trigger('photo.contextActionReady', [prototype, slot]);
+
+                if ( prototype.find('li').length === 0 ) return;
 
                 var contextAction = _params.contextAction.clone(true);
                 contextAction.append(prototype);
