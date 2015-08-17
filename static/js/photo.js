@@ -33,7 +33,7 @@
  * @since 1.6.1
  */
 (function( window, $, params ) {'use strict';
-
+    var utils = window.photoUtils;
     var _vars = $.extend({}, (params || {}),
         {cache: {}, minSize: {width: 400, height: 400}, spacing: 30, infoBar: 400, cmpListForDeleting: [], curPos: 0, fullScreen: (function()
         {
@@ -96,21 +96,21 @@
         }
     ),
     _elements = {
-        preloader: $('<div>', {class: 'ow_floatbox_preloader ow_photo_preload'})
+        preloader: $('<div>').addClass('ow_floatbox_preloader ow_photo_preload')
     },
     _methods = {
         isLoading: function()
         {
             return _vars.fetchRequest && _vars.fetchRequest.readyState !== 4;
         },
-        setId: function( photoId, listType, extend, data )
+        setId: function( photoId, listType, extend, data, photo )
         {
             if ( _methods.isLoading() )
             {
                 return false;
             }
             
-            _methods.history.replaceState(photoId, listType, extend, data);
+            _methods.history.replaceState(photoId, listType, extend, data, photo);
         },
         isCached: function( photoId )
         {
@@ -120,7 +120,7 @@
         {
             var keys, idList = [];
                 
-            if ( !photos || _vars.toString.call(photos) !== '[object Object]' || (keys = Object.keys(photos)).length === 0 )
+            if ( !photos || utils.getObjectType(photos) !== 'Object' || (keys = Object.keys(photos)).length === 0 )
             {
                 return false;
             }
@@ -131,18 +131,26 @@
                 {
                     var cmp = _vars.cache[item] = photos[item];
                     idList.push(item);
+
+                    if ( cmp.photo.dimension )
+                    {
+                        try
+                        {
+                            cmp.photo.dimension = JSON.parse(cmp.photo.dimension);
+                        }
+                        catch ( ignore ) { }
+                    }
                     
                     OW.trigger('photo.afterPhotoCached', [cmp.photo.id, cmp], _methods);
                 }
             });
-            
-            if ( idList.length )
-            {
-                _methods.backgroundLoadPhotos(idList, _methods.fullscreen.isFullscreen() ? 'fullscreen' : 'main');
-            }
+
+            _methods.backgroundLoadPhotos(idList, _methods.fullscreen.isFullscreen() ? 'fullscreen' : 'main');
         },
         backgroundLoadPhotos: function( photoIdList, type )
         {
+            if ( !Array.isArray(photoIdList) || photoIdList.length === 0 ) return;
+
             photoIdList.forEach(function( item )
             {
                 if ( _methods.isCached(item) )
@@ -150,16 +158,16 @@
                     var cmp = _methods.getPhotoCmp(item);
                     var url = (type === 'fullscreen' && +cmp.photo.hasFullsize) ? cmp.photo.urlFullscreen : cmp.photo.url;
                     
-                    setTimeout(function()
+                    setTimeout(function( url )
                     {
                         new Image().src = url;
-                    });
+                    }, 1, url);
                 }
             });
         },
         setState: function( loading )
         {
-            if ( _vars.toString.call(loading) !== '[object Boolean]' )
+            if ( utils.getObjectType(loading) !== 'Boolean' )
             {
                 loading = true;
             }
@@ -222,7 +230,7 @@
                     _methods.arrayUtils.getMaxInList(_vars.lists)) :
                 list[index + 1];
         },
-        cleareHistory: function()
+        clearHistory: function()
         {
             _vars.globalList.length = 0;
             _vars.lists.length = 0;
@@ -409,7 +417,7 @@
                 params: params
             };
         },
-        showPhotoCmp: function( photoId, listType, data )
+        showPhotoCmp: function( photoId, listType, data, photo )
         {
             OW.trigger('photo.onBeforeShow', [photoId, listType], _methods);
             
@@ -463,27 +471,29 @@
                     stageCss.width = dimension.width;
                     _elements.content.find('.ow_photoview_info_wrap').height(floatboxCss.height);
                 }
-                
+
+                OW.trigger('photo.setStage', [photo, data, stageCss, imgCss], _elements.content);
+
                 _elements.photoFB.fitWindow(floatboxCss);
                 _elements.content.find('.ow_photoview_stage_wrap').css(stageCss);
                 _elements.content.find('img.ow_photo_view').css(imgCss).attr('src', data.mainUrl);
             }
-            
+
             _methods.setState(true);
 
-            var data = _methods.getDataToSend(_vars.photoId, _vars.listType);
+            var send = _methods.getDataToSend(_vars.photoId, _vars.listType);
             
-            if ( _methods.isCached(data.dataToSend.photoId) )
+            if ( _methods.isCached(send.dataToSend.photoId) )
             {
-                _methods.loadCachedComponent(data.dataToSend.photoId);
+                _methods.loadCachedComponent(send.dataToSend.photoId);
             }
             
-            _methods.backgroundLoadPhotos([data.params.nextId, data.params.prevId], _methods.fullscreen.isFullscreen() ? 'fullscreen' : 'main');
+            _methods.backgroundLoadPhotos([send.params.nextId, send.params.prevId], _methods.fullscreen.isFullscreen() ? 'fullscreen' : 'main');
             
-            if ( _methods.utils.isNotEmptyObject(data.dataToSend) )
+            if ( _methods.utils.isNotEmptyObject(send.dataToSend) )
             {
-                $.extend(data.dataToSend, {ajaxFunc: 'getFloatbox', listType: _vars.listType});
-                _methods.fetchCmp(data.dataToSend, data.params);
+                $.extend(send.dataToSend, {ajaxFunc: 'getFloatbox', listType: _vars.listType});
+                _methods.fetchCmp(send.dataToSend, send.params);
             }
         },
         fetchCmp: function( dataToSend, params )
@@ -507,7 +517,7 @@
                     }
                     
                     OW.trigger('photo.onRequestComplete', [dataToSend, params, responce], _methods);
-                        
+                    utils.includeScriptAndStyle(responce.scripts);
                     _methods.cachePhotoComponents(responce.photos);
                         
                     if ( params.loadCurrent )
@@ -639,6 +649,8 @@
             _methods.setContent(photoId);
             _methods.setComment(photoId);
             _methods.addCmpMarkup(photoId);
+
+            OW.trigger('photo.markupReady', [_methods.getPhotoCmp(photoId)], _elements.content);
             
             _methods.fitSize(photoId, function( offset )
             {
@@ -736,7 +748,9 @@
                     _vars.minSize.width = (_vars.minSize.width + _vars.infoBar > screnWeight) ? maxWidth : (width > _vars.minSize.width) ? width : _vars.minSize.width;
                     _vars.minSize.height = (_vars.minSize.height > screnHeight) ? maxHeight : (height > _vars.minSize.height) ? height : _vars.minSize.height;
                 }
-                
+
+                OW.trigger('photo.fitSize', [_methods.getPhotoCmp(photoId), _vars.minSize], _elements.content);
+
                 width = _vars.minSize.width + _vars.infoBar;
                 height = _vars.minSize.height;
 
@@ -791,13 +805,12 @@
             $('.ow_user_list_picture a', content).attr('href', cmp.avatar.url);
             $('.ow_user_list_picture img', content).attr({alt: cmp.avatar.title, src: cmp.avatar.src}).show();
             $('.ow_photoview_albumlink', content).attr('href', cmp.albumUrl).html(
-                "'" + _methods.utils.truncate(cmp.album.name) + "': " + cmp.photoIndex + ' ' + OW.getLanguageText('photo', 'of') + ' ' + cmp.photoCount
+                "'" + utils.truncate(cmp.album.name) + "': " + cmp.photoIndex + ' ' + OW.getLanguageText('photo', 'of') + ' ' + cmp.photoCount
             );
             $('.ow_user_list_data a.ow_photo_avatar_url', content).attr('href', cmp.avatar.url).html(cmp.avatar.title);
             $('.ow_user_list_data .ow_timestamp', content).html(cmp.photo.addDatetime);
-            $('.ow_user_list_data .ow_photo_album_url', content).attr('href', cmp.albumUrl).children().html(
-                OW.getLanguageText('photo', 'album') + ': ' + _methods.utils.truncate(cmp.album.name, 60)
-            );
+            $('.ow_user_list_data .ow_photo_album_url', content).attr('href', cmp.albumUrl)
+                .find('.ow_photo_album_name').html(utils.truncate(cmp.album.name, 60));
             
             if ( cmp.contextAction.length )
             {
@@ -852,10 +865,10 @@
                                     cmp.photo.description = data.description;
 
                                     $('.ow_user_list_data .ow_photo_album_url', content).attr('href', data.albumUrl).children().html(
-                                        OW.getLanguageText('photo', 'album') + ': ' + _methods.utils.truncate(data.albumName, 60)
+                                        OW.getLanguageText('photo', 'album') + ': ' + utils.truncate(data.albumName, 60)
                                     );
 
-                                    var event = {text: _methods.utils.descToHashtag(cmp.photo.description)};
+                                    var event = {text: utils.descToHashtag(cmp.photo.description)};
                                     OW.trigger('photo.onSetDescription', event);
                                     $('.ow_photoview_description span', content).html(event.text);
 
@@ -972,13 +985,13 @@
                 return;
             }
 
-            var event = {text: _methods.utils.descToHashtag(cmp.photo.description)};
+            var event = {text: utils.descToHashtag(cmp.photo.description)};
             OW.trigger('photo.onSetDescription', event);
             $('.ow_photoview_description span', content).html(event.text);
 
             var userScore = cmp.userScore;
             var rateInfo = cmp.rateInfo;
-            var rateItems = $('.ow_rates_wrap', content).show().find('.rate_item');
+            var rateItems = $('.ow_rates_wrap', content).show().find('.rate_item').off();
             
             if ( +userScore > 0 )
             {
@@ -992,92 +1005,108 @@
                     OW.getLanguageText('photo', 'rating_total', {count: rateInfo.rates_count})
                 );
             }
-            
-            content.find('.active_rate_list').css('width', (rateInfo.avg_score * 20) + '%');
-            
-            rateItems.off().each(function( index )
-            {
-                $(this).on('click', function()
-                {
-                    var ownerError;
 
-                    if ( +_vars.rateUserId === 0 || (ownerError = (+cmp.ownerId === +_vars.rateUserId)) )
+            content.find('.active_rate_list').css('width', (rateInfo.avg_score * 20) + '%');
+
+            var eventRate = {
+                canRate: true,
+                photo: cmp.photo
+            };
+            OW.trigger('photo.canRate', eventRate, this.node);
+
+            if ( !eventRate.canRate )
+            {
+                return;
+            }
+            
+            rateItems.on('click', function()
+            {
+                var ownerError;
+
+                if ( +_vars.rateUserId === 0 )
+                {
+                    OW.error(OW.getLanguageText('base', 'rate_cmp_auth_error_message'));
+
+                    return;
+                }
+                else if ( +cmp.ownerId === +_vars.rateUserId )
+                {
+                    OW.error(OW.getLanguageText('base', 'rate_cmp_owner_cant_rate_error_message'));
+
+                    return;
+                }
+
+                var event = {
+                    canRate: true,
+                    photo: cmp.photo
+                };
+                OW.trigger('photo.canRate', event, this.node);
+
+                if ( !event.canRate ) return;
+
+                var rate = $(this).index() + 1;
+
+                $.ajax({
+                    url: _vars.ajaxResponder,
+                    dataType: 'json',
+                    data: {
+                        ajaxFunc: 'ajaxRate',
+                        entityId: cmp.photo.id,
+                        rate: rate,
+                        ownerId: cmp.ownerId
+                    },
+                    cache: false,
+                    type: 'POST',
+                    success: function( result, textStatus, jqXHR )
                     {
-                        if ( ownerError === undefined )
+                        if ( result )
                         {
-                            OW.error(OW.getLanguageText('base', 'rate_cmp_auth_error_message'));
+                            switch ( result.result )
+                            {
+                                case true:
+                                    OW.info(result.msg);
+                                        
+                                    content.find('.active_rate_list').css('width', (result.rateInfo.avg_score * 20) + '%');
+                                    content.find('.rate_title').html(
+                                        OW.getLanguageText('photo', 'rating_your', {count: result.rateInfo.rates_count, score: rate})
+                                    );
+
+                                    cmp.userScore = rate;
+                                    rateInfo.avg_score = result.rateInfo.avg_score;
+                                    rateInfo.rates_count = result.rateInfo.rates_count;
+                                        
+                                    OW.trigger('photo.onSetRate', {
+                                        entityId: cmp.photo.id,
+                                        userScore: cmp.userScore,
+                                        avgScore: rateInfo.avg_score,
+                                        ratesCount: rateInfo.rates_count
+                                    }, _methods);
+                                    break;
+                                case false:
+                                default:
+                                    OW.error(result.error);
+                                    break;
+                            }
                         }
                         else
                         {
-                            OW.error(OW.getLanguageText('base', 'rate_cmp_owner_cant_rate_error_message'));
+                            OW.error('Server error');
                         }
-
-                        return;
-                    }
-                    
-                    $.ajax(
+                    },
+                    error: function( jqXHR, textStatus, errorThrown )
                     {
-                        url: _vars.ajaxResponder,
-                        dataType: 'json',
-                        data: {
-                            ajaxFunc: 'ajaxRate',
-                            entityId: cmp.photo.id,
-                            rate: index + 1,
-                            ownerId: cmp.ownerId
-                        },
-                        cache: false,
-                        type: 'POST',
-                        success: function( result, textStatus, jqXHR )
-                        {
-                            if ( result )
-                            {
-                                switch ( result.result )
-                                {
-                                    case true:
-                                        OW.info(result.msg);
-                                        
-                                        content.find('.active_rate_list').css('width', (result.rateInfo.avg_score * 20) + '%');
-                                        content.find('.rate_title').html(
-                                            OW.getLanguageText('photo', 'rating_your', {count: result.rateInfo.rates_count, score: index + 1})
-                                        );
-
-                                        cmp.userScore = index + 1;
-                                        rateInfo.avg_score = result.rateInfo.avg_score;
-                                        rateInfo.rates_count = result.rateInfo.rates_count;
-                                        
-                                        OW.trigger('photo.onSetRate', {
-                                            entityId: cmp.photo.id,
-                                            userScore: cmp.userScore,
-                                            avgScore: rateInfo.avg_score,
-                                            ratesCount: rateInfo.rates_count
-                                        }, _methods);
-                                        break;
-                                    case false:
-                                    default:
-                                        OW.error(result.error);
-                                        break;
-                                }
-                            }
-                            else
-                            {
-                                OW.error('Server error');
-                            }
-                        },
-                        error: function( jqXHR, textStatus, errorThrown )
-                        {
-                            throw textStatus;
-                        }
-                    });
-                })
-                .hover(function()
-                {
-                    rateItems.slice(0, index + 1).addClass('active');
-                    content.find('.active_rate_list').css('width', '0px');
-                }, function()
-                {
-                    rateItems.slice(0, index + 1).removeClass('active');
-                    content.find('.active_rate_list').css('width', (rateInfo.avg_score * 20) + '%');
+                        throw textStatus;
+                    }
                 });
+            })
+            .hover(function()
+            {
+                $(this).prevAll().add(this).addClass('active');
+                content.find('.active_rate_list').css('width', '0px');
+            }, function()
+            {
+                $(this).prevAll().add(this).removeClass('active');
+                content.find('.active_rate_list').css('width', (rateInfo.avg_score * 20) + '%');
             });
         },
         setComment: function( photoId )
@@ -1390,8 +1419,6 @@
                 {
                     elem[_vars.fullScreen.requestFullscreen](keyboardAllowed && Element.ALLOW_KEYBOARD_INPUT);
                 }
-
-
             },
             exit: function()
             {
@@ -1443,32 +1470,28 @@
 
                     if ( cmp.photo.hasFullsize && cmp.photo.dimension )
                     {
-                        try
+                        var dimension = cmp.photo.dimension;
+
+                        if ( dimension.fullscreen && dimension.fullscreen.length === 2 )
                         {
-                            var dimension = JSON.parse(cmp.photo.dimension);
-                            
-                            if ( dimension.fullscreen && dimension.fullscreen.length === 2 )
+                            var css = {};
+
+                            if ( dimension.fullscreen[0] > screen.width && dimension.fullscreen[1] > screen.height )
                             {
-                                var css = {};
-                                
-                                if ( dimension.fullscreen[0] > screen.width && dimension.fullscreen[1] > screen.height )
-                                {
-                                    var proportion = _methods.utils.getScreenProportion(dimension.fullscreen[0], dimension.fullscreen[1]);
+                                var proportion = _methods.utils.getScreenProportion(dimension.fullscreen[0], dimension.fullscreen[1]);
 
-                                    css.width = proportion[0];
-                                    css.height = proportion[1];
-                                }
-                                else
-                                {
-                                    css.width = dimension.fullscreen[0];
-                                    css.height = dimension.fullscreen[1];
-                                }
-
-                                _elements.content.find('img.ow_photo_view').css(css).attr('src', cmp.photo.url);
-                                _methods.fitSize(_vars.photoId, function(){});
+                                css.width = proportion[0];
+                                css.height = proportion[1];
                             }
+                            else
+                            {
+                                css.width = dimension.fullscreen[0];
+                                css.height = dimension.fullscreen[1];
+                            }
+
+                            _elements.content.find('img.ow_photo_view').css(css).attr('src', cmp.photo.url);
+                            _methods.fitSize(_vars.photoId, function(){});
                         }
-                        catch( e ) { }
                     }
                     
                     if ( _vars.fbHasContent )
@@ -1541,47 +1564,17 @@
         },
         utils:
         {
-            truncate: function( value, limit )
-            {
-                if ( !value )
-                {
-                    return '';
-                }
-
-                var parts;
-
-                limit = +limit || 50;
-
-                if ( (parts = value.split(/\n/)).length >= 3 )
-                {
-                    value = parts.slice(0, 3).join('\n') + '...';
-                }
-                else if ( value.length > limit )
-                {
-                    value = value.toString().substring(0, limit) + '...';
-                }
-
-                return value;
-            },
             showPreloader: function()
             {
                 if ( _vars.layout !== 'page' || _elements.photoFB )
                 {
+                    if ( !_elements.photoFB.$canvas.hasClass('ow_floatbox_loading') )
                     _elements.photoFB.$canvas.prepend(_elements.preloader.css('left', $(window).width() / 2 - 160));
                 }
             },
             hidePreloader: function()
             {
                 _elements.preloader.detach();
-            },
-            descToHashtag: function( description )
-            {
-                var url = '<a href="' + _vars.urlHome + 'photo/viewlist/tagged/{$tag}">{$tagLabel}</a>';
-
-                return description.replace(/#(?:\w|[^\u0000-\u007F])+/g, function( str )
-                {
-                    return (url.replace('{$tag}', encodeURIComponent(str))).replace('{$tagLabel}', str);
-                }).replace(/\n/g, '<br>');
             },
             isNotEmptyObject: function( object )
             {
@@ -1776,7 +1769,7 @@
             }
         },
         history: {
-            replaceState: function( photoId, listType, extend, data )
+            replaceState: function( photoId, listType, extend, data, photo )
             {
                 if ( !photoId || isNaN(+photoId) )
                 {
@@ -1812,13 +1805,18 @@
                     window.history.replaceState(state, null, url);
                 }
                 
-                $(window).triggerHandler('popstate.photo', {photoId: photoId, listType: listType, data: data});
+                $(window).triggerHandler('popstate.photo', {
+                    photoId: photoId,
+                    listType: listType,
+                    data: data,
+                    photo: photo
+                });
             },
             popstate: function( event, data )
             {
                 if ( data && data.photoId && !isNaN(+data.photoId) )
                 {
-                    _methods.showPhotoCmp(+data.photoId, data.listType, data.data);
+                    _methods.showPhotoCmp(+data.photoId, data.listType, data.data, data.photo);
                 }
             },
             goInitState: function()
@@ -2127,11 +2125,27 @@
             {
                 if ( listType != _vars.listType )
                 {
-                    _methods.cleareHistory();
+                    _methods.clearHistory();
                 }
             });
-            
-            $('.ow_photoview_stage_wrap,img.ow_photo_img', content).on('click', function( event )
+            OW.bind('photo.deleteCache', function( photos )
+            {
+                if ( !Array.isArray(photos) || photos.length === 0 ) return;
+
+                photos.forEach(function( photoId )
+                {
+                    _methods.deletePhotoCmp(photoId);
+                });
+            });
+
+            var event = {
+                selectors: [
+                    '.ow_photoview_stage_wrap',
+                    'img.ow_photo_img'
+                ]
+            };
+            OW.trigger('photo.collectChangePhotoSelectors', event);
+            content.on('click', event.selectors.join(','), function( event )
             {
                 if ( !$(event.target).is(event.currentTarget) )
                 {

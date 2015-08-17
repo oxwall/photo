@@ -376,7 +376,7 @@ class PHOTO_CTRL_Photo extends OW_ActionController
             {
                 $exclude[] = $newsfeedAlbum->id;
             }
-            
+
             $albumNameList = $this->photoAlbumService->findAlbumNameListByUserId($userDto->id, $exclude);
             $this->assign('albumNameList', $albumNameList);
             
@@ -453,8 +453,7 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         {
             ini_set('zlib.output_compression', 'Off');
         }
-        
-        ob_end_clean();
+
         header('Pragma: public');
         header('Expires: 0');
         header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
@@ -464,6 +463,7 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         header('Content-Disposition: attachment; filename="' . basename($path) . '";');
         header('Content-Transfer-Encoding: binary');
         header('Content-Length: ' . filesize($path));
+        ob_end_clean();
         readfile($path);
         exit();
     }
@@ -586,6 +586,16 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         }
         
         return $this->generatePhotoList($photos);
+    }
+
+    public function getPhotoInfo( $params )
+    {
+        $albumId = isset($params['albumId']) ? (int)$params['albumId'] : null;
+        $photos = (isset($params['photos']) && is_array($params['photos'])) ? $params['photos'] : array();
+
+        $list = $this->photoService->findPhotosInAlbum($albumId, $photos);
+
+        return $this->generatePhotoList($list);
     }
     
     public function generatePhotoList( $photos )
@@ -1111,6 +1121,20 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         if ( BOL_UserService::getInstance()->isBlocked(OW::getUser()->getId(), $ownerId) )
         {
             return array('result' => FALSE, 'error' => OW::getLanguage()->text('base', 'user_block_message'));
+        }
+
+        $event = OW::getEventManager()->trigger(
+            new OW_Event('photo.onRate', array(
+                'photoId' => $entityId,
+                'rate' => $rate,
+                'ownerId' => $ownerId,
+                'userId' => $userId
+            ))
+        );
+
+        if ( $event->getData() !== null )
+        {
+            return $event->getData();
         }
 
         $service = BOL_RateService::getInstance();

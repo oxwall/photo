@@ -472,6 +472,30 @@ class PHOTO_CLASS_EventHandler
         return $data;
     }
 
+    public function photoFinds( OW_Event $event )
+    {
+        $params = $event->getParams();
+
+        if ( empty($params['idList']) )
+        {
+            return false;
+        }
+
+        $photos = $this->photoService->findPhotoListByIdList($params['idList'], 1, count($params['idList']));
+
+        if ( !$photos )
+        {
+            return false;
+        }
+
+        $list = $this->preparePhotos($photos);
+        $event->setData(array(
+            'photos' => $list
+        ));
+
+        return $event->getData();
+    }
+
     public function photoDelete( OW_Event $e )
     {
         $params = $e->getParams();
@@ -650,7 +674,7 @@ class PHOTO_CLASS_EventHandler
             $list[$id]['description'] = $photo['description'];
             $list[$id]['userId'] = $album->userId;
             $list[$id]['url'] = OW::getRouter()->urlForRoute('view_photo', array('id' => $id));
-            $list[$id]["dimension"] = $dimensions;
+            $list[$id]['dimension'] = $dimensions;
             
             $list[$id]['photoUrl'] = $this->photoService->getPhotoUrlByType($id, PHOTO_BOL_PhotoService::TYPE_MAIN, $photo['hash'], $photo['dimension']);
             $list[$id]['previewUrl'] = $this->photoService->getPhotoUrlByType($id, PHOTO_BOL_PhotoService::TYPE_PREVIEW, $photo['hash'], $photo['dimension']);
@@ -1198,20 +1222,24 @@ class PHOTO_CLASS_EventHandler
                             }
 
                             _data.mainUrl = {$url};
-                            window.photoView.setId(photoId, "latest", null, _data );
+                            window.photoView.setId(photoId, "latest", null, _data, {$photo});
                         });',
                         array(
                             'autoId' => $autoId,
                             'dimension' => $dimension,
                             'photoId' => $photoId,
-                            'url' => $this->photoService->getPhotoUrlByType($photo->id, PHOTO_BOL_PhotoService::TYPE_PREVIEW, $photo->hash, !empty($photo->dimension) ? $photo->dimension : FALSE)
+                            'url' => $this->photoService->getPhotoUrlByType($photo->id, PHOTO_BOL_PhotoService::TYPE_PREVIEW, $photo->hash, !empty($photo->dimension) ? $photo->dimension : FALSE),
+                            'photo' => array(
+                                'id' => $photo->id,
+                                'albumId' => $photo->albumId
+                            )
                         )
                     )
                 );
                 break;
 
             case 'multiple_photo_upload':
-                $data = $event->getData();
+                $photos = array();
 
                 if ( !empty($params['action']['format']) )
                 {
@@ -1219,6 +1247,11 @@ class PHOTO_CLASS_EventHandler
 
                     foreach ( $photoList as $photo )
                     {
+                        $photos[$photo->id] = array(
+                            'id' => $photo->id,
+                            'albumId' => $photo->albumId
+                        );
+
                         if ( !empty($photo->dimension) )
                         {
                             $dimension[$photo->id] = json_decode($photo->dimension);
@@ -1233,7 +1266,8 @@ class PHOTO_CLASS_EventHandler
                             var dimension = {$dimension}, _data = {};
                             var match = this.pathname.match(/\d+$/);
                             var photoId = +match[0];
-                            var url = $(this).css("background-image").replace(/url\("?|"?\)$/ig, "");
+                            var url = $(this).attr("data-image");
+                            var photos = {$photos};
 
                             if ( dimension.hasOwnProperty(photoId) && dimension[photoId].main )
                             {
@@ -1247,11 +1281,12 @@ class PHOTO_CLASS_EventHandler
                             }
 
                             _data.mainUrl = url;
-                            window.photoView.setId(photoId, "latest", null, _data );
+                            window.photoView.setId(photoId, "latest", null, _data, photos[photoId] );
                         });',
                         array(
                             'autoId' => $autoId,
-                            'dimension' => $dimension
+                            'dimension' => $dimension,
+                            'photos' => $photos
                         )
                     )
                 );
@@ -2005,6 +2040,7 @@ class PHOTO_CLASS_EventHandler
         $em->bind(self::EVENT_ENTITY_ALBUMS_FIND, array($this, 'entityAlbumsFind'));
         $em->bind(self::EVENT_PHOTO_ADD, array($this, 'photoAdd'));
         $em->bind(self::EVENT_PHOTO_FIND, array($this, 'photoFind'));
+        $em->bind('photo.finds', array($this, 'photoFinds'));
         $em->bind(self::EVENT_PHOTO_DELETE, array($this, 'photoDelete'));
         $em->bind(self::EVENT_ALBUM_PHOTOS_FIND, array($this, 'albumPhotosFind'));
         

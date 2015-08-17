@@ -55,7 +55,10 @@ class PHOTO_CMP_UserPhotoAlbumsWidget extends BASE_CLASS_Widget
         
         if ( $albums )
         {
-            $this->assign('albums', $albums);
+            $event = OW::getEventManager()->trigger(
+                new OW_Event('photo.albumsWidgetReady', array(), $albums)
+            );
+            $this->assign('albums', $event->getData());
 
             $albumsCount = $photoAlbumService->countUserAlbums($userId);
 

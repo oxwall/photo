@@ -272,7 +272,13 @@
 
         Slot.prototype.bindEvents = utils.fluent(function()
         {
-            this.node.off().on('click', this.self(function()
+            var event = {
+                selectors: [
+                    '.ow_photo_item img'
+                ]
+            };
+            OW.trigger('photo.collectShowPhoto', event);
+            this.node.off().on('click', event.selectors.join(','), this.self(function()
             {
                 var data = this.data,
                     img = this.node.find('img')[0],
@@ -412,7 +418,7 @@
 
         SlotManager.prototype.buildSlotList = utils.fluent(function( data )
         {
-            if ( !data || !Array.isArray(data.photoList) || data.photoList.length === 0 )
+            if ( !data || utils.isEmptyArray(data.photoList) )
             {
                 this.list.hideLoader();
 
@@ -456,7 +462,7 @@
 
         SlotManager.prototype.removePhotoItems = function( idList )
         {
-            if ( !Array.isArray(idList) || idList.length === 0 )
+            if ( utils.isEmptyArray(idList) )
             {
                 return false;
             }
@@ -563,7 +569,7 @@
 
         SlotManager.prototype.backgroundLoad = utils.fluent(function( list )
         {
-            if ( !Array.isArray(list) || list.length === 0 ) return;
+            if ( utils.isEmptyArray(list) ) return;
 
             list.forEach(function( photo )
             {
@@ -604,7 +610,93 @@
 
         SlotManager.prototype.updateAlbumPhotos = utils.fluent(function( photoId )
         {
+            if ( photoId === undf || !this.cache.hasOwnProperty(photoId) ) return;
 
+            var slot = this.cache[photoId];
+            var albumId = slot.data.albumId;
+            var slots = Object.keys(this.cache).reduce(this.self(function( result, slotId )
+            {
+                var slot = this.cache[slotId];
+
+                if ( slot.data.albumId == albumId )
+                {
+                    result.push(slot.data.id);
+                }
+
+                return result;
+            }), []);
+
+            OW.trigger('photo.deleteCache', [slots]);
+
+            this.getPhotoInfo(albumId, slots, this.self(function( data, textStatus, jqXHR )
+            {
+                if ( data && data.status === 'success' )
+                {
+                    utils.includeScriptAndStyle(data.scripts);
+                    this.rebuildSlots(data.data);
+                }
+                else
+                {
+                    OW.error('Server error');
+                }
+            }));
+        });
+
+        SlotManager.prototype.getPhotoInfo = utils.fluent(function( albumId, photos, then )
+        {
+            $.ajax({
+                url: params.getPhotoURL,
+                dataType: 'json',
+                data: {
+                    ajaxFunc: 'getPhotoInfo',
+                    albumId: albumId,
+                    photos: photos
+                },
+                cache: false,
+                type: 'POST',
+                success: then,
+                error: function( jqXHR, textStatus, errorThrown )
+                {
+                    throw textStatus;
+                }
+            });
+        });
+
+        SlotManager.prototype.rebuildSlots = utils.fluent(function( data )
+        {
+            if ( !data || utils.isEmptyArray(data.photoList) ) return;
+
+            this.data = data;
+            this.uniqueList = data.unique;
+            this.backgroundLoad(data.photoList);
+
+            this.data.photoList.forEach(function( photo )
+            {
+                if ( !this.cache.hasOwnProperty(photo.id) ) return;
+
+                var slot = this.cache[photo.id];
+
+                $.extend(slot.data, photo);
+                this.updateSlot(photo.id, this.getSlotData(photo));
+                OW.trigger('photo.onRenderPhotoItem', [photo], slot.node);
+
+                if ( params.classicMode )
+                {
+                    slot.node.find('.ow_photo_item').css('background-image', 'url(' + slot.data.url + ')');
+                    slot.node.find('img.ow_hidden').attr('src', slot.data.url);
+                }
+                else
+                {
+                    var img = slot.node.find('img').show()[0];
+
+                    img.onload = img.onerror = this.self(function()
+                    {
+                        this.list.reorder();
+                    });
+                    img.src = slot.data.url;
+                }
+
+            }, this);
         });
 
         return SlotManager;
@@ -664,7 +756,7 @@
                 {
                     slot.node.find('.ow_photo_item').css('background-image', 'url(' + slot.data.url + ')');
                     slot.node.find('img.ow_hidden').attr('src', slot.data.url);
-                    slot.appendTo(this.content);
+                    slot.node.appendTo(this.content);
                     slot.node.fadeIn(100, this.self(function()
                     {
                         this.slotManager.buildNewOne();
@@ -1387,8 +1479,6 @@
             {
                 _methods[action](slot);
             }
-            
-            event.stopPropagation();
         },
         createElement: function( action, html, style )
         {
@@ -1443,7 +1533,7 @@
             }
             
             var event = {buttons: [], actions: {}};
-            OW.trigger('photo.collectMenuItems', [event]);
+            OW.trigger('photo.collectMenuItems', [event, _params.listType]);
             $.extend(_methods, event.actions);
             
             if ( _contextList.length === 0 && event.buttons.length === 0 )
@@ -1485,6 +1575,8 @@
                 });
 
                 OW.trigger('photo.contextActionReady', [prototype, slot]);
+
+                if ( prototype.find('li').length === 0 ) return;
 
                 var contextAction = _params.contextAction.clone(true);
                 contextAction.append(prototype);
