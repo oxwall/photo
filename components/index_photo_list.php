@@ -57,7 +57,7 @@ class PHOTO_CMP_IndexPhotoList extends OW_Component
 
             return;
         }
-OW::getThemeManager()->getSelectedTheme()->getImagesDir() . 'ic_lock.svg';
+
         $photoService = PHOTO_BOL_PhotoService::getInstance();
 
         $latest = $photoService->findPhotoList('latest', 1, $photoCount, NULL, PHOTO_BOL_PhotoService::TYPE_PREVIEW);
