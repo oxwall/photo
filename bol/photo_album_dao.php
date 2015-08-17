@@ -148,15 +148,25 @@ class PHOTO_BOL_PhotoAlbumDao extends OW_BaseDao
     {
         $first = ( $page - 1 ) * $limit;
 
-        $example = new OW_Example();
-        $example->andFieldEqual('userId', $userId);
+        $sql = 'SELECT `a`.*
+            FROM `' . $this->getTableName() . '` AS `a`
+                INNER JOIN `' . PHOTO_BOL_PhotoDao::getInstance()->getTableName() . '` AS `p`
+                    ON(`p`.`albumId` = `a`.`id`)
+            WHERE `a`.`userId` = :userId ';
+
         if ( $exclude )
         {
-            $example->andFieldNotInArray('id', $exclude);
+            $sql .= ' AND `a`.`id` NOT IN(' . implode(',', array_map('intval', $exclude)) . ') ';
         }
-        $example->setLimitClause($first, $limit);
 
-        return $this->findListByExample($example);
+        $sql .= 'GROUP BY `a`.`id`
+        LIMIT :first, :limit';
+
+        return $this->dbo->queryForObjectList($sql, $this->getDtoClassName(), array(
+            'userId' => $userId,
+            'first' => (int) $first,
+            'limit' => (int) $limit
+        ));
     }
     
     public function findUserAlbumList( $userId, $first, $limit, array $exclude = array() )
