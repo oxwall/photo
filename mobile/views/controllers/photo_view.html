@@ -26,7 +26,7 @@
                     {if $fullsizeUrl}<a class="owm_photo_enlarge owm_float_right" href="{$fullsizeUrl}"></a>{/if}
                 </div>
                 <div class="owm_photo_author clearfix">
-                    <div class="owm_avatar owm_float_left">{decorator name='avatar_item' data=$avatar}</div>
+                    <div class="owm_float_left">{decorator name='avatar_item' data=$avatar}</div>
                     <div class="owm_photo_string">
                         <div class="owm_photo_name"><a href="{$avatar.url}">{$avatar.title}</a></div>
                         <div class="owm_photo_date">{format_date timestamp=$photo->addDatetime}</div>
