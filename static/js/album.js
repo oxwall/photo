@@ -336,7 +336,7 @@
             {
                 if ( data && data.albumName && _vars.album.name.trim() != data.albumName.trim() )
                 {
-                    window.browsePhoto.removePhotoItems(['photo-item-' + data.id]);
+                    window.browsePhoto.removePhotoItems([data.id]);
                 }
             });
             
@@ -361,7 +361,7 @@
             (_elements.editBtn = $('.edit_btn', _elements.editCont)).find('a').on('click', _methods.setEditMode);
             _elements.coverBtn = $('.ow_lbutton', _elements.albumInfo).on('click', function()
             {
-                var img = $('img.cover_orig', _elements.editCont)[0]
+                var img = $('img.cover_orig', _elements.editCont)[0];
 
                 if ( img.naturalHeight < 330 || img.naturalWidth < 330 )
                 {

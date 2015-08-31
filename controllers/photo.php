@@ -411,6 +411,20 @@ class PHOTO_CTRL_Photo extends OW_ActionController
             $lang->addKeyForJs('photo', 'photo_success_moved');
         }
     }
+
+    public function reloadAlbumCover( $params )
+    {
+        if ( empty($params['albumId']) || ($album = $this->photoAlbumService->findAlbumById($params['albumId'])) === null )
+        {
+            return array();
+        }
+
+        $coverEvent = OW::getEventManager()->trigger(
+            new OW_Event(PHOTO_CLASS_EventHandler::EVENT_GET_ALBUM_COVER_URL, array('albumId' => $album->id))
+        );
+
+        return $coverEvent->getData();
+    }
     
     public function userPhotos( array $params )
     {
