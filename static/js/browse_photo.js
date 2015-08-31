@@ -120,7 +120,7 @@
 
             if ( description )
             {
-                this.node.find('.ow_photo_item_info_description').html(description).show();
+                this.node.find('.ow_photo_item_info_description .ow_photo_description').html(description).show();
             }
             else
             {
