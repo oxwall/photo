@@ -71,13 +71,15 @@
     {
         utils.extend(Slot, BaseObject);
 
-        function Slot( photo, listType )
+        function Slot( slot, listType )
         {
             Slot._super.call(this);
 
             this.node = $('#browse-photo-item-prototype').clone();
-            this.node.attr('id', 'photo-item-' + photo.id);
-            this.data = $.extend({listType: listType}, photo);
+            this.node
+                .attr('id', 'photo-item-' + slot.id)
+                .data('slotId', slot.id);
+            this.data = $.extend({listType: listType}, slot);
         }
 
         Slot.prototype.setInfo = utils.fluent(function( data )
@@ -587,6 +589,11 @@
             this.isCompleted = false;
             this.cache = {};
         });
+
+        SlotManager.prototype.getSlot = function( slotId )
+        {
+            return this.cache[slotId] || null;
+        };
 
         SlotManager.prototype.updateSlot = utils.fluent(function( slotId, data )
         {
@@ -1277,6 +1284,10 @@
             OW.trigger('photo.onUpdateSlot', [slotId, data]);
 
             SlotManager().updateSlot(slotId, data);
+        },
+        getSlot: function( slotId )
+        {
+            return SlotManager().getSlot(slotId);
         }
     });
 }));

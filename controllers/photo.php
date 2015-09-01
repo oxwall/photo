@@ -840,10 +840,18 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         
             $album = PHOTO_BOL_PhotoAlbumService::getInstance()->findAlbumById($values['from-album']);
             $userDto =  BOL_UserService::getInstance()->findUserById($album->userId);
-            
+
+            $exclude = array($album->id);
+            $newsfeedAlbum = PHOTO_BOL_PhotoAlbumService::getInstance()->getNewsfeedAlbum($album->userId);
+
+            if ( !empty($newsfeedAlbum) )
+            {
+                $exclude[] = $newsfeedAlbum->id;
+            }
+
             return array(
                 'result' => TRUE,
-                'albumNameList' => $this->photoAlbumService->findAlbumNameListByUserId($userDto->id, array($album->id)),
+                'albumNameList' => $this->photoAlbumService->findAlbumNameListByUserId($userDto->id, $exclude),
                 'coverUrl' => PHOTO_BOL_PhotoAlbumCoverDao::getInstance()->getAlbumCoverUrlByAlbumId($album->id),
                 'isHasCover' => PHOTO_BOL_PhotoAlbumCoverDao::getInstance()->isAlbumCoverExist($album->id)
             );

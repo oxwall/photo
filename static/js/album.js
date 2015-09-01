@@ -67,6 +67,7 @@
         {
             try
             {
+                owForms.albumEditForm.removeErrors();
                 owForms.albumEditForm.validate();
             }
             catch ( e )
@@ -120,7 +121,7 @@
             if ( _elements.selectAll[0].checked )
             {
                 self.find('.ow_photo_item').addClass('ow_photo_item_checked');
-                _vars.photoIdList.push(+self.data('photoId'));
+                _vars.photoIdList.push(+self.data('slotId'));
             }
             
             self.find('img:first').after(_elements.checkbox.clone().on('click', function()
@@ -130,12 +131,12 @@
                 if ( closest.hasClass('ow_photo_item_checked') )
                 {
                      closest.removeClass('ow_photo_item_checked');
-                     _vars.photoIdList.splice(_vars.photoIdList.indexOf(+closest.parent().data('photoId')), 1);
+                     _vars.photoIdList.splice(_vars.photoIdList.indexOf(+closest.parent().data('slotId')), 1);
                 }
                 else
                 {
                     closest.addClass('ow_photo_item_checked');
-                     _vars.photoIdList.push(+closest.parent().data('photoId'));
+                     _vars.photoIdList.push(+closest.parent().data('slotId'));
                 }
                 
                 _vars.photoIdList.length === 1 ? $('.set_as_cover', _elements.menu).removeClass('ow_bl_disabled').on('click', _methods.makeAsCover) : $('.set_as_cover', _elements.menu).addClass('ow_bl_disabled').off();
@@ -149,7 +150,7 @@
         {
             event.stopImmediatePropagation();
             
-            var img, item = document.getElementById('photo-item-' + _vars.photoIdList[0]), data = $(item).data(), dim;
+            var img, item = document.getElementById('photo-item-' + _vars.photoIdList[0]), dim;
             
             if ( _vars.isClassic )
             {
@@ -159,12 +160,14 @@
             {
                 img = $('img', item)[0];
             }
+
+            var slot = browsePhoto.getSlot(_vars.photoIdList[0]);
             
-            if ( data.dimension && data.dimension.length )
+            if ( slot.data.dimension && slot.data.dimension.length )
             {
                 try
                 {
-                    var dimension = JSON.parse(data.dimension);
+                    var dimension = JSON.parse(slot.data.dimension);
 
                     dim = dimension.main;
                 }
@@ -302,10 +305,7 @@
                     });
                 }
                 
-                browsePhoto.removePhotoItems(_vars.photoIdList.map(function( item )
-                {
-                    return 'photo-item-' + item;
-                }));
+                browsePhoto.removePhotoItems(_vars.photoIdList);
                 
                 _vars.photoIdList.length = 0;
             }
@@ -431,7 +431,7 @@
                     $('.ow_photo_item', document.getElementById('browse-photo')).addClass('ow_photo_item_checked');
                     $('.ow_photo_item_wrap', document.getElementById('browse-photo')).each(function()
                     {
-                        _vars.photoIdList.push(+$(this).data('photoId'));
+                        _vars.photoIdList.push(+$(this).data('slotId'));
                     });
 
                     _vars.photoIdList.length === 1 ? $('.set_as_cover', _elements.menu).removeClass('ow_bl_disabled').on('click', _methods.makeAsCover) : $('.set_as_cover', _elements.menu).addClass('ow_bl_disabled').off();
@@ -494,10 +494,7 @@
                             }
                             else
                             {
-                                browsePhoto.removePhotoItems(_vars.photoIdList.map(function( item )
-                                {
-                                    return 'photo-item-' + item;
-                                }));
+                                browsePhoto.removePhotoItems(_vars.photoIdList);
 
                                 _vars.photoIdList.length = 0;
                             }
