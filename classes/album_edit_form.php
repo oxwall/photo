@@ -51,7 +51,7 @@ class PHOTO_CLASS_AlbumEditForm extends PHOTO_CLASS_AbstractPhotoForm
         
         $this->setAction(OW::getRouter()->urlForRoute('photo.ajax_update_photo'));
         $this->setAjax(true);
-        $this->setAjaxResetOnSuccess(true);
+        $this->setAjaxResetOnSuccess(false);
 
         $albumIdField = new HiddenField(self::ELEMENT_ALBUM_ID);
         $albumIdField->setValue($album->id);
