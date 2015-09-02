@@ -729,23 +729,18 @@ class PHOTO_CLASS_EventHandler
         
         $document->addScriptDeclarationBeforeIncludes(
             UTIL_JsGenerator::composeJsString('
-                ;window.photoViewParams = Object.defineProperties({}, {
-                    ajaxResponder:{value: {$ajaxResponder}, enumerable: true},
-                    rateUserId: {value: {$rateUserId}, enumerable: true},
-                    layout: {value: {$layout}, enumerable: true},
-                    isClassic: {value: {$isClassic}, enumerable: true},
-                    urlHome: {value: {$urlHome}, enumerable: true},
-                    isDisabled: {value: {$isDisabled}, enumerable: true},
-                    isEnableFullscreen: {value: {$isEnableFullscreen}, enumerable: true}
-                });',
+                ;window.photoViewParams = Object.freeze({$params});',
                 array(
-                    'ajaxResponder' => OW::getRouter()->urlFor('PHOTO_CTRL_Photo', 'ajaxResponder'),
-                    'rateUserId' => OW::getUser()->getId(),
-                    'layout' => $layout,
-                    'isClassic' => (bool)OW::getConfig()->getValue('photo', 'photo_view_classic'),
-                    'urlHome' => OW_URL_HOME,
-                    'isDisabled' => empty($photoViewStatus['available']),
-                    'isEnableFullscreen' => (bool)OW::getConfig()->getValue('photo', 'store_fullsize')
+                    'params' => array(
+                        'ajaxResponder' => OW::getRouter()->urlFor('PHOTO_CTRL_Photo', 'ajaxResponder'),
+                        'rateUserId' => OW::getUser()->getId(),
+                        'layout' => $layout,
+                        'isClassic' => (bool)OW::getConfig()->getValue('photo', 'photo_view_classic'),
+                        'urlHome' => OW_URL_HOME,
+                        'isDisabled' => empty($photoViewStatus['available']),
+                        'isEnableFullscreen' => (bool)OW::getConfig()->getValue('photo', 'store_fullsize'),
+                        'tagUrl' => OW::getRouter()->urlForRoute('view_tagged_photo_list', array('tag' => '-tag-'))
+                    )
                 )
             )
         );

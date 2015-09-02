@@ -1239,7 +1239,7 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         }
 
         $userId = OW::getUser()->getId();
-        $resp = array('result' => TRUE);
+        $resp = array('result' => true, 'photos' => array());
 
         if ( !empty($params['photos']) )
         {
