@@ -495,6 +495,13 @@ class PHOTO_CLASS_EventHandler
         $params = $event->getParams();
         
         PHOTO_BOL_SearchService::getInstance()->deleteSearchItem(PHOTO_BOL_SearchService::ENTITY_TYPE_PHOTO, $params['id']);
+
+        OW::getEventManager()->trigger(
+            new OW_Event(BOL_ContentService::EVENT_BEFORE_DELETE, array(
+                'entityType' => PHOTO_CLASS_ContentProvider::ENTITY_TYPE,
+                'entityId' => $params['id']
+            ))
+        );
     }
 
     /**
