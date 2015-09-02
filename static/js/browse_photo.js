@@ -106,7 +106,7 @@
 
             if ( data.listType != 'albums' )
             {
-                description = utils.descToHashtag(utils.truncate(data.description), utils.getHashtags(data.description));
+                description = utils.descToHashtag(utils.truncate(data.description), utils.getHashtags(data.description), params.tagUrl);
             }
             else
             {
@@ -122,7 +122,7 @@
 
             if ( description )
             {
-                this.node.find('.ow_photo_item_info_description .ow_photo_description').html(description).show();
+                this.node.find('.ow_photo_item_info_description').show().find('.ow_photo_description').html(description);
             }
             else
             {
@@ -302,7 +302,7 @@
                     dim.main = [img.naturalWidth, img.naturalHeight];
                 }
 
-                photoView.setId(data.id, data.listType, {}, dim, data);
+                photoView.setId(data.id, data.listType, SlotManager().getMoreData(), dim, data);
             }));
         });
 
@@ -340,6 +340,8 @@
 
         SlotManager.prototype.load = utils.fluent(function( data )
         {
+            data = data || {};
+
             if ( this.isCompleted ) return;
 
             if ( this.request && this.request.readyState !== 4 )
@@ -358,28 +360,33 @@
                     ajaxFunc: params.action || 'getPhotoList',
                     listType: params.listType || 'latest',
                     offset: ++this.offset
-                }, this.getMoreData(), data || {}),
+                }, this.getMoreData(), data),
                 cache: false,
                 type: 'POST',
                 beforeSend: this.self(function( jqXHR, settings )
                 {
                     this.list.showLoader();
                     this.data = null;
-                }),
-                success: this.self(function( data, textStatus, jqXHR )
-                {
-                    if ( data && data.status )
-                    {
-                        utils.includeScriptAndStyle(data.scripts);
 
-                        switch ( data.status )
+                    if ( data.hasOwnProperty('listType') )
+                    {
+                        this.listType = data.listType;
+                    }
+                }),
+                success: this.self(function( response, textStatus, jqXHR )
+                {
+                    if ( response && response.status )
+                    {
+                        utils.includeScriptAndStyle(response.scripts);
+
+                        switch ( response.status )
                         {
                             case 'success':
-                                this.buildSlotList(data.data);
+                                this.buildSlotList(response.data);
                                 break;
                             case 'error':
                             default:
-                                OW.error(data.msg);
+                                OW.error(response.msg);
                                 break;
                         }
                     }
@@ -941,10 +948,20 @@
     {
         utils.extend(SearchEngine, BaseObject);
 
-        var timerId;
+        var timerId, instance;
 
         function SearchEngine()
         {
+            if ( !(this instanceof SearchEngine) )
+            {
+                return new SearchEngine();
+            }
+
+            if ( instance !== undf )
+            {
+                return instance;
+            }
+
             SearchEngine._super.call(this);
 
             this.searchBox = document.getElementById('photo-list-search');
@@ -953,6 +970,7 @@
             this.userItemPrototype = $('li.user-prototype', this.searchBox).removeClass('user-prototype');
             this.searchInput = $('input:text', this.searchBox);
             this.listBtns = $('.ow_fw_btns > a');
+            instance = this;
         }
 
         SearchEngine.prototype.init = utils.fluent(function()
@@ -1171,6 +1189,7 @@
                     break;
             }
 
+            this.searchData = data;
             SlotManager().load(data);
         });
 
@@ -1189,7 +1208,7 @@
 
         SearchEngine.prototype.getSearchValue = function()
         {
-            return this.searchVal || '';
+            return this.searchVal || this.searchInput.val().trim();
         };
 
         SearchEngine.prototype.resetPhotoListData = utils.fluent(function()
@@ -1226,6 +1245,11 @@
         {
             this.searchResultList.find('.ow_preloader').detach();
         });
+
+        SearchEngine.prototype.getSearchData = function()
+        {
+            return this.searchData || {};
+        };
 
         return SearchEngine;
     })(BaseObject);
@@ -1288,6 +1312,10 @@
         getSlot: function( slotId )
         {
             return SlotManager().getSlot(slotId);
+        },
+        getListData: function()
+        {
+            return $.extend({}, SearchEngine().getSearchData(), SlotManager().getMoreData());
         }
     });
 }));

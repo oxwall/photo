@@ -810,7 +810,9 @@
             $('.ow_user_list_data a.ow_photo_avatar_url', content).attr('href', cmp.avatar.url).html(cmp.avatar.title);
             $('.ow_user_list_data .ow_timestamp', content).html(cmp.photo.addDatetime);
             $('.ow_user_list_data .ow_photo_album_url', content).attr('href', cmp.albumUrl)
-                .find('.ow_photo_album_name').html(utils.truncate(cmp.album.name, 60));
+                .find('.ow_photo_album_name').html(
+                    OW.getLanguageText('photo', 'album') + ': ' + utils.truncate(cmp.album.name, 60)
+            );
             
             if ( cmp.contextAction.length )
             {
@@ -864,11 +866,12 @@
                                     cmp.album.name = data.albumName;
                                     cmp.photo.description = data.description;
 
-                                    $('.ow_user_list_data .ow_photo_album_url', content).attr('href', data.albumUrl).children().html(
-                                        OW.getLanguageText('photo', 'album') + ': ' + utils.truncate(data.albumName, 60)
-                                    );
+                                    $('.ow_user_list_data .ow_photo_album_url', content).attr('href', data.albumUrl)
+                                        .find('.ow_photo_album_name').html(
+                                            OW.getLanguageText('photo', 'album') + ': ' + utils.truncate(data.albumName, 60)
+                                        );
 
-                                    var event = {text: utils.descToHashtag(cmp.photo.description)};
+                                    var event = {text: utils.descToHashtag(cmp.photo.description, utils.getHashtags(cmp.photo.description), params.tagUrl)};
                                     OW.trigger('photo.onSetDescription', event);
                                     $('.ow_photoview_description span', content).html(event.text);
 
@@ -985,7 +988,7 @@
                 return;
             }
 
-            var event = {text: utils.descToHashtag(cmp.photo.description)};
+            var event = {text: utils.descToHashtag(cmp.photo.description, utils.getHashtags(cmp.photo.description), params.tagUrl)};
             OW.trigger('photo.onSetDescription', event);
             $('.ow_photoview_description span', content).html(event.text);
 
