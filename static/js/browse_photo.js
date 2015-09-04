@@ -163,78 +163,92 @@
             };
             OW.trigger('photo.canRate', event, this.node);
 
-            if ( !event.canRate ) return;
-
-            $('.rate_item', this.node).off().on('click', function( event )
+            if ( !event.canRate )
             {
-                event.stopPropagation();
-
-                if ( params.rateUserId === 0 )
+                $('.rate_item', this.node).off().on('click', function( e )
                 {
-                    OW.error(OW.getLanguageText('base', 'rate_cmp_auth_error_message'));
+                    e.stopPropagation();
 
-                    return;
-                }
-                else if ( data.userId == params.rateUserId )
-                {
-                    OW.error(OW.getLanguageText('base', 'rate_cmp_owner_cant_rate_error_message'));
-
-                    return;
-                }
-
-                var rate = $(this).index() + 1;
-
-                $.ajax({
-                    url: params.getPhotoURL,
-                    dataType: 'json',
-                    data: {
-                        ajaxFunc: 'ajaxRate',
-                        entityId: data.id,
-                        rate: rate,
-                        ownerId: data.userId
-                    },
-                    cache: false,
-                    type: 'POST',
-                    success: function( result, textStatus, jqXHR )
-                    {
-                        if ( result )
-                        {
-                            switch ( result.result )
-                            {
-                                case true:
-                                    OW.info(result.msg);
-                                    self.node.find('.active_rate_list').css('width', (result.rateInfo.avg_score * 20) + '%');
-                                    self.node.find('.rate_title').html(OW.getLanguageText('photo', 'rating_your', {
-                                        count: result.rateInfo.rates_count,
-                                        score: rate
-                                    }));
-                                    self.data.rateInfo.avg_score = result.rateInfo.avg_score;
-                                    break;
-                                case false:
-                                default:
-                                    OW.error(result.error);
-                                    break;
-                            }
-                        }
-                        else
-                        {
-                            OW.error('Server error');
-                        }
-                    },
-                    error: function( jqXHR, textStatus, errorThrown )
-                    {
-                        throw textStatus;
-                    }
+                    var event = {
+                        msg: ''
+                    };
+                    OW.trigger('photo.canRateMessage', event, self.node);
+                    OW.error(event.msg);
                 });
-            }).hover(function()
+            }
+            else
             {
-                $(this).prevAll().add(this).addClass('active');
-                self.node.find('.active_rate_list').css('width', '0px');
-            }, function()
-            {
-                $(this).prevAll().add(this).removeClass('active');
-                self.node.find('.active_rate_list').css('width', (data.rateInfo.avg_score * 20) + '%');
-            });
+                $('.rate_item', this.node).off().on('click', function( event )
+                {
+                    event.stopPropagation();
+
+                    if ( params.rateUserId === 0 )
+                    {
+                        OW.error(OW.getLanguageText('base', 'rate_cmp_auth_error_message'));
+
+                        return;
+                    }
+                    else if ( data.userId == params.rateUserId )
+                    {
+                        OW.error(OW.getLanguageText('base', 'rate_cmp_owner_cant_rate_error_message'));
+
+                        return;
+                    }
+
+                    var rate = $(this).index() + 1;
+
+                    $.ajax({
+                        url: params.getPhotoURL,
+                        dataType: 'json',
+                        data: {
+                            ajaxFunc: 'ajaxRate',
+                            entityId: data.id,
+                            rate: rate,
+                            ownerId: data.userId
+                        },
+                        cache: false,
+                        type: 'POST',
+                        success: function( result, textStatus, jqXHR )
+                        {
+                            if ( result )
+                            {
+                                switch ( result.result )
+                                {
+                                    case true:
+                                        OW.info(result.msg);
+                                        self.node.find('.active_rate_list').css('width', (result.rateInfo.avg_score * 20) + '%');
+                                        self.node.find('.rate_title').html(OW.getLanguageText('photo', 'rating_your', {
+                                            count: result.rateInfo.rates_count,
+                                            score: rate
+                                        }));
+                                        self.data.rateInfo.avg_score = result.rateInfo.avg_score;
+                                        break;
+                                    case false:
+                                    default:
+                                        OW.error(result.error);
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                OW.error('Server error');
+                            }
+                        },
+                        error: function( jqXHR, textStatus, errorThrown )
+                        {
+                            throw textStatus;
+                        }
+                    });
+                }).hover(function()
+                {
+                    $(this).prevAll().add(this).addClass('active');
+                    self.node.find('.active_rate_list').css('width', '0px');
+                }, function()
+                {
+                    $(this).prevAll().add(this).removeClass('active');
+                    self.node.find('.active_rate_list').css('width', (data.rateInfo.avg_score * 20) + '%');
+                });
+            }
         });
 
         Slot.prototype.setCommentCount = utils.fluent(function()

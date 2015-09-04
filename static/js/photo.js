@@ -1019,98 +1019,109 @@
 
             if ( !eventRate.canRate )
             {
-                return;
-            }
-            
-            rateItems.on('click', function()
-            {
-                var ownerError;
-
-                if ( +_vars.rateUserId === 0 )
+                rateItems.on('click', function( e )
                 {
-                    OW.error(OW.getLanguageText('base', 'rate_cmp_auth_error_message'));
+                    e.stopPropagation();
 
-                    return;
-                }
-                else if ( +cmp.ownerId === +_vars.rateUserId )
-                {
-                    OW.error(OW.getLanguageText('base', 'rate_cmp_owner_cant_rate_error_message'));
-
-                    return;
-                }
-
-                var event = {
-                    canRate: true,
-                    photo: cmp.photo
-                };
-                OW.trigger('photo.canRate', event, this.node);
-
-                if ( !event.canRate ) return;
-
-                var rate = $(this).index() + 1;
-
-                $.ajax({
-                    url: _vars.ajaxResponder,
-                    dataType: 'json',
-                    data: {
-                        ajaxFunc: 'ajaxRate',
-                        entityId: cmp.photo.id,
-                        rate: rate,
-                        ownerId: cmp.ownerId
-                    },
-                    cache: false,
-                    type: 'POST',
-                    success: function( result, textStatus, jqXHR )
-                    {
-                        if ( result )
-                        {
-                            switch ( result.result )
-                            {
-                                case true:
-                                    OW.info(result.msg);
-                                        
-                                    content.find('.active_rate_list').css('width', (result.rateInfo.avg_score * 20) + '%');
-                                    content.find('.rate_title').html(
-                                        OW.getLanguageText('photo', 'rating_your', {count: result.rateInfo.rates_count, score: rate})
-                                    );
-
-                                    cmp.userScore = rate;
-                                    rateInfo.avg_score = result.rateInfo.avg_score;
-                                    rateInfo.rates_count = result.rateInfo.rates_count;
-                                        
-                                    OW.trigger('photo.onSetRate', {
-                                        entityId: cmp.photo.id,
-                                        userScore: cmp.userScore,
-                                        avgScore: rateInfo.avg_score,
-                                        ratesCount: rateInfo.rates_count
-                                    }, _methods);
-                                    break;
-                                case false:
-                                default:
-                                    OW.error(result.error);
-                                    break;
-                            }
-                        }
-                        else
-                        {
-                            OW.error('Server error');
-                        }
-                    },
-                    error: function( jqXHR, textStatus, errorThrown )
-                    {
-                        throw textStatus;
-                    }
+                    var event = {
+                        msg: ''
+                    };
+                    OW.trigger('photo.canRateMessage', event, self.node);
+                    OW.error(event.msg);
                 });
-            })
-            .hover(function()
+            }
+            else
             {
-                $(this).prevAll().add(this).addClass('active');
-                content.find('.active_rate_list').css('width', '0px');
-            }, function()
-            {
-                $(this).prevAll().add(this).removeClass('active');
-                content.find('.active_rate_list').css('width', (rateInfo.avg_score * 20) + '%');
-            });
+                rateItems.on('click', function()
+                {
+                    var ownerError;
+
+                    if ( +_vars.rateUserId === 0 )
+                    {
+                        OW.error(OW.getLanguageText('base', 'rate_cmp_auth_error_message'));
+
+                        return;
+                    }
+                    else if ( +cmp.ownerId === +_vars.rateUserId )
+                    {
+                        OW.error(OW.getLanguageText('base', 'rate_cmp_owner_cant_rate_error_message'));
+
+                        return;
+                    }
+
+                    var event = {
+                        canRate: true,
+                        photo: cmp.photo
+                    };
+                    OW.trigger('photo.canRate', event, this.node);
+
+                    if ( !event.canRate ) return;
+
+                    var rate = $(this).index() + 1;
+
+                    $.ajax({
+                        url: _vars.ajaxResponder,
+                        dataType: 'json',
+                        data: {
+                            ajaxFunc: 'ajaxRate',
+                            entityId: cmp.photo.id,
+                            rate: rate,
+                            ownerId: cmp.ownerId
+                        },
+                        cache: false,
+                        type: 'POST',
+                        success: function( result, textStatus, jqXHR )
+                        {
+                            if ( result )
+                            {
+                                switch ( result.result )
+                                {
+                                    case true:
+                                        OW.info(result.msg);
+
+                                        content.find('.active_rate_list').css('width', (result.rateInfo.avg_score * 20) + '%');
+                                        content.find('.rate_title').html(
+                                            OW.getLanguageText('photo', 'rating_your', {count: result.rateInfo.rates_count, score: rate})
+                                        );
+
+                                        cmp.userScore = rate;
+                                        rateInfo.avg_score = result.rateInfo.avg_score;
+                                        rateInfo.rates_count = result.rateInfo.rates_count;
+
+                                        OW.trigger('photo.onSetRate', {
+                                            entityId: cmp.photo.id,
+                                            userScore: cmp.userScore,
+                                            avgScore: rateInfo.avg_score,
+                                            ratesCount: rateInfo.rates_count
+                                        }, _methods);
+                                        break;
+                                    case false:
+                                    default:
+                                        OW.error(result.error);
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                OW.error('Server error');
+                            }
+                        },
+                        error: function( jqXHR, textStatus, errorThrown )
+                        {
+                            throw textStatus;
+                        }
+                    });
+                })
+                    .hover(function()
+                    {
+                        $(this).prevAll().add(this).addClass('active');
+                        content.find('.active_rate_list').css('width', '0px');
+                    }, function()
+                    {
+                        $(this).prevAll().add(this).removeClass('active');
+                        content.find('.active_rate_list').css('width', (rateInfo.avg_score * 20) + '%');
+                    });
+            }
         },
         setComment: function( photoId )
         {
