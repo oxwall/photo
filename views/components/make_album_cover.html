@@ -74,6 +74,8 @@
 
                     _methods.complete = function()
                     {
+                        _elements.coverPreview[0].src = '{$coverUrl}';
+                        _elements.coverImg[0].src = '{$coverUrl}';
                         _elements.coverPreview.css({
                             width: 120 + 'px',
                             height: 'auto',
@@ -133,9 +135,9 @@
                         return [x1, y1, x2, y2];
                     };
 
-                    _elements.coverPreview[0].src = '{$coverUrl}';
-                    _elements.coverImg[0].src = '{$coverUrl}';
-                    _elements.coverImg[0].onerror = _elements.coverImg[0].onload = _methods.complete;
+                    var image = new Image();
+                    image.onload = image.onerror = _methods.complete;
+                    image.src = '{$coverUrl}';
 
                     window.owForms['album-cover-maker'].bind('submit', function( data )
                     {

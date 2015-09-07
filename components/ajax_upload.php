@@ -34,15 +34,17 @@
  *
  * @author Kairat Bakitow <kainisoft@gmail.com>
  * @package ow.plugin.photo.components
- * @since 1.6.1
+ * @since 1.7.6
  */
 class PHOTO_CMP_AjaxUpload extends OW_Component
 {
-    public function __construct( $albumId = NULL, $albumName = NULL, $albumDescription = null, $url = NULL )
+    public function __construct( $albumId = null, $albumName = null, $albumDescription = null, $url = null, $data = null )
     {
+        parent::__construct();
+
         if ( !OW::getUser()->isAuthorized('photo', 'upload') )
         {
-            $this->setVisible(FALSE);
+            $this->setVisible(false);
             
             return;
         }
@@ -55,39 +57,26 @@ class PHOTO_CMP_AjaxUpload extends OW_Component
         $plugin = OW::getPluginManager()->getPlugin('photo');
 
         $document->addStyleSheet($plugin->getStaticCssUrl() . 'photo_upload.css');
-        $document->addScript($plugin->getStaticJsUrl() . 'jQueryRotate.min.js');
         $document->addScript($plugin->getStaticJsUrl() . 'codemirror.min.js');
         $document->addScript($plugin->getStaticJsUrl() . 'upload.js');
         
         $document->addScriptDeclarationBeforeIncludes(
-            UTIL_JsGenerator::composeJsString(';window.ajaxPhotoUploadParams = {};
-                Object.defineProperties(ajaxPhotoUploadParams, {
-                    actionUrl: {
-                        value: {$url},
-                        writable: false,
-                        enumerable: true
-                    },
-                    maxFileSize: {
-                        value: {$size},
-                        writable: false,
-                        enumerable: true
-                    },
-                    deleteAction: {
-                        value: {$deleteAction},
-                        writable: false,
-                        enumerable: true
-                    }
-                });',
+            UTIL_JsGenerator::composeJsString(';window.ajaxPhotoUploadParams = Object.freeze({$params});',
                 array(
-                    'url' => OW::getRouter()->urlForRoute('photo.ajax_upload'),
-                    'size' => PHOTO_BOL_PhotoService::getInstance()->getMaxUploadFileSize(),
-                    'deleteAction' => OW::getRouter()->urlForRoute('photo.ajax_upload_delete')
+                    'params' => array(
+                        'actionUrl' => OW::getRouter()->urlForRoute('photo.ajax_upload'),
+                        'maxFileSize' => PHOTO_BOL_PhotoService::getInstance()->getMaxUploadFileSize(),
+                        'deleteAction' => OW::getRouter()->urlForRoute('photo.ajax_upload_delete')
+                    )
                 )
             )
         );
         $document->addOnloadScript(';window.ajaxPhotoUploader.init();');
-        
-        $this->addForm(new PHOTO_CLASS_AjaxUploadForm('user', $userId, $albumId, $albumName, $albumDescription, $url));
+
+        $form = new PHOTO_CLASS_AjaxUploadForm('user', $userId, $albumId, $albumName, $albumDescription, $url, $data);
+        $this->addForm($form);
+        $this->assign('extendInputs', $form->getExtendedElements());
+
         $newsfeedAlbum = PHOTO_BOL_PhotoAlbumService::getInstance()->getNewsfeedAlbum($userId);
         $this->assign('albumNameList', PHOTO_BOL_PhotoAlbumService::getInstance()->findAlbumNameListByUserId($userId, !empty($newsfeedAlbum) ? array($newsfeedAlbum->id) : array()));
         

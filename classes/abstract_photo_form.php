@@ -29,21 +29,39 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-Updater::getLanguageService()->importPrefixFromZip(__DIR__ . DS . 'langs.zip', 'photo');
-
-$sqls = array(
-    'ALTER TABLE `' . OW_DB_PREFIX . 'photo_album` ADD INDEX (`entityType`, `entityId`);'
-);
-
-foreach ( $sqls as $sql )
+/**
+ *
+ *
+ * @author Kairat Bakitow <kainisoft@gmail.com>
+ * @package ow.plugin.photo.classes
+ * @since 1.7.6
+ */
+abstract class PHOTO_CLASS_AbstractPhotoForm extends Form
 {
-    try
+    /**
+     * @return array
+     */
+    abstract public function getOwnElements();
+
+    public function getExtendedElements()
     {
-        Updater::getDbo()->query($sql);
+        return array_diff(
+            array_keys($this->getElements()),
+            array_merge(array('form_name'), $this->getOwnElements())
+        );
     }
-    catch ( Exception $e )
+
+    public function triggerReady( array $data = null )
     {
-        Updater::getLogger()->addEntry(json_encode($e));
+        OW::getEventManager()->trigger(
+            new OW_Event(PHOTO_CLASS_EventHandler::EVENT_ON_FORM_READY, array('form' => $this), $data)
+        );
+    }
+
+    public function triggerComplete( array $data = null )
+    {
+        OW::getEventManager()->trigger(
+            new OW_Event(PHOTO_CLASS_EventHandler::EVENT_ON_FORM_COMPLETE, array('form' => $this), $data)
+        );
     }
 }

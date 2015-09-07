@@ -29,21 +29,27 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-Updater::getLanguageService()->importPrefixFromZip(__DIR__ . DS . 'langs.zip', 'photo');
-
-$sqls = array(
-    'ALTER TABLE `' . OW_DB_PREFIX . 'photo_album` ADD INDEX (`entityType`, `entityId`);'
-);
-
-foreach ( $sqls as $sql )
+/**
+ * AJAX Upload photo component
+ *
+ * @author Kairat Bakitow <kainisoft@gmail.com>
+ * @package ow.plugin.photo.components
+ * @since 1.7.6
+ */
+class PHOTO_CMP_AlbumInfo extends OW_Component
 {
-    try
+    public function __construct( $params )
     {
-        Updater::getDbo()->query($sql);
-    }
-    catch ( Exception $e )
-    {
-        Updater::getLogger()->addEntry(json_encode($e));
+        parent::__construct();
+
+        $album = $params['album'];
+        $coverEvent = OW::getEventManager()->trigger(
+            new OW_Event(PHOTO_CLASS_EventHandler::EVENT_GET_ALBUM_COVER_URL, array('albumId' => $album->id))
+        );
+        $coverData = $coverEvent->getData();
+
+        $this->assign('album', $album);
+        $this->assign('coverUrl', $coverData['coverUrl']);
+        $this->assign('coverUrlOrig', $coverData['coverUrlOrig']);
     }
 }

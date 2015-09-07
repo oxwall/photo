@@ -60,26 +60,30 @@ class PHOTO_CTRL_AjaxUpload extends OW_ActionController
         
         if ( !OW::getUser()->isAuthorized('photo', 'upload') )
         {
-            $this->returnResponse(array('status' => self::STATUS_ERROR, 'result' => FALSE, 'msg' => OW::getLanguage()->text('photo', 'auth_upload_permissions')));
+            $this->returnResponse(array(
+                'status' => self::STATUS_ERROR,
+                'result' => false,
+                'msg' => OW::getLanguage()->text('photo', 'auth_upload_permissions')
+            ));
         }
     }
     
     protected function getEntity( $params )
     {
-        if ( empty($params["entityType"]) || empty($params["entityId"]) )
+        if ( empty($params['entityType']) || empty($params['entityId']) )
         {
-            $params["entityType"] = "user";
-            $params["entityId"] = OW::getUser()->getId();
+            $params['entityType'] = 'user';
+            $params['entityId'] = OW::getUser()->getId();
         }
         
-        return array($params["entityType"], $params["entityId"]);
+        return array($params['entityType'], $params['entityId']);
     }
 
     private function isAvailableFile( $file )
     {
         return !empty($file['file']) && 
             $file['file']['error'] === UPLOAD_ERR_OK && 
-            in_array($file['file']['type'], array('image/jpeg', 'image/png', 'image/gif')) && 
+            in_array($file['file']['type'], array('image/jpeg', 'image/png', 'image/gif'), true) &&
             $_FILES['file']['size'] <= $this->photoService->getMaxUploadFileSize() && 
             is_uploaded_file($file['file']['tmp_name']);
     }
@@ -88,7 +92,7 @@ class PHOTO_CTRL_AjaxUpload extends OW_ActionController
     {
         if ( $this->isAvailableFile($file) )
         {
-            return NULL;
+            return null;
         }
         
         if ( !empty($file['file']['error']) )
@@ -204,7 +208,7 @@ class PHOTO_CTRL_AjaxUpload extends OW_ActionController
             }
                 
             $tmpId = $tmpPhoto['dto']->id;
-            $angel = (($rotate = (int)$_POST['rotate'][$tmpId]) > 0) ? fmod($rotate, 360) : 0;
+            $angel = isset($_POST['rotate'][$tmpId]) ? fmod((int) $_POST['rotate'][$tmpId], 360) : 0;
             
             $photo = $photoTmpService->moveTemporaryPhoto($tmpId, $album->id, !empty($_POST['desc'][$tmpId]) ? $_POST['desc'][$tmpId] : '', NULL, $angel);
             $photoTmpService->deleteTemporaryPhoto($tmpId);
@@ -215,6 +219,11 @@ class PHOTO_CTRL_AjaxUpload extends OW_ActionController
                 BOL_AuthorizationService::getInstance()->trackAction('photo', 'upload', array('checkInterval' => FALSE));
             }
         }
+
+        $form->triggerComplete(array(
+            'album' => $album,
+            'photos' => $photos
+        ));
 
         $resp = $this->onSubmitComplete($entityType, $entityId, $album, $photos);
         
@@ -329,18 +338,28 @@ class PHOTO_CTRL_AjaxUpload extends OW_ActionController
             {
                 $fileUrl = PHOTO_BOL_PhotoTemporaryDao::getInstance()->getTemporaryPhotoUrl($id, 2);
                 
-                $this->returnResponse(array('status' => self::STATUS_SUCCESS, 'fileUrl' => $fileUrl, 'id' => $id));
+                $this->returnResponse(array(
+                    'status' => self::STATUS_SUCCESS,
+                    'fileUrl' => $fileUrl,
+                    'id' => $id
+                ));
             }
             else
             {
-                $this->returnResponse(array('status' => self::STATUS_ERROR, 'msg' => OW::getLanguage()->text('photo', 'no_photo_uploaded')));
+                $this->returnResponse(array(
+                    'status' => self::STATUS_ERROR,
+                    'msg' => OW::getLanguage()->text('photo', 'no_photo_uploaded')
+                ));
             }
         }
         else
         {
             $msg = $this->getErrorMsg($_FILES);
 
-            $this->returnResponse(array('status' => self::STATUS_ERROR, 'msg' => $msg));
+            $this->returnResponse(array(
+                'status' => self::STATUS_ERROR,
+                'msg' => $msg
+            ));
         }
     }
     
@@ -356,8 +375,31 @@ class PHOTO_CTRL_AjaxUpload extends OW_ActionController
     
     private function returnResponse( $response )
     {
-        ob_end_clean();
+        if ( !OW_DEBUG_MODE )
+        {
+            ob_end_clean();
+        }
 
         exit(json_encode($response));
+    }
+
+    public function checkFakeAlbumData( array $params = array() )
+    {
+        $form = new PHOTO_CLASS_CreateFakeAlbumForm();
+
+        if ( OW::getRequest()->isPost() && $form->isValid($_POST) )
+        {
+            $this->returnResponse(array(
+                'result' => true,
+                'data' => $form->getValues()
+            ));
+        }
+        else
+        {
+            $this->returnResponse(array(
+                'result' => false,
+                'errors' => $form->getErrors()
+            ));
+        }
     }
 }

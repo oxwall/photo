@@ -1579,7 +1579,28 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
 
         return $photos;
     }
-    
+
+    public function findPhotosInAlbum( $albumId, array $photoIds = null )
+    {
+        if ( empty($albumId) )
+        {
+            return array();
+        }
+
+        $sql = 'SELECT `p`.*, `a`.`userId`
+            FROM `' . $this->getTableName() . '` AS `p`
+                INNER JOIN `' . PHOTO_BOL_PhotoAlbumDao::getInstance()->getTableName() . '` AS `a`
+                    ON(`p`.`albumId` = `a`.`id`)
+            WHERE `p`.`albumId` = :albumId';
+
+        if ( count($photoIds) !== 0 )
+        {
+            $sql .= ' AND `p`.`id` IN(' . $this->dbo->mergeInClause($photoIds) . ')';
+        }
+
+        return $this->dbo->queryForList($sql, array('albumId' => $albumId));
+    }
+
     public function countPhotosInAlbumByPhotoIdList( $albumId, array $photoIdList )
     {
         if ( empty($albumId) )
