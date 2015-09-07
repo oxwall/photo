@@ -59,6 +59,7 @@ class PHOTO_CLASS_EventHandler
 
     const EVENT_PHOTO_ADD = 'photo.add';
     const EVENT_PHOTO_FIND = 'photo.find';
+    const EVENT_PHOTO_FINDS = 'photo.finds';
     const EVENT_PHOTO_DELETE = 'photo.delete';
     const EVENT_ALBUM_PHOTOS_FIND = 'photo.album_photos_find';
     const EVENT_INIT_FLOATBOX = 'photo.init_floatbox';
@@ -80,6 +81,10 @@ class PHOTO_CLASS_EventHandler
     const EVENT_COLLECT_PHOTO_SUB_MENU = 'photo.collectSubMenu';
     
     const EVENT_SUGGEST_DEFAULT_ALBUM = 'photo.suggest_default_album';
+    const EVENT_ON_FORM_READY = 'photo.form_ready';
+    const EVENT_ON_FORM_COMPLETE = 'photo.form_complete';
+    const EVENT_GET_UPLOAD_DATA = 'photo.upload_data';
+    const EVENT_GET_ALBUM_COVER_URL = 'photo.get_cover';
 
     /**
      * @return PHOTO_CLASS_EventHandler
@@ -468,6 +473,30 @@ class PHOTO_CLASS_EventHandler
         return $data;
     }
 
+    public function photoFinds( OW_Event $event )
+    {
+        $params = $event->getParams();
+
+        if ( empty($params['idList']) )
+        {
+            return false;
+        }
+
+        $photos = $this->photoService->findPhotoListByIdList($params['idList'], 1, count($params['idList']));
+
+        if ( !$photos )
+        {
+            return false;
+        }
+
+        $list = $this->preparePhotos($photos);
+        $event->setData(array(
+            'photos' => $list
+        ));
+
+        return $event->getData();
+    }
+
     public function photoDelete( OW_Event $e )
     {
         $params = $e->getParams();
@@ -653,7 +682,7 @@ class PHOTO_CLASS_EventHandler
             $list[$id]['description'] = $photo['description'];
             $list[$id]['userId'] = $album->userId;
             $list[$id]['url'] = OW::getRouter()->urlForRoute('view_photo', array('id' => $id));
-            $list[$id]["dimension"] = $dimensions;
+            $list[$id]['dimension'] = $dimensions;
             
             $list[$id]['photoUrl'] = $this->photoService->getPhotoUrlByType($id, PHOTO_BOL_PhotoService::TYPE_MAIN, $photo['hash'], $photo['dimension']);
             $list[$id]['previewUrl'] = $this->photoService->getPhotoUrlByType($id, PHOTO_BOL_PhotoService::TYPE_PREVIEW, $photo['hash'], $photo['dimension']);
@@ -684,6 +713,7 @@ class PHOTO_CLASS_EventHandler
         $document->addStyleSheet($plugin->getStaticCssUrl() . 'photo_floatbox.css');
         $document->addScript(OW::getPluginManager()->getPlugin('base')->getStaticJsUrl() . 'jquery-ui.min.js');
         $document->addScript($plugin->getStaticJsUrl() . 'slider.min.js', 'text/javascript', 1000000);
+        $document->addScript($plugin->getStaticJsUrl() . 'utils.js');
         $document->addScript($plugin->getStaticJsUrl() . 'photo.js');
 
         $language = OW::getLanguage();
@@ -707,23 +737,18 @@ class PHOTO_CLASS_EventHandler
         
         $document->addScriptDeclarationBeforeIncludes(
             UTIL_JsGenerator::composeJsString('
-                ;window.photoViewParams = Object.defineProperties({}, {
-                    ajaxResponder:{value: {$ajaxResponder}, enumerable: true},
-                    rateUserId: {value: {$rateUserId}, enumerable: true},
-                    layout: {value: {$layout}, enumerable: true},
-                    isClassic: {value: {$isClassic}, enumerable: true},
-                    urlHome: {value: {$urlHome}, enumerable: true},
-                    isDisabled: {value: {$isDisabled}, enumerable: true},
-                    isEnableFullscreen: {value: {$isEnableFullscreen}, enumerable: true}
-                });',
+                ;window.photoViewParams = Object.freeze({$params});',
                 array(
-                    'ajaxResponder' => OW::getRouter()->urlFor('PHOTO_CTRL_Photo', 'ajaxResponder'),
-                    'rateUserId' => OW::getUser()->getId(),
-                    'layout' => $layout,
-                    'isClassic' => (bool)OW::getConfig()->getValue('photo', 'photo_view_classic'),
-                    'urlHome' => OW_URL_HOME,
-                    'isDisabled' => empty($photoViewStatus['available']),
-                    'isEnableFullscreen' => (bool)OW::getConfig()->getValue('photo', 'store_fullsize')
+                    'params' => array(
+                        'ajaxResponder' => OW::getRouter()->urlFor('PHOTO_CTRL_Photo', 'ajaxResponder'),
+                        'rateUserId' => OW::getUser()->getId(),
+                        'layout' => $layout,
+                        'isClassic' => (bool)OW::getConfig()->getValue('photo', 'photo_view_classic'),
+                        'urlHome' => OW_URL_HOME,
+                        'isDisabled' => empty($photoViewStatus['available']),
+                        'isEnableFullscreen' => (bool)OW::getConfig()->getValue('photo', 'store_fullsize'),
+                        'tagUrl' => OW::getRouter()->urlForRoute('view_tagged_photo_list', array('tag' => '-tag-'))
+                    )
                 )
             )
         );
@@ -1200,20 +1225,24 @@ class PHOTO_CLASS_EventHandler
                             }
 
                             _data.mainUrl = {$url};
-                            window.photoView.setId(photoId, "latest", null, _data );
+                            window.photoView.setId(photoId, "latest", null, _data, {$photo});
                         });',
                         array(
                             'autoId' => $autoId,
                             'dimension' => $dimension,
                             'photoId' => $photoId,
-                            'url' => $this->photoService->getPhotoUrlByType($photo->id, PHOTO_BOL_PhotoService::TYPE_PREVIEW, $photo->hash, !empty($photo->dimension) ? $photo->dimension : FALSE)
+                            'url' => $this->photoService->getPhotoUrlByType($photo->id, PHOTO_BOL_PhotoService::TYPE_PREVIEW, $photo->hash, !empty($photo->dimension) ? $photo->dimension : FALSE),
+                            'photo' => array(
+                                'id' => $photo->id,
+                                'albumId' => $photo->albumId
+                            )
                         )
                     )
                 );
                 break;
 
             case 'multiple_photo_upload':
-                $data = $event->getData();
+                $photos = array();
 
                 if ( !empty($params['action']['format']) )
                 {
@@ -1221,6 +1250,11 @@ class PHOTO_CLASS_EventHandler
 
                     foreach ( $photoList as $photo )
                     {
+                        $photos[$photo->id] = array(
+                            'id' => $photo->id,
+                            'albumId' => $photo->albumId
+                        );
+
                         if ( !empty($photo->dimension) )
                         {
                             $dimension[$photo->id] = json_decode($photo->dimension);
@@ -1235,7 +1269,8 @@ class PHOTO_CLASS_EventHandler
                             var dimension = {$dimension}, _data = {};
                             var match = this.pathname.match(/\d+$/);
                             var photoId = +match[0];
-                            var url = $(this).css("background-image").replace(/url\("?|"?\)$/ig, "");
+                            var url = $(this).attr("data-image");
+                            var photos = {$photos};
 
                             if ( dimension.hasOwnProperty(photoId) && dimension[photoId].main )
                             {
@@ -1249,11 +1284,12 @@ class PHOTO_CLASS_EventHandler
                             }
 
                             _data.mainUrl = url;
-                            window.photoView.setId(photoId, "latest", null, _data );
+                            window.photoView.setId(photoId, "latest", null, _data, photos[photoId] );
                         });',
                         array(
                             'autoId' => $autoId,
-                            'dimension' => $dimension
+                            'dimension' => $dimension,
+                            'photos' => $photos
                         )
                     )
                 );
@@ -1688,10 +1724,13 @@ class PHOTO_CLASS_EventHandler
         $id = uniqid('addNewPhoto');
         
         $params = $event->getParams();
-        $albumId = !empty($params['albumId']) ? (int)$params['albumId'] : NULL;
-        $albumName = !empty($params['albumName']) ? $params['albumName'] : NULL;
-        $albumDescription = !empty($params['albumDescription']) ? $params['albumDescription'] : NULL;
-        $url = !empty($params['url']) ? $params['url'] : NULL;
+        $albumId = !empty($params['albumId']) ? (int)$params['albumId'] : null;
+        $albumName = !empty($params['albumName']) ? $params['albumName'] : null;
+        $albumDescription = !empty($params['albumDescription']) ? $params['albumDescription'] : null;
+        $url = !empty($params['url']) ? $params['url'] : null;
+        $data = $event->getData();
+
+        $extraEventData = OW::getEventManager()->trigger(new OW_Event(self::EVENT_GET_UPLOAD_DATA, $params, $data));
         
         if ( !OW::getUser()->isAuthorized('photo', 'upload') )
         {
@@ -1701,10 +1740,11 @@ class PHOTO_CLASS_EventHandler
                 UTIL_JsGenerator::composeJsString(
                     ';window[{$addNewPhoto}] = function()
                     {
-                        OW.authorizationLimitedFloatbox('.json_encode($status['msg']).');
+                        OW.authorizationLimitedFloatbox({$msg});
                     }',
                     array(
-                        'addNewPhoto' => $id
+                        'addNewPhoto' => $id,
+                        'msg' => $status['msg']
                     )
                 )
             );
@@ -1712,11 +1752,10 @@ class PHOTO_CLASS_EventHandler
         else
         {
             OW::getDocument()->addScriptDeclaration(
-                UTIL_JsGenerator::composeJsString(
-                    ';window[{$addNewPhoto}] = function()
+                UTIL_JsGenerator::composeJsString(';window[{$addNewPhoto}] = function()
                     {
-                        var ajaxUploadPhotoFB = OW.ajaxFloatBox("PHOTO_CMP_AjaxUpload", [{$albumId}, {$albumName}, {$albumDescription}, {$url}], {
-                            $title: {$title},
+                        var ajaxUploadPhotoFB = OW.ajaxFloatBox("PHOTO_CMP_AjaxUpload", [{$albumId}, {$albumName}, {$albumDescription}, {$url}, {$data}], {
+                            title: {$title},
                             width: "746px"
                         });
 
@@ -1739,6 +1778,7 @@ class PHOTO_CLASS_EventHandler
                         'albumName' => $albumName,
                         'albumDescription' => $albumDescription,
                         'url' => $url,
+                        'data' => $extraEventData->getData(),
                         'title' => OW::getLanguage()->text('photo', 'upload_photos'),
                         'close_alert' => OW::getLanguage()->text('photo', 'close_alert')
                     )
@@ -1943,6 +1983,39 @@ class PHOTO_CLASS_EventHandler
         return $event->getData();
     }
 
+    public function getAlbumCoverUrl( OW_Event $event )
+    {
+        $params = $event->getParams();
+        $albumId = $params['albumId'];
+        $coverDao = PHOTO_BOL_PhotoAlbumCoverDao::getInstance();
+
+        if ( ($coverDto = $coverDao->findByAlbumId($albumId)) === null )
+        {
+            if ( ($photo = $this->albumService->getLastPhotoByAlbumId($albumId)) === null )
+            {
+                $coverUrl = $coverDao->getAlbumCoverDefaultUrl();
+            }
+            else
+            {
+                $coverUrl = $this->photoService->getPhotoUrlByType($photo->id, PHOTO_BOL_PhotoService::TYPE_MAIN, $photo->hash, !empty($photo->dimension) ? $photo->dimension : false);
+            }
+
+            $coverUrlOrig = $coverUrl;
+        }
+        else
+        {
+            $coverUrl = $coverDao->getAlbumCoverUrlForCoverEntity($coverDto);
+            $coverUrlOrig = $coverDao->getAlbumCoverOrigUrlForCoverEntity($coverDto);
+        }
+
+        $event->setData(array(
+            'coverUrl' => $coverUrl,
+            'coverUrlOrig' => $coverUrlOrig
+        ));
+
+        return $event->getData();
+    }
+
     public function init()
     {
         $this->genericInit();
@@ -1970,6 +2043,7 @@ class PHOTO_CLASS_EventHandler
         $em->bind(self::EVENT_ENTITY_ALBUMS_FIND, array($this, 'entityAlbumsFind'));
         $em->bind(self::EVENT_PHOTO_ADD, array($this, 'photoAdd'));
         $em->bind(self::EVENT_PHOTO_FIND, array($this, 'photoFind'));
+        $em->bind(self::EVENT_PHOTO_FINDS, array($this, 'photoFinds'));
         $em->bind(self::EVENT_PHOTO_DELETE, array($this, 'photoDelete'));
         $em->bind(self::EVENT_ALBUM_PHOTOS_FIND, array($this, 'albumPhotosFind'));
         
@@ -2014,6 +2088,8 @@ class PHOTO_CLASS_EventHandler
         $em->bind('feed.before_content_add', array($this, 'feedBeforeStatusUpdate'));
         $em->bind(self::EVENT_BACKGROUND_LOAD_PHOTO, array($this, 'backgroundLoadPhoto'));
         $em->bind(self::EVENT_ON_PHOTO_CONTENT_UPDATE, array($this, 'onUpdateContent'));
+
+        $em->bind(self::EVENT_GET_ALBUM_COVER_URL, array($this, 'getAlbumCoverUrl'));
 
         PHOTO_CLASS_ContentProvider::getInstance()->init();
     }

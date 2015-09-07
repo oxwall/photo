@@ -29,21 +29,22 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-Updater::getLanguageService()->importPrefixFromZip(__DIR__ . DS . 'langs.zip', 'photo');
-
-$sqls = array(
-    'ALTER TABLE `' . OW_DB_PREFIX . 'photo_album` ADD INDEX (`entityType`, `entityId`);'
-);
-
-foreach ( $sqls as $sql )
+/**
+ *
+ *
+ * @author Kairat Bakitow <kainisoft@gmail.com>
+ * @package ow.plugin.photo.components
+ * @since 1.7.6
+ */
+class PHOTO_CMP_CreateFakeAlbum extends OW_Component
 {
-    try
+    public function __construct()
     {
-        Updater::getDbo()->query($sql);
-    }
-    catch ( Exception $e )
-    {
-        Updater::getLogger()->addEntry(json_encode($e));
+        parent::__construct();
+
+        $form = new PHOTO_CLASS_CreateFakeAlbumForm();
+        $this->addForm($form);
+
+        $this->assign('extendInputs', $form->getExtendedElements());
     }
 }

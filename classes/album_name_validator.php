@@ -84,19 +84,20 @@ class PHOTO_CLASS_AlbumNameValidator extends OW_Validator
         return UTIL_JsGenerator::composeJsString('{
             validate : function( value )
             {
-                if ( {$albumName} && {$albumName}.trim().toLowerCase() == {$newsfeedAdmin}.toString().trim().toLowerCase() )
+                if ( {$albumName} && {$albumName}.trim().toLowerCase() == {$newsfeedAlbum}.toString().trim().toLowerCase() )
                 {
                     return true;
                 }
                     
-                if ( value.toString().trim().toLowerCase() == {$newsfeedAdmin}.toString().trim().toLowerCase() )
+                if ( value.toString().trim().toLowerCase() == {$newsfeedAlbum}.toString().trim().toLowerCase() )
                 {
-                    throw "' . $this->errorMessage . '";
+                    throw {$errorMsg};
                 }
             }
         }', array(
             'albumName' => $this->albumName,
-            'newsfeedAdmin' => OW::getLanguage()->text('photo', 'newsfeed_album')
+            'newsfeedAlbum' => OW::getLanguage()->text('photo', 'newsfeed_album'),
+            'errorMsg' => $this->errorMessage
         ));
     }
 }

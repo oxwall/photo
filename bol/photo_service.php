@@ -1003,7 +1003,7 @@ final class PHOTO_BOL_PhotoService
 
         if ( $convert )
         {
-            $accepted = floatval(OW::getConfig()->getValue('photo', 'accepted_filesize') * 1024 * 1024);
+            $accepted = (float)(OW::getConfig()->getValue('photo', 'accepted_filesize') * 1024 * 1024);
 
             return $accepted >= $maxSize ? $maxSize : $accepted;
         }
@@ -1340,5 +1340,17 @@ final class PHOTO_BOL_PhotoService
         {
             $this->triggerNewsfeedEventOnSinglePhotoAdd($album, $photo, false);
         }
+    }
+
+    public function findPhotosInAlbum( $albumId, array $photos )
+    {
+        $self = $this;
+
+        return array_map(function( $photo ) use( $self )
+        {
+            $photo['url'] = $self->getPhotoUrlByType($photo['id'], PHOTO_BOL_PhotoService::TYPE_PREVIEW, $photo['hash'], !empty($photo['dimension']) ? $photo['dimension'] : false);
+
+            return $photo;
+        }, $this->photoDao->findPhotosInAlbum($albumId, $photos));
     }
 }
