@@ -174,14 +174,15 @@ final class PHOTO_BOL_PhotoAlbumService
 
         if ( $albums )
         {
-            $albumIdList = array();
+            $albumIdList = $albumList = array();
             foreach ( $albums as $key => $album )
             {
                 array_push($albumIdList, $album->id);
                 $list[$key]['dto'] = $album;
+                $albumList[] = get_object_vars($album);
             }
             
-            $covers = $this->getAlbumCoverForList($albumIdList);
+            $covers = $this->getAlbumCoverForList($albumList);
             $counters = $this->countAlbumPhotosForList($albumIdList);
             foreach ( $albums as $key => $album )
             {
