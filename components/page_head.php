@@ -68,7 +68,7 @@ class PHOTO_CMP_PageHead extends OW_Component
             }
         }
 
-        $this->assign('url', OW::getEventManager()->call('photo.getAddPhotoURL', array(
+        $this->assign('url', OW::getEventManager()->call(PHOTO_CLASS_EventHandler::EVENT_GET_ADDPHOTO_URL, array(
             'albumId' => (!empty($ownerMode) && !empty($album)) ? $album->id : 0
         )));
         

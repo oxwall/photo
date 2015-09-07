@@ -98,7 +98,6 @@ class PHOTO_CLASS_AjaxUploadForm extends PHOTO_CLASS_AbstractPhotoForm
         $albumNameField = new TextField(self::ELEMENT_ALBUM_NAME);
         $albumNameField->setRequired();
         $albumNameField->addValidator(new PHOTO_CLASS_AlbumNameValidator(false));
-        $albumNameField->addAttribute(FormElement::ATTR_CLASS, 'ow_smallmargin');
         $albumNameField->addAttribute('placeholder', $language->text('photo', 'album_name'));
         $this->addElement($albumNameField);
         
