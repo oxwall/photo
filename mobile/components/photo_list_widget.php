@@ -56,7 +56,7 @@ class PHOTO_MCMP_PhotoListWidget extends BASE_CLASS_Widget
         );
         
         $uniqId = $cmpParams['uniqId'];
-        
+
         $cmp = new PHOTO_MCMP_IndexPhotoList($cmpParams);
         $this->addComponent('cmp', $cmp);
         
@@ -68,7 +68,8 @@ class PHOTO_MCMP_PhotoListWidget extends BASE_CLASS_Widget
         }
         
         $menuItems = $cmp->getMenuItems($items, $uniqId);
-        $paramObj->standartParamList->capContent = (new BASE_MCMP_WidgetMenu($menuItems))->render();
+        $menuCmp = new BASE_MCMP_WidgetMenu($menuItems);
+        $paramObj->standartParamList->capContent = $menuCmp->render();
         
         $this->setSettingValue(self::SETTING_TOOLBAR, PHOTO_MCMP_IndexPhotoList::getToolbar($uniqId));
         $script = '';
