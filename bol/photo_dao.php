@@ -296,7 +296,19 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
      */
     public function getPhotoList( $listType, $first, $limit, $exclude = NULL, $checkPrivacy = NULL )
     {
-        $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition($listType, array('photo' => 'p', 'featured' => 'f', 'album' => 'a'));
+        $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition($listType,
+            array(
+                'photo' => 'p',
+                'featured' => 'f',
+                'album' => 'a'
+            ),
+            array(
+                'listType' => $listType,
+                'first' => $first,
+                'limit' => $limit,
+                'exclude' => $exclude,
+                'checkPrivacy' => $checkPrivacy
+            ));
 
         $excludeCond = $exclude ? ' AND `p`.`id` NOT IN (' . $this->dbo->mergeInClause($exclude) . ')' : '';
 
@@ -348,7 +360,7 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
             }
         }
         
-        return $this->dbo->queryForList($query, array_merge($condition['params'], $params));
+        return $this->dbo->queryForList($query, array_merge($params, $condition['params']));
     }
 
     public function findAlbumPhotoList( $albumId, $listType, $offset, $limit, $privacy = null )
@@ -428,7 +440,16 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
 
     public function findPhotoInfoListByIdList( $idList, $listType = null )
     {
-        $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition($listType, array('photo' => 'p', 'album' => 'a'));
+        $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition($listType,
+            array(
+                'photo' => 'p',
+                'album' => 'a'
+            ),
+            array(
+                'idList' => $idList,
+                'listType' => $listType
+            )
+        );
 
         $query = 'SELECT `p`.*, `a`.`userId`
             FROM `' . $this->getTableName() . '` AS `p`
@@ -437,51 +458,71 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
             WHERE `p`.`id` IN (' . $this->dbo->mergeInClause($idList) . ') AND `p`.`status` = :status AND ' . $condition['where'] . '
             ORDER BY `id` DESC';
 
-        return $this->dbo->queryForList($query, array_merge($condition['params'], array('status' => 'approved')));
+        return $this->dbo->queryForList($query, array_merge(
+            array('status' => 'approved'),
+            $condition['params']
+        ));
     }
 
     /**
      * Count photos
      *
-     * @param string $listtype
+     * @param string $listType
      * @param boolean $checkPrivacy
      * @param null $exclude
      * @return int
      */
-    public function countPhotos( $listtype, $checkPrivacy = true, $exclude = null )
+    public function countPhotos( $listType, $checkPrivacy = true, $exclude = null )
     {
+        $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition('countPhotos',
+            array(
+                'photo' => 'p',
+                'album' => 'a',
+                'featured' => 'f'
+            ),
+            array(
+                'listType' => $listType,
+                'checkPrivacy' => $checkPrivacy,
+                'exclude' => $exclude
+            )
+        );
+
         $privacyCond = $checkPrivacy ? " AND `p`.`privacy` = 'everybody' " : "";
         $excludeCond = $exclude ? ' AND `p`.`id` NOT IN (' . $this->dbo->mergeInClause($exclude) . ')' : '';
         $albumDao = PHOTO_BOL_PhotoAlbumDao::getInstance();
 
-        switch ( $listtype )
+        switch ( $listType )
         {
             case 'featured':
                 $featuredDao = PHOTO_BOL_PhotoFeaturedDao::getInstance();
 
-                $query = "
-                    SELECT COUNT(`p`.`id`)
-                    FROM `" . $this->getTableName() . "` AS `p`
-                    INNER JOIN `" . $albumDao->getTableName() . "` AS `a` ON ( `p`.`albumId` = `a`.`id` )
-                    INNER JOIN `" . $featuredDao->getTableName() . "` AS `f` ON ( `p`.`id` = `f`.`photoId` )
-                    WHERE `p`.`status` = 'approved' " . $privacyCond . $excludeCond . " AND `f`.`id` IS NOT NULL
-                    AND `a`.`entityType` = 'user'
-                ";
-
-                return $this->dbo->queryForColumn($query);
+                $query = 'SELECT COUNT(`p`.`id`)
+                    FROM `' . $this->getTableName() . '` AS `p`
+                    INNER JOIN `' . $albumDao->getTableName() . '` AS `a` ON ( `p`.`albumId` = `a`.`id` )
+                    INNER JOIN `' . $featuredDao->getTableName() . '` AS `f` ON ( `p`.`id` = `f`.`photoId` )
+                    ' . $condition['join'] . '
+                    WHERE `p`.`status` = :status ' . $privacyCond . $excludeCond . ' AND `f`.`id` IS NOT NULL
+                    AND `a`.`entityType` = :entityType AND ' . $condition['where'];
+                break;
 
             case 'latest':
             default:
-                $query = "
-                    SELECT COUNT(`p`.`id`)
-                    FROM `" . $this->getTableName() . "` AS `p`
-                    INNER JOIN `" . $albumDao->getTableName() . "` AS `a` ON ( `p`.`albumId` = `a`.`id` )
-                    WHERE `p`.`status` = 'approved' " . $privacyCond . $excludeCond . "
-                    AND `a`.`entityType` = 'user'
-                ";
-
-                return $this->dbo->queryForColumn($query);
+                $query = 'SELECT COUNT(`p`.`id`)
+                    FROM `' . $this->getTableName() . '` AS `p`
+                    INNER JOIN `' . $albumDao->getTableName() . '` AS `a` ON ( `p`.`albumId` = `a`.`id` )
+                    ' . $condition['join'] . '
+                    WHERE `p`.`status` = :status ' . $privacyCond . $excludeCond . '
+                    AND `a`.`entityType` = :entityType AND ' . $condition['where'];
+                break;
         }
+
+        return $this->dbo->queryForColumn($query, array_merge(
+            array(
+                'status' => 'approved',
+                'entityType' => 'user'
+            ),
+            $condition['params']
+        ));
     }
 
     public function countFullsizePhotos()
@@ -525,25 +566,45 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
     /**
      * Counts album photos
      *
-     * @param int $id
+     * @param int $albumId
      * @param $exclude
      * @return int
      */
-    public function countAlbumPhotos( $id, $exclude )
+    public function countAlbumPhotos( $albumId, $exclude )
     {
-        if ( !$id )
-            return false;
+        if ( !$albumId ) return false;
 
-        $example = new OW_Example();
-        $example->andFieldEqual('albumId', $id);
-        $example->andFieldEqual('status', 'approved');
+        $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition('countAlbumPhotos',
+            array(
+                'photo' => 'p'
+            ),
+            array(
+                'albumId' => $albumId,
+                'exclude' => $exclude
+            )
+        );
+
+        $sql = 'SELECT COUNT(*)
+            FROM `%s` AS `p`
+                %s
+            WHERE `p`.`albumId` = :albumId AND `p`.`status` = :status AND %s';
+        $sql = sprintf($sql,
+            $this->getTableName(),
+            $condition['join'],
+            $condition['where']);
 
         if ( $exclude )
         {
-            $example->andFieldNotInArray('id', $exclude);
+            $sql .= ' AND `p`.`id` NOT IN(' . $this->dbo->mergeInClause($exclude) . ')';
         }
 
-        return (int)$this->countByExample($example);
+        return (int) $this->dbo->queryForColumn($sql, array_merge(
+            array(
+                'albumId' => $albumId,
+                'status' => 'approved'
+            ),
+            $condition['params']
+        ));
     }
     
     public function countAlbumPhotosForList( $albumIdList )
@@ -587,38 +648,60 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
     /**
      * Returns photos in the album
      *
-     * @param int $album
+     * @param int $albumId
      * @param int $page
      * @param int $limit
      * @param $exclude
      * @return array of PHOTO_Bol_Photo
      */
-    public function getAlbumPhotos( $album, $page, $limit, $exclude, $status = PHOTO_BOL_PhotoDao::STATUS_APPROVED )
+    public function getAlbumPhotos( $albumId, $page, $limit, $exclude, $status = PHOTO_BOL_PhotoDao::STATUS_APPROVED )
     {
-        if ( !$album )
+        if ( !$albumId )
         {
             return false;
         }
 
         $first = ( $page - 1 ) * $limit;
 
-        $example = new OW_Example();
-        $example->andFieldEqual('albumId', $album);
-        
-        if ( !empty($status) )
-        {
-            $example->andFieldEqual('status', $status);
-        }
+        $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition('getAlbumPhotos',
+            array(
+                'photo' => 'p'
+            ),
+            array(
+                'albumId' => $albumId,
+                'page' => $page,
+                'limit' => $limit,
+                'exclude' => $exclude,
+                'status' => $status
+            )
+        );
+
+        $sql = 'SELECT `p`.*
+            FROM `%s` AS `p`
+                %s
+            WHERE `p`.`albumId` = :albumId AND `p`.`status` = :status AND %s';
+        $sql = sprintf($sql,
+            $this->getTableName(),
+            $condition['join'],
+            $condition['where']);
 
         if ( $exclude )
         {
-            $example->andFieldNotInArray('id', $exclude);
+            $sql .= ' AND `p`.`id` NOT IN(' . $this->dbo->mergeInClause($exclude) . ')';
         }
 
-        $example->setOrder('`id` DESC');
-        $example->setLimitClause($first, $limit);
+        $sql .= ' ORDER BY `p`.`id` DESC
+        LIMIT :first, :limit';
 
-        return $this->findListByExample($example);
+        return $this->dbo->queryForObjectList($sql, $this->getDtoClassName(), array_merge(
+            array(
+                'albumId' => $albumId,
+                'status' => $status,
+                'first' => $first,
+                'limit' => $limit
+            ),
+            $condition['params']
+        ));
     }
 
     /**
