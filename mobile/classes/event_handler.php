@@ -72,13 +72,20 @@ class PHOTO_MCLASS_EventHandler
         $linkId = uniqid('photo');
 
         $albumService = PHOTO_BOL_PhotoAlbumService::getInstance();
+        $exclude = array();
+        $newsfeedAlbum = $albumService->getNewsfeedAlbum($userId);
 
-        if ( !$albumService->countUserAlbums($userId) )
+        if ( $newsfeedAlbum !== null )
+        {
+            $exclude[] = $newsfeedAlbum->id;
+        }
+
+        if ( !$albumService->countUserAlbums($userId, $exclude) )
         {
             return;
         }
 
-        $albumList = $albumService->findUserAlbumList($userId, 1, 1);
+        $albumList = $albumService->findUserAlbumList($userId, 1, 1, $exclude);
         $cover = $albumList[0]['cover'];
 
         $username = BOL_UserService::getInstance()->getUserName($userId);

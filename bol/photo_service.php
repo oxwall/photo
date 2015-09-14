@@ -1289,10 +1289,13 @@ final class PHOTO_BOL_PhotoService
         }
     }
 
-    public function getQueryCondition( $listType, $aliases )
+    public function getQueryCondition( $listType, $aliases, array $params = array() )
     {
-        $event = new BASE_CLASS_QueryBuilderEvent('photo.getPhotoList', array('listType' => $listType, 'aliases' => $aliases));
-        OW::getEventManager()->trigger($event);
+        $event = OW::getEventManager()->trigger(new BASE_CLASS_QueryBuilderEvent('photo.getPhotoList', array(
+            'listType' => $listType,
+            'aliases' => $aliases,
+            'params' => $params
+        )));
 
         return array(
             'join' => $event->getJoin(),

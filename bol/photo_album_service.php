@@ -216,7 +216,7 @@ final class PHOTO_BOL_PhotoAlbumService
             
             foreach ( $albums as $key => $album )
             {
-                array_push($albumIdList, $album->id);
+                $albumIdList[] = $album->id;
                 $list[$key]['dto'] = $album;
                 $albumList[] = get_object_vars($album);
             }
