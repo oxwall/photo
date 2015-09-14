@@ -716,17 +716,32 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
         {
             return array();
         }
-        
-        $example = new OW_Example();
-        $example->andFieldEqual('albumId', $albumId);
-        $example->setOrder('`id` DESC');
-        
-        if ( count($exclude) !== 0 )
-        {
-            $example->andFieldNotInArray('id', $exclude);
-        }
 
-        return $this->findListByExample($example);
+        $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition('getAlbumAllPhotos',
+            array(
+                'photo' => 'p'
+            ),
+            array(
+                'albumId' => $albumId,
+                'exclude' => $exclude,
+            )
+        );
+
+        $sql = 'SELECT `p`.*
+            FROM `%s` AS `p`
+                %s
+            WHERE `p`.`albumId` = :albumId AND %s AND %s
+            ORDER BY `p`.`id` DESC';
+        $sql = sprintf($sql,
+            $this->getTableName(),
+            $condition['join'],
+            count($exclude) !== 0 ? '`p`.`id` NOT IN(' . $this->dbo->mergeInClause($exclude) . ')' : '1',
+            $condition['where']);
+
+        return $this->dbo->queryForObjectList($sql, $this->getDtoClassName(), array_merge(
+            array('albumId' => $albumId),
+            $condition['params']
+        ));
     }
     
     public function getLastPhotoForList( $albumIdList )
@@ -1492,27 +1507,53 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
         {
             return array();
         }
-        
-        $statusSql = "1";
-        $params = array('userId' => $userId, 'first' => (int)$first, 'limit' => (int)$limit);
-        
-        if ( !empty($status) )
-        {
-            $params["status"] = $status;
-            $statusSql = "`p`.`status` = :status";
-        }
-        
+
+        $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition('findPhotoListByUserId',
+            array(
+                'photo' => 'p',
+                'album' => 'a'
+            ),
+            array(
+                'userId' => $userId,
+                'first' => $first,
+                'limit' => $limit,
+                'checkPrivacy' => $checkPrivacy,
+                'exclude' => $exclude,
+                'status' => $status
+            )
+        );
+
         $sql = 'SELECT `p`.*, `a`.`userId`
-            FROM `' . $this->getTableName() . '` AS `p`
-                INNER JOIN `' . PHOTO_BOL_PhotoAlbumDao::getInstance()->getTableName() . '` AS `a` ON (`p`.`albumId` = `a`.`id`)
-            WHERE `a`.`userId` = :userId AND ' . $statusSql .
-                ($checkPrivacy !== NULL ? 
-                    $checkPrivacy ? ' AND (`p`.`' . self::PRIVACY . '` = :everybody OR `p`.`' . self::PRIVACY . '` = :friends)' : 
-                                    ' AND `p`.`' . self::PRIVACY . '` = :everybody' : '') . 
-                (count($exclude) !== 0 ? ' AND `p`.`id` NOT IN (' . implode(',', array_map('intval', array_unique($exclude))) . ')' : '') . '
+            FROM `%s` AS `p`
+                INNER JOIN `%s` AS `a` ON(`p`.`albumId` = `a`.`id`)
+                %s
+            WHERE `a`.`userId` = :userId AND `p`.`status` = :status AND
+                %s AND
+                %s AND
+                %s
             ORDER BY `p`.`id` DESC
             LIMIT :first, :limit';
-        
+        $sql = sprintf($sql,
+            $this->getTableName(),
+            PHOTO_BOL_PhotoAlbumDao::getInstance()->getTableName(),
+            $condition['join'],
+
+            $checkPrivacy !== null ?
+                ($checkPrivacy ?
+                    '(`p`.`privacy` = :everybody OR `p`.`privacy` = :friends)' :
+                    '`p`.`privacy` = :everybody') :
+                '1',
+            count($exclude) !== 0 ?
+                '`p`.`id` NOT IN (' . $this->dbo->mergeInClause($exclude) . ')' : '1',
+            $condition['where']);
+
+        $params = array(
+            'userId' => $userId,
+            'status' => $status,
+            'first' => (int) $first,
+            'limit' => (int) $limit
+        );
+
         if ( $checkPrivacy !== NULL )
         {
             switch ( $checkPrivacy )
@@ -1524,7 +1565,7 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
             }
         }
         
-        return $this->dbo->queryForList($sql, $params);
+        return $this->dbo->queryForList($sql, array_merge($params, $condition['params']));
     }
     
     public function findPhotoListByUserIdList( array $userIdList, $first, $limit, $checkPrivacy = NULL )
