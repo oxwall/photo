@@ -56,6 +56,8 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
     CONST STATUS_APPROVAL = 'approval';
     CONST STATUS_APPROVED = 'approved';
     CONST STATUS_BLOCKED = 'blocked';
+
+    const ENTITY_TYPE_USER = 'user';
     
     private $typeToPrefix;
     
@@ -459,7 +461,7 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
             ORDER BY `id` DESC';
 
         return $this->dbo->queryForList($query, array_merge(
-            array('status' => 'approved'),
+            array('status' => self::STATUS_APPROVED),
             $condition['params']
         ));
     }
@@ -518,8 +520,8 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
 
         return $this->dbo->queryForColumn($query, array_merge(
             array(
-                'status' => 'approved',
-                'entityType' => 'user'
+                'status' => self::STATUS_APPROVED,
+                'entityType' => self::ENTITY_TYPE_USER
             ),
             $condition['params']
         ));
@@ -600,7 +602,7 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
         return (int) $this->dbo->queryForColumn($sql, array_merge(
             array(
                 'albumId' => $albumId,
-                'status' => 'approved'
+                'status' => self::STATUS_APPROVED
             ),
             $condition['params']
         ));
