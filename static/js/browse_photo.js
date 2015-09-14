@@ -1023,7 +1023,7 @@
 
             $('.ow_btn_close_search', this.searchBox).on('click', this.self(function()
             {
-                this.loadList(this.serachInitList);
+                this.loadList(this.searchInitList);
             }));
 
             $('.ow_searchbar_btn', this.searchBox).on('click', this.self(function( event )
@@ -1179,9 +1179,9 @@
                 this.changeListType(mixed);
             }
 
-            if ( !this.serachInitList )
+            if ( !this.searchInitList )
             {
-                this.serachInitList = SlotManager().listType;
+                this.searchInitList = SlotManager().listType;
             }
 
             var data = {
@@ -1214,7 +1214,7 @@
             $('.ow_searchbar_input', this.searchBox).removeClass('active');
             this.listBtns.filter('[list-type="' + listType + '"]').addClass('active');
 
-            this.serachInitList = listType;
+            this.searchInitList = listType;
             this.changeListType(listType);
             this.destroySearchResultList();
             SlotManager().load({listType: listType});

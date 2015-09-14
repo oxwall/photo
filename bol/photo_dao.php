@@ -1719,7 +1719,7 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
 
         if ( count($photoIds) !== 0 )
         {
-            $sql .= ' AND `p`.`id` IN(' . implode(',', array_map('intval', $photoIds)) . ')';
+            $sql .= ' AND `p`.`id` IN(' . $this->dbo->mergeInClause($photoIds) . ')';
         }
 
         return $this->dbo->queryForList($sql, array('albumId' => $albumId));

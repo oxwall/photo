@@ -184,20 +184,18 @@ class PHOTO_BOL_PhotoAlbumDao extends OW_BaseDao
                 INNER JOIN `%s` AS `p`
                     ON(`p`.`albumId` = `a`.`id`)
                 %s
-            WHERE `a`.`userId` = :userId AND %s';
+            WHERE `a`.`userId` = :userId AND
+                %s AND
+                %s
+            GROUP BY `a`.`id`
+            LIMIT :first, :limit';
         $sql = sprintf($sql,
             $this->getTableName(),
             PHOTO_BOL_PhotoDao::getInstance()->getTableName(),
             $condition['join'],
-            $condition['where']);
-
-        if ( $exclude )
-        {
-            $sql .= ' AND `a`.`id` NOT IN(' . $this->dbo->mergeInClause($exclude) . ') ';
-        }
-
-        $sql .= ' GROUP BY `a`.`id`
-        LIMIT :first, :limit';
+            $condition['where'],
+            !empty($exclude) ? '`a`.`id` NOT IN(' . $this->dbo->mergeInClause($exclude) . ')' : '1'
+        );
 
         return $this->dbo->queryForObjectList($sql, $this->getDtoClassName(), array_merge(
             array(

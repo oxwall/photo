@@ -59,6 +59,7 @@ class PHOTO_CLASS_EventHandler
 
     const EVENT_PHOTO_ADD = 'photo.add';
     const EVENT_PHOTO_FIND = 'photo.find';
+    const EVENT_PHOTO_FINDS = 'photo.finds';
     const EVENT_PHOTO_DELETE = 'photo.delete';
     const EVENT_ALBUM_PHOTOS_FIND = 'photo.album_photos_find';
     const EVENT_INIT_FLOATBOX = 'photo.init_floatbox';
@@ -523,6 +524,13 @@ class PHOTO_CLASS_EventHandler
         $params = $event->getParams();
         
         PHOTO_BOL_SearchService::getInstance()->deleteSearchItem(PHOTO_BOL_SearchService::ENTITY_TYPE_PHOTO, $params['id']);
+
+        OW::getEventManager()->trigger(
+            new OW_Event(BOL_ContentService::EVENT_BEFORE_DELETE, array(
+                'entityType' => PHOTO_CLASS_ContentProvider::ENTITY_TYPE,
+                'entityId' => $params['id']
+            ))
+        );
     }
 
     /**
@@ -2035,7 +2043,7 @@ class PHOTO_CLASS_EventHandler
         $em->bind(self::EVENT_ENTITY_ALBUMS_FIND, array($this, 'entityAlbumsFind'));
         $em->bind(self::EVENT_PHOTO_ADD, array($this, 'photoAdd'));
         $em->bind(self::EVENT_PHOTO_FIND, array($this, 'photoFind'));
-        $em->bind('photo.finds', array($this, 'photoFinds'));
+        $em->bind(self::EVENT_PHOTO_FINDS, array($this, 'photoFinds'));
         $em->bind(self::EVENT_PHOTO_DELETE, array($this, 'photoDelete'));
         $em->bind(self::EVENT_ALBUM_PHOTOS_FIND, array($this, 'albumPhotosFind'));
         
