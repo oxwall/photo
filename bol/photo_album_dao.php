@@ -104,14 +104,31 @@ class PHOTO_BOL_PhotoAlbumDao extends OW_BaseDao
             return false;
         }
 
-        $example = new OW_Example();
-        $example->andFieldEqual('userId', $userId);
-        if ( $exclude )
-        {
-            $example->andFieldNotInArray('id', $exclude);
-        }
+        $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition('countAlbums',
+            array('album' => 'a'),
+            array(
+                'userId' => $userId,
+                'exclude' => $exclude
+            )
+        );
 
-        return $this->countByExample($example);
+        $sql = 'SELECT COUNT(*)
+            FROM `%s` AS `a`
+                %s
+            WHERE `a`.`userId` = :userId AND
+              %s AND
+              %s';
+        $sql = sprintf($sql,
+            $this->getTableName(),
+            $condition['join'],
+            $condition['where'],
+            !empty($exclude) ? '`a`.`id` NOT IN(' . $this->dbo->mergeInClause($exclude) . ')' : '1'
+        );
+
+        return $this->dbo->queryForColumn($sql, array_merge(
+            array('userId' => $userId),
+            $condition['params']
+        ));
     }
     
      /**
@@ -148,24 +165,44 @@ class PHOTO_BOL_PhotoAlbumDao extends OW_BaseDao
     {
         $first = ( $page - 1 ) * $limit;
 
+        $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition('getUserAlbumList',
+            array(
+                'album' => 'a',
+                'photo' => 'p'
+            ),
+            array(
+                'userId' => $userId,
+                'page' => $page,
+                'limit' => $limit,
+                'exclude' => $exclude
+            )
+        );
+
         $sql = 'SELECT `a`.*
-            FROM `' . $this->getTableName() . '` AS `a`
-                INNER JOIN `' . PHOTO_BOL_PhotoDao::getInstance()->getTableName() . '` AS `p`
+            FROM `%s` AS `a`
+                INNER JOIN `%s` AS `p`
                     ON(`p`.`albumId` = `a`.`id`)
-            WHERE `a`.`userId` = :userId ';
+                %s
+            WHERE `a`.`userId` = :userId AND
+                %s AND
+                %s
+            GROUP BY `a`.`id`
+            LIMIT :first, :limit';
+        $sql = sprintf($sql,
+            $this->getTableName(),
+            PHOTO_BOL_PhotoDao::getInstance()->getTableName(),
+            $condition['join'],
+            $condition['where'],
+            !empty($exclude) ? '`a`.`id` NOT IN(' . $this->dbo->mergeInClause($exclude) . ')' : '1'
+        );
 
-        if ( $exclude )
-        {
-            $sql .= ' AND `a`.`id` NOT IN(' . implode(',', array_map('intval', $exclude)) . ') ';
-        }
-
-        $sql .= 'GROUP BY `a`.`id`
-        LIMIT :first, :limit';
-
-        return $this->dbo->queryForObjectList($sql, $this->getDtoClassName(), array(
-            'userId' => $userId,
-            'first' => (int) $first,
-            'limit' => (int) $limit
+        return $this->dbo->queryForObjectList($sql, $this->getDtoClassName(), array_merge(
+            array(
+                'userId' => $userId,
+                'first' => (int) $first,
+                'limit' => (int) $limit
+            ),
+            $condition['params']
         ));
     }
     
