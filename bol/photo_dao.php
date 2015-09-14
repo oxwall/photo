@@ -587,16 +587,15 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
         $sql = 'SELECT COUNT(*)
             FROM `%s` AS `p`
                 %s
-            WHERE `p`.`albumId` = :albumId AND `p`.`status` = :status AND %s';
+            WHERE `p`.`albumId` = :albumId AND `p`.`status` = :status AND
+                %s AND
+                %s';
         $sql = sprintf($sql,
             $this->getTableName(),
             $condition['join'],
-            $condition['where']);
-
-        if ( $exclude )
-        {
-            $sql .= ' AND `p`.`id` NOT IN(' . $this->dbo->mergeInClause($exclude) . ')';
-        }
+            $condition['where'],
+            !empty($exclude) ? '`p`.`id` NOT IN(' . $this->dbo->mergeInClause($exclude) . ')' : '1'
+        );
 
         return (int) $this->dbo->queryForColumn($sql, array_merge(
             array(
@@ -679,19 +678,17 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
         $sql = 'SELECT `p`.*
             FROM `%s` AS `p`
                 %s
-            WHERE `p`.`albumId` = :albumId AND `p`.`status` = :status AND %s';
+            WHERE `p`.`albumId` = :albumId AND `p`.`status` = :status AND
+                %s AND
+                %s
+            ORDER BY `p`.`id` DESC
+            LIMIT :first, :limit';
         $sql = sprintf($sql,
             $this->getTableName(),
             $condition['join'],
-            $condition['where']);
-
-        if ( $exclude )
-        {
-            $sql .= ' AND `p`.`id` NOT IN(' . $this->dbo->mergeInClause($exclude) . ')';
-        }
-
-        $sql .= ' ORDER BY `p`.`id` DESC
-        LIMIT :first, :limit';
+            $condition['where'],
+            !empty($exclude) ? '`p`.`id` NOT IN(' . $this->dbo->mergeInClause($exclude) . ')' : '1'
+        );
 
         return $this->dbo->queryForObjectList($sql, $this->getDtoClassName(), array_merge(
             array(

@@ -115,16 +115,15 @@ class PHOTO_BOL_PhotoAlbumDao extends OW_BaseDao
         $sql = 'SELECT COUNT(*)
             FROM `%s` AS `a`
                 %s
-            WHERE `a`.`userId` = :userId AND %s';
+            WHERE `a`.`userId` = :userId AND
+              %s AND
+              %s';
         $sql = sprintf($sql,
             $this->getTableName(),
             $condition['join'],
-            $condition['where']);
-
-        if ( $exclude )
-        {
-            $sql .= ' AND `a`.`id` NOT IN(' . $this->dbo->mergeInClause($exclude) . ')';
-        }
+            $condition['where'],
+            !empty($exclude) ? '`a`.`id` NOT IN(' . $this->dbo->mergeInClause($exclude) . ')' : '1'
+        );
 
         return $this->dbo->queryForColumn($sql, array_merge(
             array('userId' => $userId),
