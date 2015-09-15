@@ -813,13 +813,13 @@
                         top: offset.top,
                         left: offset.left / (params.level || 4) * 100 + '%'
                     });
-
-                    var img = slot.node.find('img')[0];
-
-                    img.onload = img.onerror = this.self(function(){this.buildComplete(slot)});
-                    img.src = slot.data.url;
+                    slot.node.find('img').attr('src', slot.data.url);
                     slot.node.appendTo(this.content);
                     this.content.height(Math.max.apply(Math, this.photoListOrder));
+
+                    var img = new Image();
+                    img.onload = img.onerror = this.self(function(){this.buildComplete(slot)});
+                    img.src = slot.data.url;
                 };
             }
         })();
