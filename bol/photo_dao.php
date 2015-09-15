@@ -367,6 +367,20 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
 
     public function findAlbumPhotoList( $albumId, $listType, $offset, $limit, $privacy = null )
     {
+        $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition(sprintf('findAlbumPhotoList.%s', $listType),
+            array(
+                'photo' => 'p',
+                'featured' => 'f',
+                'album' => 'a'
+            ),
+            array(
+                'albumId' => $albumId,
+                'listType' => $listType,
+                'offset' => $offset,
+                'limit' => $limit,
+                'privacy' => $privacy
+            ));
+
         $privacySql = $privacy === null ? "1": "`p`.`privacy`='{$privacy}'";
         
         switch ( $listType )
@@ -376,8 +390,9 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
                     FROM `' . $this->getTableName() . '` AS `p`
                     INNER JOIN `' . PHOTO_BOL_PhotoAlbumDao::getInstance()->getTableName() . '` AS `a` ON ( `p`.`albumId` = `a`.`id` )
                     INNER JOIN `' . PHOTO_BOL_PhotoFeaturedDao::getInstance()->getTableName() . '` AS `f` ON (`f`.`photoId`=`p`.`id`)
+                    ' . $condition['join'] . '
                     WHERE `p`.`status` = :status AND `p`.`albumId` = :albumId AND ' . $privacySql . '
-                    AND `f`.`id` IS NOT NULL
+                    AND `f`.`id` IS NOT NULL AND ' . $condition['where'] . '
                     ORDER BY `p`.`id` DESC
                     LIMIT :first, :limit';
                 break;
@@ -387,7 +402,8 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
                         INNER JOIN `' . PHOTO_BOL_PhotoAlbumDao::getInstance()->getTableName() . '` AS `a` ON ( `p`.`albumId` = `a`.`id` )
                         INNER JOIN ' . BOL_RateDao::getInstance()->getTableName() . ' AS `r` ON (`r`.`entityId`=`p`.`id`
                             AND `r`.`' . BOL_RateDao::ENTITY_TYPE . '` = "photo_rates" AND `r`.`' . BOL_RateDao::ACTIVE . '` = 1)
-                    WHERE `p`.`status` = :status AND `p`.`albumId` = :albumId AND ' . $privacySql . '
+                        ' . $condition['join'] . '
+                    WHERE `p`.`status` = :status AND `p`.`albumId` = :albumId AND ' . $privacySql . ' AND ' . $condition['where'] . '
                     GROUP BY `p`.`id`
                     ORDER BY `avgScore` DESC, `ratesCount` DESC
                     LIMIT :first, :limit';
@@ -397,13 +413,22 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
                 $query = 'SELECT `p`.*
                     FROM `' . $this->getTableName() . '` AS `p`
                     INNER JOIN `' . PHOTO_BOL_PhotoAlbumDao::getInstance()->getTableName() . '` AS `a` ON ( `p`.`albumId` = `a`.`id` )
-                    WHERE `p`.`status` = :status AND `p`.`albumId` = :albumId AND ' . $privacySql . '
+                    ' . $condition['join'] . '
+                    WHERE `p`.`status` = :status AND `p`.`albumId` = :albumId AND ' . $privacySql . ' AND ' . $condition['where'] . '
                     ORDER BY `p`.`id` DESC
                     LIMIT :first, :limit';
                 break;
         }
 
-        return $this->dbo->queryForList($query, array('albumId' => $albumId, 'first' => $offset, 'limit' => $limit, 'status' => 'approved'));
+        return $this->dbo->queryForList($query, array_merge(
+            array(
+                'albumId' => $albumId,
+                'first' => $offset,
+                'limit' => $limit,
+                'status' => self::STATUS_APPROVED
+            ),
+            $condition['params']
+        ));
     }
     
     public function getAlbumPhotoList( $albumId, $offset, $limit, $checkPrivacy = NULL, array $exclude = array() )
@@ -1211,6 +1236,20 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
     public function findEntityPhotoList( $entityType, $entityId, $first, $count, $status = "approved", $privacy = null )
     {
         $limit = (int) $count;
+        $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition('findEntityPhotoList',
+            array(
+                'photo' => 'p',
+                'album' => 'a'
+            ),
+            array(
+                'entityType' => $entityType,
+                'entityId' => $entityId,
+                'first' => $first,
+                'count' => $count,
+                'status' => $status,
+                'privacy' => $privacy
+            )
+        );
 
         $statusSql = $status === null ? "1" : "`p`.`status` = '{$status}'";
         $privacySql = $privacy === null ? "1": "`p`.`privacy`='{$privacy}'";
@@ -1220,9 +1259,11 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
             SELECT `p`.*
             FROM `" . $this->getTableName() . "` AS `p`
             LEFT JOIN `" . $albumDao->getTableName() . "` AS `a` ON ( `p`.`albumId` = `a`.`id` )
+            " . $condition['join'] . "
             WHERE $statusSql AND $privacySql
             AND `a`.`entityType` = :entityType
             AND `a`.`entityId` = :entityId
+            AND " . $condition['where'] . "
             ORDER BY `p`.`id` DESC
             LIMIT :first, :limit";
 
@@ -1236,7 +1277,7 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
         $cacheLifeTime = $first == 0 ? 24 * 3600 : null;
         $cacheTags = $first == 0 ? array(self::CACHE_TAG_PHOTO_LIST) : null;
 
-        return $this->dbo->queryForObjectList($query, $this->getDtoClassName(), $qParams, $cacheLifeTime, $cacheTags);
+        return $this->dbo->queryForObjectList($query, $this->getDtoClassName(), array_merge($qParams, $condition['params']), $cacheLifeTime, $cacheTags);
     }
     
     public function countEntityPhotos( $entityType, $entityId, $status = "approved", $privacy = null )
