@@ -1291,11 +1291,27 @@ final class PHOTO_BOL_PhotoService
 
     public function getQueryCondition( $listType, $aliases, array $params = array() )
     {
-        $event = OW::getEventManager()->trigger(new BASE_CLASS_QueryBuilderEvent('photo.getPhotoList', array(
+        $event = new BASE_CLASS_QueryBuilderEvent('photo.getPhotoList', array(
             'listType' => $listType,
             'aliases' => $aliases,
             'params' => $params
-        )));
+        ));
+        OW::getEventManager()->trigger($event);
+
+        $queryParts = BOL_ContentService::getInstance()->getQueryFilter(array(
+            BASE_CLASS_QueryBuilderEvent::TABLE_USER => $aliases['album'],
+            BASE_CLASS_QueryBuilderEvent::TABLE_CONTENT => $aliases['album']
+        ), array(
+            BASE_CLASS_QueryBuilderEvent::FIELD_USER_ID => 'userId',
+            BASE_CLASS_QueryBuilderEvent::FIELD_CONTENT_ID => 'id'
+        ), array(
+            BASE_CLASS_QueryBuilderEvent::OPTION_METHOD => __METHOD__,
+            BASE_CLASS_QueryBuilderEvent::OPTION_TYPE => $listType
+        ));
+
+        $event->addJoin($queryParts['join']);
+        $event->addWhere($queryParts['where']);
+        $event->addOrder($queryParts['order']);
 
         return array(
             'join' => $event->getJoin(),

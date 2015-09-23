@@ -603,6 +603,7 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
 
         $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition('countAlbumPhotos',
             array(
+                'album' => 'a',
                 'photo' => 'p'
             ),
             array(
@@ -613,12 +614,14 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
 
         $sql = 'SELECT COUNT(*)
             FROM `%s` AS `p`
+                INNER JOIN `%s` AS `a` ON(`p`.`albumId` = `a`.`id`)
                 %s
             WHERE `p`.`albumId` = :albumId AND `p`.`status` = :status AND
                 %s AND
                 %s';
         $sql = sprintf($sql,
             $this->getTableName(),
+            PHOTO_BOL_PhotoAlbumDao::getInstance()->getTableName(),
             $condition['join'],
             $condition['where'],
             !empty($exclude) ? '`p`.`id` NOT IN(' . $this->dbo->mergeInClause($exclude) . ')' : '1'
@@ -691,6 +694,7 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
 
         $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition('getAlbumPhotos',
             array(
+                'album' => 'a',
                 'photo' => 'p'
             ),
             array(
@@ -704,6 +708,7 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
 
         $sql = 'SELECT `p`.*
             FROM `' . $this->getTableName() . '` AS `p`
+                INNER JOIN `' . PHOTO_BOL_PhotoAlbumDao::getInstance()->getTableName() . '` AS `a`
                 ' . $condition['join'] . '
             WHERE `p`.`albumId` = :albumId AND
                 ' . (!empty($status) ? '`p`.`status` = :status' : '1') . ' AND
@@ -744,6 +749,7 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
 
         $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition('getAlbumAllPhotos',
             array(
+                'album' => 'a',
                 'photo' => 'p'
             ),
             array(
@@ -754,11 +760,13 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
 
         $sql = 'SELECT `p`.*
             FROM `%s` AS `p`
+                INNER JOIN `%s` AS `a` ON(`p`.`albumId` = `a`.`id`)
                 %s
             WHERE `p`.`albumId` = :albumId AND %s AND %s
             ORDER BY `p`.`id` DESC';
         $sql = sprintf($sql,
             $this->getTableName(),
+            PHOTO_BOL_PhotoAlbumDao::getInstance()->getTableName(),
             $condition['join'],
             count($exclude) !== 0 ? '`p`.`id` NOT IN(' . $this->dbo->mergeInClause($exclude) . ')' : '1',
             $condition['where']);
