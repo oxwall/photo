@@ -67,7 +67,7 @@
     {form name="ajax-upload"}
         <div id="slot-area" class="ow_photo_preview_block_wrap clearfix"></div>
 
-        <div id="photo-album-form" class="ow_photo_upload_bottom clearfix">
+        <div id="photo-album-form" class="ow_photo_upload_bottom ow_privacy_mode_width clearfix">
             <div id="photo-album-list" class="ow_left">
                 <div class="ow_suggest_field ow_smallmargin">
                     {input name='album'}
@@ -97,6 +97,9 @@
                     </div>
                 {/foreach}
             </div>
+
+            {add_content key="photo.onRenderAjaxUpload" albumId=$albumId userId=$userId}
+
             <div class="ow_photo_upload_submit ow_right">
                 <span class="ow_button">
                     <span class=" ow_ic_submit ow_positive">

@@ -317,3 +317,156 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
     visibility: hidden;
   }
 }
+.ow_photo_upload_wrap .ow_privacy_mode_width .ow_suggest_field input {
+    width: 100%;
+}
+.ow_privacy_mode_width #photo-album-list {
+    width: 100%;
+}
+.ow_privacy_userlist_main_wrap {
+    width: 62%;
+    padding-right: 11px;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+.ow_privacy_userlist_selected {
+    width: 37%;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+.ow_privacy_userlist {
+    clear: both;
+    background-color: rgba(195, 206, 216, 0.7);
+}
+/* Privacy setting - dropdown */
+.floatbox_container .ow_photo_privacy_settings {
+    clear: both;
+}
+.ow_photo_privacy_settings .ow_context_action {
+    z-index: 4;
+}
+.ow_photo_privacy_settings .ow_context_action_value_block {
+    margin-left: 0px;
+}
+/* Search bar */
+.ow_privacy_userlist_search .ow_searchbar {
+    -webkit-border-radius: 0px;
+    -moz-border-radius: 0px;
+    border-radius: 0px;
+    margin-top: 0px;
+}
+.ow_privacy_userlist_search .ow_searchbar_input {
+    width: 95%;
+}
+.ow_privacy_userlist_search .ow_searchbar input[type="text"] {
+    width: 100%;
+    padding-left: 8px;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+.ow_privacy_userlist_search .ow_searchbar_btn {
+    margin-left: -24px;
+}
+.ow_privacy_userlist_search .ow_searchbar .ow_searchbar_ac {
+    left: 5px;
+    z-index: 3;
+}
+.browse-user-search .ow_searchbar_username {
+    margin-top: 10px;
+}
+/* Choice column of users */
+.ow_privacy_userlist_main_label {
+    font-family: Tahoma,Verdana,Segoe,sans-serif;
+    padding-bottom: 6px;
+    padding-left: 15px;
+    padding-top: 4px;
+    text-transform: uppercase;
+}
+.ow_privacy_userlist_main {
+    max-height: 194px;
+    overflow-y: auto;
+}
+.ow_privacy_userlist_main_item {
+    position: relative;
+    border-width: 0 1px 1px;
+    padding: 8px 8px 8px 40px;
+}
+.ow_privacy_userlist_main_item:first-child {
+    border-top-width: 1px;
+}
+.ow_privacy_userlist_main_item:hover {
+    cursor: pointer;
+    background-color: rgba(195, 206, 216, 0.5);
+}
+.ow_privacy_userlist_checkbox {
+    left: 14px;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 22px;
+}
+.ow_privacy_userlist_item_avatar {
+    float: left;
+    margin-right: -40px;
+}
+.ow_privacy_userlist_item_info {
+    display: table;
+    height: 40px;
+    margin-left: 53px;
+}
+.ow_privacy_userlist_item_info_string {
+    display: table-cell;
+    vertical-align: middle;
+}
+.ow_privacy_userlist_item_avatar .ow_avatar {
+    padding: 0;
+}
+/* Selected column of users */
+.ow_privacy_userlist_selected {
+    padding: 8px 16px 16px;
+    height: 252px;
+    overflow-y: auto;
+}
+.ow_privacy_userlist_selected h3 {
+    height: 22px;
+    line-height: 22px;
+    font-size: 18px;
+}
+.ow_privacy_userlist_selected_item {
+    border-width: 1px;
+}
+.ow_privacy_userlist_item_close {
+    display: table-cell;
+    vertical-align: middle;
+    background: url(../images/tag_close_btn.png) no-repeat center center;
+    border-left-width: 1px;
+    height: 44px;
+    text-decoration: none;
+    text-align: center;
+}
+.ow_privacy_userlist_selected .ow_privacy_userlist_item_info_string {
+    width: 95%;
+}
+.ow_privacy_userlist_item_close a {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+}
+.ow_privacy_userlist_selected .ow_privacy_userlist_item_avatar {
+    padding: 2px;
+}
+.ow_privacy_userlist_selected_item .ow_avatar,
+.ow_privacy_userlist_selected_item .ow_avatar img {
+    width: 32px;
+    height: 32px;
+}
+.ow_privacy_userlist_selected_item .ow_privacy_userlist_item_info {
+    height: 32px;
+    margin-left: 40px;
+}
+.ow_privacy_userlist_selected_item .ow_privacy_userlist_item_close {
+    height: 36px;
+}
