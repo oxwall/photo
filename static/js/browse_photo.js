@@ -432,7 +432,7 @@
                 default:
                     if ( ['user', 'hash', 'desc', 'all', 'tag'].indexOf(this.listType) !== -1 )
                     {
-                        return {searchVal: SearchEngine().getSearchValue()};
+                        return SearchEngine().getSearchData();
                     }
 
                     return {};
