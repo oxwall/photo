@@ -78,7 +78,9 @@ class PHOTO_CLASS_AlbumEditForm extends PHOTO_CLASS_AbstractPhotoForm
         $desc->addAttribute('class', 'ow_photo_album_description_textarea');
         $this->addElement($desc);
 
-        $this->triggerReady();
+        $this->triggerReady(array(
+            'albumId' => $albumId
+        ));
     }
 
     public function getOwnElements()

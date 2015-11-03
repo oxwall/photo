@@ -1435,7 +1435,7 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
             return array();
         }
 
-        $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition('searchByHashtag', array('photo' => 'photo', 'album' => 'album', 'tag' => 'tag', 'entityTag' => 'entity'));
+        $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition('searchByHashtag', array('photo' => 'p', 'album' => 'album', 'tag' => 'tag', 'entityTag' => 'entity'));
 
         $sql = 'SELECT `p`.`id`
             FROM `' . $this->getTableName() . '` AS `p`
@@ -1459,7 +1459,7 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
             return array();
         }
 
-        $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition('searchByDesc', array('photo' => 'p', 'album' => 'a'));
+        $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition('searchByUser', array('photo' => 'p', 'album' => 'a'));
 
         $sql = 'SELECT `a`.`userId` AS `id`, COUNT(`p`.`albumId`) AS `count`, GROUP_CONCAT(DISTINCT `p`.`id`) AS `ids`
             FROM `' . PHOTO_BOL_PhotoAlbumDao::getInstance()->getTableName() . '` AS `a`

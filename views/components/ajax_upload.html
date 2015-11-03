@@ -89,11 +89,12 @@
                     {input name="album-name" class='ow_smallmargin'}
                     {input name="description"}
                 </div>
+                {foreach $extendInputs as $input}
+                    {input name=$input}{label name=$input}<br />{error name=$input}
+                {/foreach}
             </div>
 
-            {foreach $extendInputs as $input}
-                {input name=$input}
-            {/foreach}
+            {add_content key="photo.onRenderAjaxUpload" albumId=$albumId userId=$userId}
 
             <div class="ow_photo_upload_submit ow_right">
                 <span class="ow_button">
