@@ -90,7 +90,11 @@
                     {input name="description"}
                 </div>
                 {foreach $extendInputs as $input}
-                    {input name=$input}{label name=$input}<br />{error name=$input}
+                    <div id="{$input}" style="margin-bottom: 8px;">
+                        <div class="ow_smallmargin">
+                            {input name=$input}{label name=$input}<br />{error name=$input}
+                        </div>
+                    </div>
                 {/foreach}
             </div>
 
