@@ -341,6 +341,10 @@ class PHOTO_CTRL_Photo extends OW_ActionController
             throw new Redirect404Exception();
         }
 
+        OW::getEventManager()->trigger(new OW_Event('photo.user_album_view', array(
+            'album' => $album
+        )));
+
         OW::getDocument()->setTitle(
             OW::getLanguage()->text('photo', 'meta_title_photo_useralbum', array(
                 'displayName' => BOL_UserService::getInstance()->getDisplayName($userDto->id),
