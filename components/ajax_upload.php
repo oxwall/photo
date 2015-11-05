@@ -76,6 +76,8 @@ class PHOTO_CMP_AjaxUpload extends OW_Component
         $form = new PHOTO_CLASS_AjaxUploadForm('user', $userId, $albumId, $albumName, $albumDescription, $url, $data);
         $this->addForm($form);
         $this->assign('extendInputs', $form->getExtendedElements());
+        $this->assign('albumId', $albumId);
+        $this->assign('userId', $userId);
 
         $newsfeedAlbum = PHOTO_BOL_PhotoAlbumService::getInstance()->getNewsfeedAlbum($userId);
         $this->assign('albumNameList', PHOTO_BOL_PhotoAlbumService::getInstance()->findAlbumNameListByUserId($userId, !empty($newsfeedAlbum) ? array($newsfeedAlbum->id) : array()));

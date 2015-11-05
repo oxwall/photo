@@ -62,6 +62,8 @@
                 _elements.editCont.find('.ow_photo_album_description').hide();
                 _elements.editCont.find('.ow_photo_album_description_textarea').show();
             }
+
+            OW.trigger('photo.albumEditClick');
         },
         setViewMode: function()
         {

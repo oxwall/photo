@@ -146,7 +146,15 @@ class PHOTO_CLASS_AjaxUploadForm extends PHOTO_CLASS_AbstractPhotoForm
         $submit->addAttribute('class', 'ow_ic_submit ow_positive');
         $this->addElement($submit);
 
-        $this->triggerReady($data);
+        $this->triggerReady(array(
+            'entityType' => $entityType,
+            'entityId' => $entityId,
+            'albumId' => $albumId,
+            'albumName' => $albumName,
+            'albumDescription' => $albumDescription,
+            'url' => $url,
+            'data' => $data
+        ));
     }
 
     public function getOwnElements()

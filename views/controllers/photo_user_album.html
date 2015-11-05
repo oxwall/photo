@@ -93,6 +93,8 @@
                         </div>
                     </div>
                 {/foreach}
+
+                {add_content key="photo.onRenderEditAlbum" albumId=$album->id userId=$album->userId}
             {/form}
         </div>
     </div>
