@@ -137,12 +137,13 @@ final class PHOTO_BOL_PhotoAlbumService
      *
      * @param $userId
      * @param null $exclude
+     * @param bool $excludeEmpty
      * @internal param string $type
      * @return int
      */
-    public function countUserAlbums( $userId, $exclude = null )
+    public function countUserAlbums( $userId, $exclude = null, $excludeEmpty = false )
     {
-        return $this->photoAlbumDao->countAlbums($userId, $exclude);
+        return $this->photoAlbumDao->countAlbums($userId, $exclude, $excludeEmpty);
     }
 
     /**

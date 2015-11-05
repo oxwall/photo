@@ -794,7 +794,7 @@ class PHOTO_CLASS_EventHandler
         $userId = OW::getUser()->getId();
         $username = OW::getUser()->getUserObject()->getUsername();
 
-        $albumCount = (int) $service->countUserAlbums($userId);
+        $albumCount = (int) $service->countUserAlbums($userId, null, true);
 
         if ( $albumCount > 0 )
         {
