@@ -97,7 +97,7 @@ class PHOTO_BOL_PhotoAlbumDao extends OW_BaseDao
      * @param $exclude
      * @return int
      */
-    public function countAlbums( $userId, $exclude )
+    public function countAlbums( $userId, $exclude, $excludeEmpty = false )
     {
         if ( !$userId )
         {
@@ -105,25 +105,21 @@ class PHOTO_BOL_PhotoAlbumDao extends OW_BaseDao
         }
 
         $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition('countAlbums',
-            array('album' => 'a'),
+            array('album' => 'a', 'photo' => 'p'),
             array(
                 'userId' => $userId,
-                'exclude' => $exclude
+                'exclude' => $exclude,
+                'excludeEmpty' => $excludeEmpty
             )
         );
 
-        $sql = 'SELECT COUNT(*)
-            FROM `%s` AS `a`
-                %s
+        $sql = 'SELECT COUNT(DISTINCT `a`.`id`)
+            FROM `' . $this->getTableName() . '` AS `a`
+                ' . $condition['join'] . '
+                ' . ($excludeEmpty ? 'INNER JOIN `' . PHOTO_BOL_PhotoDao::getInstance()->getTableName() . '` AS `p` ON(`a`.`id` = `p`.`albumId`)' : '') . '
             WHERE `a`.`userId` = :userId AND
-              %s AND
-              %s';
-        $sql = sprintf($sql,
-            $this->getTableName(),
-            $condition['join'],
-            $condition['where'],
-            !empty($exclude) ? '`a`.`id` NOT IN(' . $this->dbo->mergeInClause($exclude) . ')' : '1'
-        );
+            ' . $condition['where'] . ' AND
+            ' . (!empty($exclude) ? '`a`.`id` NOT IN(' . $this->dbo->mergeInClause($exclude) . ')' : '1');
 
         return $this->dbo->queryForColumn($sql, array_merge(
             array('userId' => $userId),
