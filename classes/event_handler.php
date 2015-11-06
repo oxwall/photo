@@ -61,6 +61,7 @@ class PHOTO_CLASS_EventHandler
     const EVENT_PHOTO_FIND = 'photo.find';
     const EVENT_PHOTO_FINDS = 'photo.finds';
     const EVENT_PHOTO_DELETE = 'photo.delete';
+    const EVENT_ALBUM_PHOTOS_COUNT = 'photo.album_photos_count';
     const EVENT_ALBUM_PHOTOS_FIND = 'photo.album_photos_find';
     const EVENT_INIT_FLOATBOX = 'photo.init_floatbox';
     const EVENT_GET_PHOTO_VIEW_STATUS = 'photo.get_photo_view_status';
@@ -533,6 +534,20 @@ class PHOTO_CLASS_EventHandler
         );
     }
 
+    public function albumPhotosCount( OW_Event $event )
+    {
+        $params = $event->getParams();
+
+        if ( empty($params['albumId']) )
+        {
+            return null;
+        }
+
+        $event->setData($this->photoService->countAlbumPhotos($params['albumId'], array()));
+
+        return $event->getData();
+    }
+
     /**
      * @param OW_Event $e
      * @return array
@@ -551,7 +566,7 @@ class PHOTO_CLASS_EventHandler
         $offset = !empty($params['offset']) ? (int) $params['offset'] : 0;
         $limit = !empty($params['limit']) ? (int) $params['limit'] : OW::getConfig()->getValue('photo', 'photos_per_page');
         $listType = isset($params['listType']) ? $params['listType'] : 'latest';
-        $privacy = isset($params['privacy']) || $params['privacy'] === null ? $params['privacy'] : 'everybody';
+        $privacy = isset($params['privacy']) ? $params['privacy'] : 'everybody';
 
         $photos = $this->photoService->findAlbumPhotoList($album->id, $listType, $offset, $limit, $privacy);
 
@@ -689,6 +704,7 @@ class PHOTO_CLASS_EventHandler
             $list[$id]['smallUrl'] = $this->photoService->getPhotoUrlByType($id, PHOTO_BOL_PhotoService::TYPE_SMALL, $photo['hash'], $photo['dimension']);
             $list[$id]['fullscreenUrl'] = $this->photoService->getPhotoUrlByType($id, PHOTO_BOL_PhotoService::TYPE_FULLSCREEN, $photo['hash'], $photo['dimension']);
             $list[$id]['originalUrl'] = $this->photoService->getPhotoUrlByType($id, PHOTO_BOL_PhotoService::TYPE_ORIGINAL, $photo['hash'], $photo['dimension']);
+            $list[$id]['dto'] = $photo;
         }
 
         return $list;
@@ -2045,6 +2061,7 @@ class PHOTO_CLASS_EventHandler
         $em->bind(self::EVENT_PHOTO_FIND, array($this, 'photoFind'));
         $em->bind(self::EVENT_PHOTO_FINDS, array($this, 'photoFinds'));
         $em->bind(self::EVENT_PHOTO_DELETE, array($this, 'photoDelete'));
+        $em->bind(self::EVENT_ALBUM_PHOTOS_COUNT, array($this, 'albumPhotosCount'));
         $em->bind(self::EVENT_ALBUM_PHOTOS_FIND, array($this, 'albumPhotosFind'));
         
         $em->bind(self::EVENT_ENTITY_ALBUMS_COUNT, array($this, 'entityAlbumsCount'));
