@@ -860,6 +860,11 @@ final class PHOTO_BOL_PhotoService
             OW::getEventManager()->trigger($event);
         }
 
+        OW::getEventManager()->trigger(new OW_Event('photo.after_add_feed', array(
+            'album' => $album,
+            'photos' => array($photo)
+        )));
+
         return TRUE;
     }
 
@@ -942,6 +947,11 @@ final class PHOTO_BOL_PhotoService
 
             OW::getEventManager()->trigger($event);
         }
+
+        OW::getEventManager()->trigger(new OW_Event('photo.after_add_feed', array(
+            'album' => $album,
+            'photos' => $photos
+        )));
 
         return TRUE;
     }
