@@ -216,7 +216,6 @@ class PHOTO_CTRL_AjaxUpload extends OW_ActionController
             if ( $photo )
             {
                 $photos[] = $photo;
-                BOL_AuthorizationService::getInstance()->trackAction('photo', 'upload', array('checkInterval' => FALSE));
             }
         }
 
@@ -275,7 +274,11 @@ class PHOTO_CTRL_AjaxUpload extends OW_ActionController
 
         foreach ($newPhotos as $photo )
         {
-            if ( $photo->status != PHOTO_BOL_PhotoDao::STATUS_APPROVED )
+            if ( $photo->status == PHOTO_BOL_PhotoDao::STATUS_APPROVED )
+            {
+                BOL_AuthorizationService::getInstance()->trackAction('photo', 'upload', array('checkInterval' => false));
+            }
+            elseif ( $photo->status == PHOTO_BOL_PhotoDao::STATUS_APPROVAL )
             {
                 $approvalPhotos[] = $photo;
             }

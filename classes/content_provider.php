@@ -198,6 +198,32 @@ class PHOTO_CLASS_ContentProvider
             'string' => array('key' => 'photo+content_edited_string')
         )));
     }
+
+    public function afterContentApprove( OW_Event $event )
+    {
+        $params = $event->getParams();
+
+        if ( $params['entityType'] != self::ENTITY_TYPE )
+        {
+            return;
+        }
+
+        if ( !$params['isNew'] )
+        {
+            return;
+        }
+
+        $photo = PHOTO_BOL_PhotoService::getInstance()->findPhotoById($params['entityId']);
+
+        if ( $photo === null )
+        {
+            return;
+        }
+
+        $album = PHOTO_BOL_PhotoAlbumService::getInstance()->findAlbumById($photo->albumId);
+
+        BOL_AuthorizationService::getInstance()->trackActionForUser($album->userId, 'photo', 'upload', array('checkInterval' => false));
+    }
     
     public function init()
     {
@@ -209,5 +235,7 @@ class PHOTO_CLASS_ContentProvider
         OW::getEventManager()->bind(BOL_ContentService::EVENT_GET_INFO, array($this, 'onGetInfo'));
         OW::getEventManager()->bind(BOL_ContentService::EVENT_UPDATE_INFO, array($this, 'onUpdateInfo'));
         OW::getEventManager()->bind(BOL_ContentService::EVENT_DELETE, array($this, 'onDelete'));
+
+        OW::getEventManager()->bind('moderation.after_content_approve', array($this, 'afterContentApprove'));
     }
 }
