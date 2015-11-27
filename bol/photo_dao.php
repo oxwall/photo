@@ -708,7 +708,7 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
 
         $sql = 'SELECT `p`.*
             FROM `' . $this->getTableName() . '` AS `p`
-                INNER JOIN `' . PHOTO_BOL_PhotoAlbumDao::getInstance()->getTableName() . '` AS `a`
+                INNER JOIN `' . PHOTO_BOL_PhotoAlbumDao::getInstance()->getTableName() . '` AS `a` ON(`p`.`albumId` = `a`.`id`)
                 ' . $condition['join'] . '
             WHERE `p`.`albumId` = :albumId AND
                 ' . (!empty($status) ? '`p`.`status` = :status' : '1') . ' AND
