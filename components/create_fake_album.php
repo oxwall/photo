@@ -46,5 +46,7 @@ class PHOTO_CMP_CreateFakeAlbum extends OW_Component
         $this->addForm($form);
 
         $this->assign('extendInputs', $form->getExtendedElements());
+        $this->assign('userId', OW::getUser()->getId());
+        OW::getDocument()->addStyleSheet(OW::getPluginManager()->getPlugin('photo')->getStaticCssUrl() . 'photo_upload.css');
     }
 }
