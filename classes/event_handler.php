@@ -1787,6 +1787,10 @@ class PHOTO_CLASS_EventHandler
                                 
                                 return false;
                             }
+                            else
+                            {
+                                OW.trigger("photo.onCloseUploaderFloatBox");
+                            }
                         });
                     }', array(
                         'addNewPhoto' => $id,

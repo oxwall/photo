@@ -83,14 +83,29 @@ class PHOTO_CLASS_CreateFakeAlbumForm extends PHOTO_CLASS_AbstractPhotoForm
             };
             var ajaxUploadPhotoFB = OW.ajaxFloatBox("PHOTO_CMP_AjaxUpload", params, {
                 title: {$title},
-                width: "746px"
+                width: "746px",
+                onLoad: function()
+                {
+                    OW.trigger("photo.ready_fake_album", [formData]);
+                }
             });
 
             ajaxUploadPhotoFB.bind("close", function()
             {
                 if ( ajaxPhotoUploader.isHasData() )
                 {
-                    return confirm({$confirm});
+                    if ( confirm({$confirm}) )
+                    {
+                        OW.trigger("photo.onCloseUploaderFloatBox");
+
+                        return true;
+                    }
+
+                    return true;
+                }
+                else
+                {
+                    OW.trigger("photo.onCloseUploaderFloatBox");
                 }
             });
         }', array(
