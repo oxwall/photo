@@ -394,7 +394,7 @@ class PHOTO_CTRL_AjaxUpload extends OW_ActionController
         {
             $this->returnResponse(array(
                 'result' => true,
-                'data' => $form->getValues()
+                'data' => array_merge($_POST, $form->getValues())
             ));
         }
         else
