@@ -101,7 +101,7 @@ class PHOTO_CLASS_CreateFakeAlbumForm extends PHOTO_CLASS_AbstractPhotoForm
                         return true;
                     }
 
-                    return true;
+                    return false;
                 }
                 else
                 {
