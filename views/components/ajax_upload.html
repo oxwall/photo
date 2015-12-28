@@ -71,18 +71,7 @@
             <div id="photo-album-list" class="ow_left">
                 <div class="ow_suggest_field ow_smallmargin">
                     {input name='album'}
-                    <div class="ow_dropdown_list_wrap">
-                        <ul class="ow_dropdown_list">
-                            <li>{text key="photo+create_album"}<span class="ow_add_item"></span></li>
-                            {if !empty($albumNameList)}
-                                <li class="ow_dropdown_delimeter"><div></div></li>
-                                {foreach $albumNameList as $album}
-                                    <li>{$album}</li>
-                                {/foreach}
-                            {/if}
-                        </ul>
-                    </div>
-                    <div class="ow_dropdown_arrow_down upload_photo_spinner"></div>
+                    {$albumNames}
                     {error name='album-name'}
                 </div>
                 <div class="new-album ow_smallmargin" style="display: none">

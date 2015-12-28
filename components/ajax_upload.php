@@ -80,7 +80,8 @@ class PHOTO_CMP_AjaxUpload extends OW_Component
         $this->assign('userId', $userId);
 
         $newsfeedAlbum = PHOTO_BOL_PhotoAlbumService::getInstance()->getNewsfeedAlbum($userId);
-        $this->assign('albumNameList', PHOTO_BOL_PhotoAlbumService::getInstance()->findAlbumNameListByUserId($userId, !empty($newsfeedAlbum) ? array($newsfeedAlbum->id) : array()));
+        $exclude = !empty($newsfeedAlbum) ? array($newsfeedAlbum->id) : array();
+        $this->addComponent('albumNames', OW::getClassInstance('PHOTO_CMP_AlbumNameList', $userId, $exclude));
         
         $language = OW::getLanguage();
         $language->addKeyForJs('photo', 'not_all_photos_uploaded');
