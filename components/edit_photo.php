@@ -61,7 +61,7 @@ class PHOTO_CMP_EditPhoto extends OW_Component
             $exclude[] = $newsfeedAlbum->id;
         }
 
-        $this->assign('albumNameList', PHOTO_BOL_PhotoAlbumService::getInstance()->findAlbumNameListByUserId(OW::getUser()->getId(), $exclude));
+        $this->addComponent('albumNameList', OW::getClassInstance('PHOTO_CMP_AlbumNameList', OW::getUser()->getId(), $exclude));
         $language = OW::getLanguage();
         
         OW::getDocument()->addOnloadScript(
@@ -106,7 +106,7 @@ class PHOTO_CMP_EditPhoto extends OW_Component
                     $("textarea", panel).val({$album_desc});
                 }).end().slice(2).on("click", function()
                 {
-                    albumInput.val($(this).html());
+                    albumInput.val($(this).data("name"));
                     $(".new-album", panel).hide();
                     $("input[name=\'album-name\']", panel).val(albumInput.val());
                     $("textarea", panel).val("");

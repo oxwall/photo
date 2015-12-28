@@ -1,0 +1,12 @@
+<div class="ow_dropdown_list_wrap">
+    <ul class="ow_dropdown_list" style="z-index: 10;">
+        <li>{text key="photo+create_album"}<span class="ow_add_item"></span></li>
+        {if !empty($albumNameList)}
+            <li class="ow_dropdown_delimeter"><div></div></li>
+            {foreach $albumNameList as $album}
+                <li data-name="{$album}">{$album}</li>
+            {/foreach}
+        {/if}
+    </ul>
+</div>
+<div class="ow_dropdown_arrow_down upload_photo_spinner"></div>

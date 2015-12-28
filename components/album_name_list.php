@@ -1,4 +1,4 @@
-{*
+<?php
 
 /**
  * This software is intended for use with Oxwall Free Community Software http://www.oxwall.org/ and is
@@ -30,40 +30,28 @@
  */
 
 /**
- *
+ * AJAX Upload photo component
  *
  * @author Kairat Bakitow <kainisoft@gmail.com>
- * @package ow_plugins.photo
- * @since 1.6.1
+ * @package ow.plugin.photo.components
+ * @since 1.8.1
  */
- 
-*}
+class PHOTO_CMP_AlbumNameList extends OW_Component
+{
+    /**
+     * @param int $userId
+     */
+    public function __construct( $userId, $exclude )
+    {
+        parent::__construct();
 
-<div id="photo_edit_form" style="width: 500px">
-    {form name='photo-edit-form'}
-        <table class="ow_table_1 ow_form ow_stdmargin">
-            <tr class="ow_alt1 ow_tr_first">
-                <td class="ow_label">{label name='album'}</td>
-                <td class="ow_value">
-                    <div class="ow_suggest_field ow_smallmargin">
-                        {input name='album'} {error name='album'}
-                        {$albumNameList}
-                    </div>
-                    <div class="new-album" style="display: none">
-                        {input name="album-name"}{error name="album-name"}
-                        {input name="description"}
-                    </div>
-                </td>
-            </tr>
-            <tr class="ow_alt2">
-                <td class="ow_label">{label name='photo-desc'}</td>
-                <td class="ow_value">
-                    <div class="ow_photo_upload_description" style="border-width: 1px;">
-                        {input name='photo-desc'}
-                    </div>
-                </td>
-            </tr>
-        </table>
-        <div class="clearfix"><div class="ow_right">{submit name='edit' class='ow_ic_save ow_positive'}</div></div>
-    {/form}
-</div>
+        if ( empty($userId) )
+        {
+            $this->setVisible(false);
+
+            return;
+        }
+
+        $this->assign('albumNameList', PHOTO_BOL_PhotoAlbumService::getInstance()->findAlbumNameListByUserId($userId, $exclude));
+    }
+}

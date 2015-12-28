@@ -86,6 +86,7 @@ class PHOTO_CLASS_EventHandler
     const EVENT_ON_FORM_COMPLETE = 'photo.form_complete';
     const EVENT_GET_UPLOAD_DATA = 'photo.upload_data';
     const EVENT_GET_ALBUM_COVER_URL = 'photo.get_cover';
+    const EVENT_GET_ALBUM_NAMES = 'photo.get_album_names';
 
     /**
      * @return PHOTO_CLASS_EventHandler
@@ -2036,6 +2037,23 @@ class PHOTO_CLASS_EventHandler
         return $event->getData();
     }
 
+    public function getAlbumNames( OW_Event $event )
+    {
+        $params = $event->getParams();
+
+        if ( empty($params['userId']) )
+        {
+            $event->setData(array());
+
+            return $event->getData();
+        }
+
+        $exclude = !empty($params['exclude']) && is_array($params['exclude']) ? $params['exclude'] : array();
+        $event->setData($this->albumService->findAlbumNameListByUserId($params['userId'], $exclude));
+
+        return $event->getData();
+    }
+
     public function init()
     {
         $this->genericInit();
@@ -2111,6 +2129,7 @@ class PHOTO_CLASS_EventHandler
         $em->bind(self::EVENT_ON_PHOTO_CONTENT_UPDATE, array($this, 'onUpdateContent'));
 
         $em->bind(self::EVENT_GET_ALBUM_COVER_URL, array($this, 'getAlbumCoverUrl'));
+        $em->bind(self::EVENT_GET_ALBUM_NAMES, array($this, 'getAlbumNames'));
 
         PHOTO_CLASS_ContentProvider::getInstance()->init();
     }

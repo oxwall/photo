@@ -473,7 +473,7 @@
             })).end().slice(2).on('click', self(function( event )
             {
                 $('.new-album', this.albumForm).hide();
-                this.albumInput.val($(event.target).html());
+                this.albumInput.val($(event.target).data('name'));
                 $('input[name="album-name"]', this.albumForm).val(this.albumInput.val());
                 $('textarea', this.albumForm).val('');
             }));
