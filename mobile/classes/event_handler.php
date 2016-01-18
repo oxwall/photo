@@ -86,7 +86,7 @@ class PHOTO_MCLASS_EventHandler
         }
 
         $albumList = $albumService->findUserAlbumList($userId, 1, 1, $exclude);
-        $cover = $albumList[0]['cover'];
+        $cover = !empty($albumList[0]['cover']) ? $albumList[0]['cover'] : null;
 
         $username = BOL_UserService::getInstance()->getUserName($userId);
         $url = OW::getRouter()->urlForRoute('photo_user_albums', array('user' => $username));
