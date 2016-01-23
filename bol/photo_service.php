@@ -359,7 +359,15 @@ final class PHOTO_BOL_PhotoService
             $dimension = !empty($photo->dimension) ? $photo->dimension : FALSE;
         }
         
-        return $this->photoDao->getPhotoUrlByType($id, $type, $hash, $dimension);
+        $url = $this->photoDao->getPhotoUrlByType($id, $type, $hash, $dimension);
+        $event = OW::getEventManager()->trigger(new OW_Event('photo.getPhotoUrl', array(
+            'id' => $id,
+            'type' => $type,
+            'hash' => $hash,
+            'dimension' => $dimension
+        ), $url));
+
+        return $event->getData();
     }
 
     /**
