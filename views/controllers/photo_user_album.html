@@ -36,7 +36,7 @@
  * @package ow_plugins.photo
  * @since 1.6.1
  */
- 
+
 *}
 
 {$pageHead}
@@ -53,7 +53,7 @@
                     </li>
                 </ul>
             </div>
-            
+
             <div style="display: none" class="ow_photo_album_btns_edit ow_right clearfix edit_done">
                 <ul class="ow_bl clearfix ow_small ow_right">
                     <li>
@@ -80,8 +80,8 @@
                     {/if}
                 {/if}
             </div>
-            <h3 class="ow_photo_album_name">{$album->name}</h3>
-            <div class="ow_photo_album_description">{$album->description}</div>
+            <h3 class="ow_photo_album_name">{$album->name|escape}</h3>
+            <div class="ow_photo_album_description">{$album->description|escape}</div>
             {form name="albumEditForm" style="display: none"}
                 {input name="albumName"}{error name="albumName"}
                 {input name="desc" class='ow_smallmargin'}
@@ -113,7 +113,7 @@
         {if $isOwner}
             <div style="float: left;" class="ow_context_action_block ow_context_action_value_block clearfix">
                 <div class="ow_context_action">
-                    <a class="ow_context_action_value">{text key="photo+move_to_album"}</a><span class="ow_context_more"></span>               
+                    <a class="ow_context_action_value">{text key="photo+move_to_album"}</a><span class="ow_context_more"></span>
                     <div style="opacity: 1; top: 18px;" class="ow_tooltip ow_small ow_tooltip_top_right">
                         <div class="ow_tooltip_tail">
                             <span></span>
@@ -124,7 +124,7 @@
                                 {if !empty($albumNameList)}
                                     <li><div class="ow_console_divider"></div></li>
                                     {foreach $albumNameList as $albumName}
-                                        <li><a href="javascript://" rel="{$albumName@key}">{$albumName}</a></li>
+                                        <li><a href="javascript://" rel="{$albumName@key|escape}">{$albumName}</a></li>
                                     {/foreach}
                                 {/if}
                             </ul>

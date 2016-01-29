@@ -101,8 +101,8 @@
             _elements.editBtn.appendTo($('.ow_photo_album_toolbar', _elements.editCont));
             _elements.menu.detach();
             _elements.editForm.detach();
-            _elements.albumInfo.find('.ow_photo_album_name').html(owForms.albumEditForm.elements.albumName.getValue());
-            _elements.albumInfo.find('.ow_photo_album_description').html(owForms.albumEditForm.elements.desc.getValue());
+            _elements.albumInfo.find('.ow_photo_album_name').text(owForms.albumEditForm.elements.albumName.getValue());
+            _elements.albumInfo.find('.ow_photo_album_description').text(owForms.albumEditForm.elements.desc.getValue());
 
             if ( _vars.album.name != OW.getLanguageText('photo', 'newsfeed_album').trim() )
             {
@@ -113,7 +113,7 @@
                 _elements.editCont.find('.ow_photo_album_description').show();
                 _elements.editCont.find('.ow_photo_album_description_textarea').hide();
             }
-            
+
             OW.info(OW.getLanguageText('photo', 'photo_album_updated'));
         },
         converPhotoItemToEditMode: function()
