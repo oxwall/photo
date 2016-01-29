@@ -4,7 +4,7 @@
         {if !empty($albumNameList)}
             <li class="ow_dropdown_delimeter"><div></div></li>
             {foreach $albumNameList as $album}
-                <li data-name="{$album}">{$album}</li>
+                <li data-name="{$album|escape}">{$album|escape}</li>
             {/foreach}
         {/if}
     </ul>
