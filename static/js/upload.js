@@ -327,7 +327,7 @@
             {
                 OW.error(OW.getLanguageText('photo', 'size_limit', {
                     name: photoFile.file.name,
-                    size: (_vars.maxFileSize / 1048576) // 1024 * 1024 Convert to readable format
+                    size: (params.maxFileSize / 1048576) // 1024 * 1024 Convert to readable format
                 }));
                 this.uploadNewOne();
             }
