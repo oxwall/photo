@@ -335,8 +335,7 @@ class PHOTO_CTRL_AjaxUpload extends OW_ActionController
         if ( $this->isAvailableFile($_FILES) )
         {
             $order = !empty($_POST['order']) ? (int) $_POST['order'] : 0;
-            ini_set('memory_limit', '-1');
-            
+
             if ( ($id = PHOTO_BOL_PhotoTemporaryService::getInstance()->addTemporaryPhoto($_FILES['file']['tmp_name'], OW::getUser()->getId(), $order)) )
             {
                 $fileUrl = PHOTO_BOL_PhotoTemporaryDao::getInstance()->getTemporaryPhotoUrl($id, 2);
