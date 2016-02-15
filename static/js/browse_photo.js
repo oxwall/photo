@@ -1018,7 +1018,8 @@
             this.listBtns.on('click', this.self(function( event )
             {
                 event.preventDefault();
-                this.loadList(event.currentTarget.getAttribute('list-type'));
+                params['listType'] = event.currentTarget.getAttribute('list-type');
+                this.loadList(params['listType']);
             }));
 
             $('.ow_btn_close_search', this.searchBox).on('click', this.self(function()
