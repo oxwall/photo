@@ -211,7 +211,7 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         OW::getDocument()->setHeading($album->name);
         OW::getDocument()->setHeadingIconClass('ow_ic_picture');
         
-        $imageUrl = $this->photoService->getPhotoUrlByType($photo->id, PHOTO_BOL_PhotoService::TYPE_MAIN, $photo->hash, $photo->dimension);
+        $imageUrl = $this->photoService->getPhotoUrl($photo->id, FALSE, $photo->hash);
         OW::getDocument()->addMetaInfo('image', $imageUrl, 'itemprop');
         OW::getDocument()->addMetaInfo('og:image', $imageUrl, 'property');
 
