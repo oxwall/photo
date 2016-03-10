@@ -210,7 +210,7 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         
         OW::getDocument()->setHeading($album->name);
         OW::getDocument()->setHeadingIconClass('ow_ic_picture');
-        
+
         $imageUrl = $this->photoService->getPhotoUrl($photo->id, FALSE, $photo->hash);
         OW::getDocument()->addMetaInfo('image', $imageUrl, 'itemprop');
         OW::getDocument()->addMetaInfo('og:image', $imageUrl, 'property');
@@ -1332,11 +1332,11 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         $photo->addDatetime = UTIL_DateTime::formatDate($photo->addDatetime);
         $photo->description = UTIL_HtmlTag::autoLink($photo->description);
         $dim = !empty($photo->dimension) ? $photo->dimension : FALSE;
-        $photo->url = $this->photoService->getPhotoUrlByType($photo->id, PHOTO_BOL_PhotoService::TYPE_MAIN, $photo->hash, $dim);
+        $photo->url = $this->photoService->getPhotoUrlByPhotoInfo($photo->id, PHOTO_BOL_PhotoService::TYPE_MAIN, get_object_vars($photo));
         
         if ( $photo->hasFullsize )
         {
-            $photo->urlFullscreen = $this->photoService->getPhotoUrlByType($photo->id, PHOTO_BOL_PhotoService::TYPE_FULLSCREEN, $photo->hash, $dim);
+            $photo->urlFullscreen = $this->photoService->getPhotoUrlByPhotoInfo($photo->id, PHOTO_BOL_PhotoService::TYPE_FULLSCREEN, get_object_vars($photo));
         }
         
         if ( !empty($photo->description) )

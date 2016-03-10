@@ -333,14 +333,14 @@ class PHOTO_CLASS_EventHandler
             
             $photoList[$photo->id] = get_object_vars($photo);
             $photoList[$photo->id]['url'] = array();
-            $photoList[$photo->id]['url'][PHOTO_BOL_PhotoService::TYPE_ORIGINAL] = $this->photoService->getPhotoUrlByType($photo->id, PHOTO_BOL_PhotoService::TYPE_ORIGINAL, $photo->hash, $dim);
-            $photoList[$photo->id]['url'][PHOTO_BOL_PhotoService::TYPE_MAIN] = $this->photoService->getPhotoUrlByType($photo->id, PHOTO_BOL_PhotoService::TYPE_MAIN, $photo->hash, $dim);
-            $photoList[$photo->id]['url'][PHOTO_BOL_PhotoService::TYPE_PREVIEW] = $this->photoService->getPhotoUrlByType($photo->id, PHOTO_BOL_PhotoService::TYPE_PREVIEW, $photo->hash, $dim);
-            $photoList[$photo->id]['url'][PHOTO_BOL_PhotoService::TYPE_SMALL] = $this->photoService->getPhotoUrlByType($photo->id, PHOTO_BOL_PhotoService::TYPE_PREVIEW, $photo->hash, $dim);
+            $photoList[$photo->id]['url'][PHOTO_BOL_PhotoService::TYPE_ORIGINAL] = $this->photoService->getPhotoUrlByPhotoInfo($photo->id, PHOTO_BOL_PhotoService::TYPE_ORIGINAL, $photoList[$photo->id]);
+            $photoList[$photo->id]['url'][PHOTO_BOL_PhotoService::TYPE_MAIN] = $this->photoService->getPhotoUrlByPhotoInfo($photo->id, PHOTO_BOL_PhotoService::TYPE_MAIN, $photoList[$photo->id]);
+            $photoList[$photo->id]['url'][PHOTO_BOL_PhotoService::TYPE_PREVIEW] = $this->photoService->getPhotoUrlByPhotoInfo($photo->id, PHOTO_BOL_PhotoService::TYPE_PREVIEW, $photoList[$photo->id]);
+            $photoList[$photo->id]['url'][PHOTO_BOL_PhotoService::TYPE_SMALL] = $this->photoService->getPhotoUrlByPhotoInfo($photo->id, PHOTO_BOL_PhotoService::TYPE_PREVIEW, $photoList[$photo->id]);
             
             if ( $photo->hasFullsize && (bool)OW::getConfig()->getValue('photo', 'store_fullsize'))
             {
-                $photoList[$photo->id]['url'][PHOTO_BOL_PhotoService::TYPE_FULLSCREEN] = $this->photoService->getPhotoUrlByType($photo->id, PHOTO_BOL_PhotoService::TYPE_FULLSCREEN, $photo->hash, $dim);
+                $photoList[$photo->id]['url'][PHOTO_BOL_PhotoService::TYPE_FULLSCREEN] = $this->photoService->getPhotoUrlByPhotoInfo($photo->id, PHOTO_BOL_PhotoService::TYPE_FULLSCREEN, $photoList[$photo->id]);
             }
         }
         
@@ -700,11 +700,11 @@ class PHOTO_CLASS_EventHandler
             $list[$id]['url'] = OW::getRouter()->urlForRoute('view_photo', array('id' => $id));
             $list[$id]['dimension'] = $dimensions;
             
-            $list[$id]['photoUrl'] = $this->photoService->getPhotoUrlByType($id, PHOTO_BOL_PhotoService::TYPE_MAIN, $photo['hash'], $photo['dimension']);
-            $list[$id]['previewUrl'] = $this->photoService->getPhotoUrlByType($id, PHOTO_BOL_PhotoService::TYPE_PREVIEW, $photo['hash'], $photo['dimension']);
-            $list[$id]['smallUrl'] = $this->photoService->getPhotoUrlByType($id, PHOTO_BOL_PhotoService::TYPE_SMALL, $photo['hash'], $photo['dimension']);
-            $list[$id]['fullscreenUrl'] = $this->photoService->getPhotoUrlByType($id, PHOTO_BOL_PhotoService::TYPE_FULLSCREEN, $photo['hash'], $photo['dimension']);
-            $list[$id]['originalUrl'] = $this->photoService->getPhotoUrlByType($id, PHOTO_BOL_PhotoService::TYPE_ORIGINAL, $photo['hash'], $photo['dimension']);
+            $list[$id]['photoUrl'] = $this->photoService->getPhotoUrlByPhotoInfo($id, PHOTO_BOL_PhotoService::TYPE_MAIN, $photo);
+            $list[$id]['previewUrl'] = $this->photoService->getPhotoUrlByPhotoInfo($id, PHOTO_BOL_PhotoService::TYPE_PREVIEW, $photo);
+            $list[$id]['smallUrl'] = $this->photoService->getPhotoUrlByPhotoInfo($id, PHOTO_BOL_PhotoService::TYPE_SMALL, $photo);
+            $list[$id]['fullscreenUrl'] = $this->photoService->getPhotoUrlByPhotoInfo($id, PHOTO_BOL_PhotoService::TYPE_FULLSCREEN, $photo);
+            $list[$id]['originalUrl'] = $this->photoService->getPhotoUrlByPhotoInfo($id, PHOTO_BOL_PhotoService::TYPE_ORIGINAL, $photo);
             $list[$id]['dto'] = $photo;
         }
 
@@ -970,7 +970,7 @@ class PHOTO_CLASS_EventHandler
                 ),
                 'content' => $comment->getMessage(),
                 'url' => $url,
-                'contentImage' => $photoService->getPhotoUrlByType($entityId, PHOTO_BOL_PhotoService::TYPE_SMALL)
+                'contentImage' => $photoService->getPhotoUrlByPhotoInfo($entityId, PHOTO_BOL_PhotoService::TYPE_SMALL)
             );
 
             $event = new OW_Event('notifications.add', $params, $data);
@@ -1162,7 +1162,7 @@ class PHOTO_CLASS_EventHandler
                 foreach ( $photoIdList as $id )
                 {
                     $list[] = array(
-                        "image" => $photoService->getPhotoUrlByType($id, PHOTO_BOL_PhotoService::TYPE_PREVIEW),
+                        "image" => $photoService->getPhotoUrlByPhotoInfo($id, PHOTO_BOL_PhotoService::TYPE_PREVIEW),
                         "url" => array("routeName" => "view_photo", "vars" => array('id' => $id))
                     );
                 }
@@ -1183,7 +1183,7 @@ class PHOTO_CLASS_EventHandler
                     $type = PHOTO_BOL_PhotoService::TYPE_MAIN;
                 }
                 
-                $vars["image"] = $photoService->getPhotoUrlByType($photo->id, $type, $photo->hash, !empty($photo->dimension) ? $photo->dimension : FALSE);
+                $vars["image"] = $photoService->getPhotoUrlByPhotoInfo($photo->id, $type, get_object_vars($photo));
                 $vars["url"] = array("routeName" => "view_photo", "vars" => array('id' => $photoId));
                 break;
 
@@ -1248,7 +1248,7 @@ class PHOTO_CLASS_EventHandler
                             'autoId' => $autoId,
                             'dimension' => $dimension,
                             'photoId' => $photoId,
-                            'url' => $this->photoService->getPhotoUrlByType($photo->id, PHOTO_BOL_PhotoService::TYPE_PREVIEW, $photo->hash, !empty($photo->dimension) ? $photo->dimension : FALSE),
+                            'url' => $this->photoService->getPhotoUrlByPhotoInfo($photo->id, PHOTO_BOL_PhotoService::TYPE_PREVIEW, get_object_vars($photo)),
                             'photo' => array(
                                 'id' => $photo->id,
                                 'albumId' => $photo->albumId
@@ -1887,7 +1887,7 @@ class PHOTO_CLASS_EventHandler
                     'entityId' => $album->id,
                     'entityType' => 'photo_album',
                     'url' => $photo['url'],
-                    'bigUrl' => $this->photoService->getPhotoUrlByType($photo['id'], PHOTO_BOL_PhotoService::TYPE_MAIN, $photo['dto']->hash, $photo['dto']->dimension)
+                    'bigUrl' => $this->photoService->getPhotoUrlByPhotoInfo($photo['id'], PHOTO_BOL_PhotoService::TYPE_MAIN, get_object_vars($photo['dto']))
                 );
             }
 
@@ -1933,7 +1933,7 @@ class PHOTO_CLASS_EventHandler
             $list[] = array(
                 'id' => $photo['id'],
                 'url' => $photo['url'],
-                'bigUrl' => $this->photoService->getPhotoUrlByType($photo['id'], PHOTO_BOL_PhotoService::TYPE_MAIN, $photo['dto']->hash, $photo['dto']->dimension)
+                'bigUrl' => $this->photoService->getPhotoUrlByPhotoInfo($photo['id'], PHOTO_BOL_PhotoService::TYPE_MAIN, get_object_vars($photo['dto']))
             );
         }
 
@@ -1959,7 +1959,7 @@ class PHOTO_CLASS_EventHandler
                 $type = (bool)$photo->hasFullsize ? PHOTO_BOL_PhotoService::TYPE_ORIGINAL : PHOTO_BOL_PhotoService::TYPE_MAIN;
 
                 $data = array(
-                    'url' => $this->photoService->getPhotoUrlByType($photo->id, $type, $photo->hash, $photo->dimension),
+                    'url' => $this->photoService->getPhotoUrlByPhotoInfo($photo->id, $type, get_object_vars($photo)),
                     'path' => $this->photoService->getPhotoPath($photo->id, $photo->hash, $type)
                 );
 
@@ -2018,7 +2018,7 @@ class PHOTO_CLASS_EventHandler
             }
             else
             {
-                $coverUrl = $this->photoService->getPhotoUrlByType($photo->id, PHOTO_BOL_PhotoService::TYPE_MAIN, $photo->hash, !empty($photo->dimension) ? $photo->dimension : false);
+                $coverUrl = $this->photoService->getPhotoUrlByPhotoInfo($photo->id, PHOTO_BOL_PhotoService::TYPE_MAIN, get_object_vars($photo));
             }
 
             $coverUrlOrig = $coverUrl;

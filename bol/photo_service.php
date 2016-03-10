@@ -248,7 +248,7 @@ final class PHOTO_BOL_PhotoService
             
             foreach ( $photos as $key => $photo )
             {
-                $photos[$key]['url'] = $this->getPhotoUrlByType($photo['id'], $type, $photo['hash'], !empty($photo['dimension']) ? $photo['dimension'] : FALSE);
+                $photos[$key]['url'] = $this->getPhotoUrlByPhotoInfo($photo['id'], $type, $photo['hash'], !empty($photo['dimension']) ? $photo['dimension'] : FALSE);
             }
         }
 
@@ -350,33 +350,104 @@ final class PHOTO_BOL_PhotoService
         }
     }
 
-    public function getPhotoUrlByType( $id, $type, $hash = NULL, $dimension = NULL )
+    /**
+     * @param $id
+     * @param $type
+     * @param array $photoInfo
+     * @return string
+     */
+    public function getPhotoUrlByPhotoInfo($id, $type, $photoInfo = array() )
     {
-        if ( !$hash || !$dimension === NULL )
+        if ( empty($photoInfo) || !is_array($photoInfo) || empty($photoInfo['hash'])
+            || !isset($photoInfo['dimension']) || empty($photoInfo['albumId']) )
         {
             $photo = $this->photoDao->findById($id);
-            $hash = $photo->hash;
-            $dimension = !empty($photo->dimension) ? $photo->dimension : FALSE;
+
+            if ( empty($photo) )
+            {
+                return null;
+            }
+
+            $photoInfo = get_object_vars($photo);
         }
-        
-        return $this->photoDao->getPhotoUrlByType($id, $type, $hash, $dimension);
+
+        $hash = $photoInfo['hash'];
+        $dimension = $photoInfo['dimension'];
+
+        $url = $this->photoDao->getPhotoUrlByType($id, $type, $hash, $dimension);
+        $event = OW::getEventManager()->trigger(new OW_Event('photo.getPhotoUrl', array(
+            'id' => $id,
+            'type' => $type,
+            'hash' => $hash,
+            'dimension' => $dimension,
+            'photoInfo' => $photoInfo
+        ), $url));
+
+        return $event->getData();
+    }
+
+    /**
+     * @param $id
+     * @param $type
+     * @param null $hash
+     * @param null $dimension
+     * @return string
+     */
+
+    public function getPhotoUrlByType( $id, $type, $hash = null, $dimension = null )
+    {
+        $photo = $this->photoDao->findById($id);
+
+        if ( empty($photo) )
+        {
+            return null;
+        }
+
+        $photoInfo = get_object_vars($photo);
+
+        if ( $hash )
+        {
+            $photoInfo['hash'] = $hash;
+        }
+
+        if ( $dimension )
+        {
+            $photoInfo['dimension'] = $hash;
+        }
+
+        return $this->getPhotoUrlByPhotoInfo($id, $type, $photoInfo);
     }
 
     /**
      * @deprecated
-     * @return OW_Dispatcher
+     * @param $id
+     * @param bool $preview
+     * @param null $hash
+     * @param null $dimension
+     * @return string
      */
-    public function getPhotoUrl( $id, $preview = false, $hash = null, $dimension = NULL )
+    public function getPhotoUrl( $id, $preview = false, $hash = null, $dimension = null )
     {
-        if ( !$hash || $dimension === NULL )
+        $photo = $this->photoDao->findById($id);
+
+        if ( empty($photo) )
         {
-            /** @var $photo PHOTO_BOL_Photo */
-            $photo = $this->photoDao->findById($id);
-            $hash = $photo->hash;
-            $dimension = !empty($photo->dimension) ? $photo->dimension : FALSE;
+            return null;
         }
 
-        return $this->photoDao->getPhotoUrlByType($id, $preview ? self::TYPE_PREVIEW : self::TYPE_MAIN, $hash, $dimension);
+        $photoInfo = get_object_vars($photo);
+
+        if ( $hash )
+        {
+            $photoInfo['hash'] = $hash;
+        }
+
+        if ( $dimension )
+        {
+            $photoInfo['dimension'] = $hash;
+        }
+
+        return $this->getPhotoUrlByPhotoInfo($id, $preview ? self::TYPE_PREVIEW : self::TYPE_MAIN, $photoInfo);
     }
     
     /**
@@ -1069,7 +1140,7 @@ final class PHOTO_BOL_PhotoService
         {
             foreach ( $photos as $key => $photo )
             {
-                $photos[$key]['url'] = $this->getPhotoUrlByType($photo['id'], self::TYPE_PREVIEW, $photo['hash'], !empty($photo['dimension']) ? $photo['dimension'] : FALSE);
+                $photos[$key]['url'] = $this->getPhotoUrlByPhotoInfo($photo['id'], self::TYPE_PREVIEW, $photo);
             }
         }
 
@@ -1091,7 +1162,7 @@ final class PHOTO_BOL_PhotoService
         {
             foreach ( $photos as $key => $photo )
             {
-                $photos[$key]['url'] = $this->getPhotoUrlByType($photo['id'], self::TYPE_PREVIEW, $photo['hash'], !empty($photo['dimension']) ? $photo['dimension'] : FALSE);
+                $photos[$key]['url'] = $this->getPhotoUrlByPhotoInfo($photo['id'], self::TYPE_PREVIEW, $photo['hash'], $photo);
             }
         }
 
@@ -1112,7 +1183,7 @@ final class PHOTO_BOL_PhotoService
         {
             foreach ( $photos as $key => $photo )
             {
-                $photos[$key]['url'] = $this->getPhotoUrlByType($photo['id'], self::TYPE_PREVIEW, $photo['hash'], !empty($photo['dimension']) ? $photo['dimension'] : FALSE);
+                $photos[$key]['url'] = $this->getPhotoUrlByPhotoInfo($photo['id'], self::TYPE_PREVIEW, $photo);
             }
         }
 
@@ -1164,7 +1235,7 @@ final class PHOTO_BOL_PhotoService
         {
             foreach ( $photos as $key => $photo )
             {
-                $photos[$key]['url'] = $this->getPhotoUrlByType($photo['id'], self::TYPE_PREVIEW, $photo['hash'], !empty($photo['dimension']) ? $photo['dimension'] : FALSE);
+                $photos[$key]['url'] = $this->getPhotoUrlByPhotoInfo($photo['id'], self::TYPE_PREVIEW, $photo);
             }
         }
 
@@ -1377,7 +1448,7 @@ final class PHOTO_BOL_PhotoService
 
         return array_map(function( $photo ) use( $self )
         {
-            $photo['url'] = $self->getPhotoUrlByType($photo['id'], PHOTO_BOL_PhotoService::TYPE_PREVIEW, $photo['hash'], !empty($photo['dimension']) ? $photo['dimension'] : false);
+            $photo['url'] = $self->getPhotoUrlByPhotoInfo($photo['id'], PHOTO_BOL_PhotoService::TYPE_PREVIEW, $photo);
 
             return $photo;
         }, $this->photoDao->findPhotosInAlbum($albumId, $photos));
