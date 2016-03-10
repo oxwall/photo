@@ -362,6 +362,12 @@ final class PHOTO_BOL_PhotoService
             || !isset($photoInfo['dimension']) || empty($photoInfo['albumId']) )
         {
             $photo = $this->photoDao->findById($id);
+
+            if ( empty($photo) )
+            {
+                return null;
+            }
+
             $photoInfo = get_object_vars($photo);
         }
 
@@ -392,7 +398,7 @@ final class PHOTO_BOL_PhotoService
     {
         $photo = $this->photoDao->findById($id);
 
-        if ( !empty($photo) )
+        if ( empty($photo) )
         {
             return null;
         }
@@ -409,7 +415,7 @@ final class PHOTO_BOL_PhotoService
             $photoInfo['dimension'] = $hash;
         }
 
-        return $this->photoDao->getPhotoUrlByPhotoInfo($id, $type, $photoInfo);
+        return $this->getPhotoUrlByPhotoInfo($id, $type, $photoInfo);
     }
 
     /**
@@ -424,7 +430,7 @@ final class PHOTO_BOL_PhotoService
     {
         $photo = $this->photoDao->findById($id);
 
-        if ( !empty($photo) )
+        if ( empty($photo) )
         {
             return null;
         }
@@ -441,7 +447,7 @@ final class PHOTO_BOL_PhotoService
             $photoInfo['dimension'] = $hash;
         }
 
-        return $this->photoDao->getPhotoUrlByPhotoInfo($id, $preview ? self::TYPE_PREVIEW : self::TYPE_MAIN, $photoInfo);
+        return $this->getPhotoUrlByPhotoInfo($id, $preview ? self::TYPE_PREVIEW : self::TYPE_MAIN, $photoInfo);
     }
     
     /**
