@@ -113,7 +113,16 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
     {
         return OW_DB_PREFIX . 'photo';
     }
-    
+
+    /**
+     * Get photo/preview URL
+     *
+     * @param int $id
+     * @param string $type
+     * @param boolean $preview
+     * @return string
+     */
+
     public function getPhotoUrlByType( $id, $type, $hash, $dimension = NULL )
     {
         if ( !isset($this->typeToPrefix[$type]) )

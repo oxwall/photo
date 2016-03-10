@@ -95,10 +95,10 @@ class PHOTO_CLASS_ContentProvider
             $info['url'] = $route->urlForRoute('view_photo', array('id' => $photo['id']));
             $info['timeStamp'] = $photo['addDatetime'];
             $info['image'] = array(
-                'thumbnail' => $photoDao->getPhotoUrlByType($photo['id'], PHOTO_BOL_PhotoService::TYPE_SMALL, $photo['hash'], $photo['dimension']),
-                'preview' => $photoDao->getPhotoUrlByType($photo['id'], PHOTO_BOL_PhotoService::TYPE_PREVIEW, $photo['hash'], $photo['dimension']),
-                'view' => $photoDao->getPhotoUrlByType($photo['id'], PHOTO_BOL_PhotoService::TYPE_MAIN, $photo['hash'], $photo['dimension']),
-                'fullsize' => $photoDao->getPhotoUrlByType($photo['id'], PHOTO_BOL_PhotoService::TYPE_FULLSCREEN, $photo['hash'], $photo['dimension'])
+                'thumbnail' => $photoDao->getPhotoUrlByPhotoInfo($photo['id'], PHOTO_BOL_PhotoService::TYPE_SMALL, $photo),
+                'preview' => $photoDao->getPhotoUrlByPhotoInfo($photo['id'], PHOTO_BOL_PhotoService::TYPE_PREVIEW, $photo),
+                'view' => $photoDao->getPhotoUrlByPhotoInfo($photo['id'], PHOTO_BOL_PhotoService::TYPE_MAIN, $photo),
+                'fullsize' => $photoDao->getPhotoUrlByPhotoInfo($photo['id'], PHOTO_BOL_PhotoService::TYPE_FULLSCREEN, $photo)
             );
 
             $dimension = json_decode($photo['dimension'], true);
