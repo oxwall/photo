@@ -99,7 +99,7 @@ class PHOTO_MCMP_PhotoListWidget extends BASE_CLASS_Widget
         }
         
         OW::getDocument()->addOnloadScript($script);
-        
+
         $this->setTemplate(OW::getPluginManager()->getPlugin('photo')->getMobileCmpViewDir() . 'photo_list_widget.html');
     }
 

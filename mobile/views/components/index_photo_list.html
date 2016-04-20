@@ -7,8 +7,8 @@
         <div class="owm_index_photo_list" id="{$items.latest.contId}">
             {foreach from=$latest item='p'}     
                 <div class="owm_index_photo_item">
-                    <a {if !empty($p.title)} title="{$p.title}"{/if}  style="background-image: url({$p.url})" href="{url_for_route for="view_photo:[id=>`$p.id`]"}">
-                        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" />
+                    <a {if !empty($p.title)} title="{$p.title|escape}"{/if}  style="background-image: url({$p.url})" href="{url_for_route for="view_photo:[id=>`$p.id`]"}">
+                        <img alt="{$p.description|escape}" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" />
                     </a>
                 </div>
             {foreachelse}
@@ -20,8 +20,8 @@
             <div class="owm_index_photo_list" id="{$items.featured.contId}" style="display:none;">
                 {foreach from=$featured item='p'}
                     <div class="owm_index_photo_item">
-                        <a {if !empty($p.title)} title="{$p.title}"{/if}  style="background-image: url({$p.url})" href="{url_for_route for="view_photo:[id=>`$p.id`]"}">
-                            <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" />
+                        <a {if !empty($p.title)} title="{$p.title|escape}"{/if}  style="background-image: url({$p.url})" href="{url_for_route for="view_photo:[id=>`$p.id`]"}">
+                            <img alt="{$p.description|escape}" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" />
                         </a>
                     </div>
                 {foreachelse}
@@ -33,8 +33,8 @@
         <div class="owm_index_photo_list" id="{$items.toprated.contId}" style="display:none;">
             {foreach from=$toprated item='p'}
                 <div class="owm_index_photo_item">
-                    <a {if !empty($p.title)} title="{$p.title}"{/if}  style="background-image: url({$p.url})" href="{url_for_route for="view_photo:[id=>`$p.id`]"}">
-                        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" />
+                    <a {if !empty($p.title)} title="{$p.title|escape}"{/if}  style="background-image: url({$p.url})" href="{url_for_route for="view_photo:[id=>`$p.id`]"}">
+                        <img alt="{$p.description|escape}" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" />
                     </a>
                 </div>
             {foreachelse}
