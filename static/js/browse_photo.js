@@ -1274,7 +1274,12 @@
         {
             var slotManager = new SlotManager();
 
-            slotManager.load();
+            var data = params.searchVal && {
+                searchVal: params.searchVal
+            };
+
+            SearchEngine().searchData = data;
+            slotManager.load(data);
 
             if ( ['albums', 'userPhotos', 'albumPhotos'].indexOf(params.listType) === -1 )
             {
