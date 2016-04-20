@@ -813,7 +813,12 @@
                         top: offset.top,
                         left: offset.left / (params.level || 4) * 100 + '%'
                     });
-                    slot.node.find('.ow_photo_pint_album img').attr('src', slot.data.url);
+
+                    slot.node.find('.ow_photo_pint_album img').attr({
+                        src: slot.data.url,
+                        alt: escape(slot.data.description)
+                    });
+
                     slot.node.appendTo(this.content);
                     this.content.height(Math.max.apply(Math, this.photoListOrder));
 

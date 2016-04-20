@@ -713,6 +713,7 @@
                     else
                     {
                         img.src = cmp.photo.url;
+                        img.alt = escape(cmp.photo.description);
                     }
                 }
                 
@@ -801,7 +802,7 @@
         {
             var content = _elements.content;
             var cmp = _methods.getPhotoCmp(photoId);
-            
+
             $('.ow_user_list_picture a', content).attr('href', cmp.avatar.url);
             $('.ow_user_list_picture img', content).attr({alt: cmp.avatar.title, src: cmp.avatar.src}).show();
             $('.ow_photoview_albumlink', content).attr('href', cmp.albumUrl).html(

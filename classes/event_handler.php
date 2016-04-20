@@ -1161,12 +1161,20 @@ class PHOTO_CLASS_EventHandler
                 
                 foreach ( $photoIdList as $id )
                 {
+                    $photo = $photoService->findPhotoById($id);
+
+                    if ( !$photo )
+                    {
+                        continue;
+                    }
+
                     $list[] = array(
                         "image" => $photoService->getPhotoUrlByPhotoInfo($id, PHOTO_BOL_PhotoService::TYPE_PREVIEW),
-                        "url" => array("routeName" => "view_photo", "vars" => array('id' => $id))
+                        "url" => array("routeName" => "view_photo", "vars" => array('id' => $id)),
+                        "title" => $photo->description
                     );
                 }
-                
+
                 $vars["list"] = $list;
                 $data['features'] = array('likes');
                 break;
@@ -1182,9 +1190,10 @@ class PHOTO_CLASS_EventHandler
                 {
                     $type = PHOTO_BOL_PhotoService::TYPE_MAIN;
                 }
-                
+
                 $vars["image"] = $photoService->getPhotoUrlByPhotoInfo($photo->id, $type, get_object_vars($photo));
                 $vars["url"] = array("routeName" => "view_photo", "vars" => array('id' => $photoId));
+                $vars["title"] = $photo->description;
                 break;
 
             default:
@@ -1580,7 +1589,7 @@ class PHOTO_CLASS_EventHandler
         {
             return;
         }
-        
+
         $fromAlbum = $this->albumService->findAlbumById($params['fromAlbum']);
         $fromAlbumLastPhoto = PHOTO_BOL_PhotoDao::getInstance()->getLastPhoto($params['fromAlbum']);
         

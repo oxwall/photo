@@ -74,7 +74,7 @@
         <div class="ow_photo_album_info">
             <div class="ow_photo_album_cover ow_high1" style="background-image: url({$coverUrl})">
                 {if $isOwner}
-                    <img src="{$coverUrlOrig}" class="ow_hidden cover_orig" />
+                    <img src="{$coverUrlOrig}" alt="{$album->name|escape}" class="ow_hidden cover_orig" />
                     {if empty($noCover)}
                         <a class="ow_lbutton" href="javascript://" style="display: none">{text key="photo+edit_cover_label"}</a>
                     {/if}
