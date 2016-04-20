@@ -342,7 +342,7 @@ class PHOTO_CTRL_AjaxUpload extends OW_ActionController
                 
                 $this->returnResponse(array(
                     'status' => self::STATUS_SUCCESS,
-                    'fileUrl' => $fileUrl,
+                    'fileUrl' => $fileUrl . '?' . uniqid(),
                     'id' => $id
                 ));
             }
