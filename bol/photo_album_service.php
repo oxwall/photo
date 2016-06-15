@@ -65,6 +65,17 @@ final class PHOTO_BOL_PhotoAlbumService
     }
 
     /**
+     * Find last albums
+     *
+     * @param int $limit
+     * @return array
+     */
+    public function findLastAlbums( $limit )
+    {
+        return $this->photoAlbumDao->findLastAlbums($limit);
+    }
+
+    /**
      * Returns class instance
      *
      * @return PHOTO_BOL_PhotoAlbumService

@@ -2063,6 +2063,67 @@ class PHOTO_CLASS_EventHandler
         return $event->getData();
     }
 
+
+    /**
+     * Get sitemap urls
+     *
+     * @param OW_Event $event
+     * @return void
+     */
+    public function onSitemapGetUrls( OW_Event $event )
+    {
+        if ( OW::getUser()->isAuthorized('photo', 'view') )
+        {
+            $params = $event->getParams();
+
+            switch ( $params['entity'] )
+            {
+                case 'photos' :
+                    $urls   = [];
+                    $photos  = PHOTO_BOL_PhotoService::getInstance()->findLastPublicPhotos($params['limit']);
+
+                    foreach ( $photos as $photo )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('view_photo', array(
+                            'id' =>  $photo['id']
+                        ));
+                    }
+
+                    $event->setData($urls);
+                    break;
+
+                case 'photo_albums' :
+                    $urls   = [];
+                    $albums  = PHOTO_BOL_PhotoAlbumService::getInstance()->findLastAlbums($params['limit']);
+
+                    foreach ( $albums as $album )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('photo_user_album', array(
+                            'user' =>  BOL_UserService::getInstance()->getUserName($album->userId),
+                            'album' => $album->id
+                        ));
+                    }
+
+                    $event->setData($urls);
+                    break;
+
+                case 'photo_list' :
+                    $event->setData(array(
+                        OW::getRouter()->urlForRoute('view_photo_list', array(
+                            'listType' => 'latest'
+                        )),
+                        OW::getRouter()->urlForRoute('view_photo_list', array(
+                            'listType' => 'toprated'
+                        )),
+                        OW::getRouter()->urlForRoute('view_photo_list', array(
+                            'listType' => 'most_discussed'
+                        ))
+                    ));
+                    break;
+            }
+        }
+    }
+
     public function init()
     {
         $this->genericInit();
@@ -2139,6 +2200,7 @@ class PHOTO_CLASS_EventHandler
 
         $em->bind(self::EVENT_GET_ALBUM_COVER_URL, array($this, 'getAlbumCoverUrl'));
         $em->bind(self::EVENT_GET_ALBUM_NAMES, array($this, 'getAlbumNames'));
+        $em->bind("base.sitemap.get_urls", array($this, 'onSitemapGetUrls'));
 
         PHOTO_CLASS_ContentProvider::getInstance()->init();
     }
