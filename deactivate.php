@@ -35,3 +35,5 @@ BOL_ComponentAdminService::getInstance()->deleteWidget('PHOTO_CMP_PhotoListWidge
 BOL_ComponentAdminService::getInstance()->deleteWidget('PHOTO_CMP_UserPhotoAlbumsWidget');
 BOL_ComponentAdminService::getInstance()->deleteWidget('PHOTO_MCMP_PhotoListWidget');
 
+// remove from sitemap
+BOL_SeoService::getInstance()->removeSitemapEntity('photos');
