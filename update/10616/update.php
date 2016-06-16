@@ -33,7 +33,10 @@
 Updater::getSeoService()->addSitemapEntity('photo', 'photo_sitemap', 'photos', array(
     'photo_list',
     'photos',
-    'photo_albums'
+    'photo_albums',
+    'photo_tags',
+    'photo_user_albums',
+    'photo_users'
 ));
 
 Updater::getLanguageService()->importPrefixFromZip(__DIR__ . DS . 'langs.zip', 'photo');

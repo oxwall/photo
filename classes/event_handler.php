@@ -2078,6 +2078,48 @@ class PHOTO_CLASS_EventHandler
 
             switch ( $params['entity'] )
             {
+                case 'photo_users' :
+                    $urls   = [];
+                    $users  = BOL_UserService::getInstance()->findList(0, $params['limit'], true);
+
+                    foreach ( $users as $user )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('photo.user_photos', array(
+                            'user' =>  $user->getUsername()
+                        ));
+                    }
+
+                    $event->setData($urls);
+                    break;
+
+                case 'photo_user_albums' :
+                    $urls   = [];
+                    $users  = BOL_UserService::getInstance()->findList(0, $params['limit'], true);
+
+                    foreach ( $users as $user )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('photo_user_albums', array(
+                            'user' =>  $user->getUsername()
+                        ));
+                    }
+
+                    $event->setData($urls);
+                    break;
+
+                case 'photo_tags' :
+                    $urls  = [];
+                    $tags  = BOL_TagService::getInstance()->findMostPopularTags('photo', $params['limit']);
+
+                    foreach ( $tags as $tag )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('view_tagged_photo_list', array(
+                            'tag' =>  $tag['label']
+                        ));
+                    }
+
+                    $event->setData($urls);
+                    break;
+
                 case 'photos' :
                     $urls   = [];
                     $photos  = PHOTO_BOL_PhotoService::getInstance()->findLastPublicPhotos($params['limit']);
@@ -2086,6 +2128,21 @@ class PHOTO_CLASS_EventHandler
                     {
                         $urls[] = OW::getRouter()->urlForRoute('view_photo', array(
                             'id' =>  $photo['id']
+                        ));
+
+                        $urls[] = OW::getRouter()->urlForRoute('view_photo_type', array(
+                            'id' =>  $photo['id'],
+                            'listType' => 'latest'
+                        ));
+
+                        $urls[] = OW::getRouter()->urlForRoute('view_photo_type', array(
+                            'id' =>  $photo['id'],
+                            'listType' => 'toprated'
+                        ));
+
+                        $urls[] = OW::getRouter()->urlForRoute('view_photo_type', array(
+                            'id' =>  $photo['id'],
+                            'listType' => 'most_discussed'
                         ));
                     }
 
@@ -2117,7 +2174,8 @@ class PHOTO_CLASS_EventHandler
                         )),
                         OW::getRouter()->urlForRoute('view_photo_list', array(
                             'listType' => 'most_discussed'
-                        ))
+                        )),
+                        OW::getRouter()->urlForRoute('view_tagged_photo_list_st')
                     ));
                     break;
             }

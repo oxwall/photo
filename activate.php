@@ -74,5 +74,8 @@ $credits->triggerCreditActionsAdd();
 BOL_SeoService::getInstance()->addSitemapEntity('photo', 'photo_sitemap', 'photos', array(
     'photo_list',
     'photos',
-    'photo_albums'
+    'photo_albums',
+    'photo_tags',
+    'photo_user_albums',
+    'photo_users'
 ));
