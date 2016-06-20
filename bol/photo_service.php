@@ -116,6 +116,18 @@ final class PHOTO_BOL_PhotoService
     }
 
     /**
+     * Find latest public photos authors ids
+     *
+     * @param integer $first
+     * @param integer $count
+     * @return array
+     */
+    public function findLatestPublicPhotosAuthorsIds($first, $count)
+    {
+        return $this->photoDao->findLatestPublicPhotosAuthorsIds($first, $count);
+    }
+
+    /**
      * Adds photo
      *
      * @param PHOTO_BOL_Photo $photo
