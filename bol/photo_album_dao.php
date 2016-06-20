@@ -402,6 +402,25 @@ class PHOTO_BOL_PhotoAlbumDao extends OW_BaseDao
     }
 
     /**
+     * Find latest albums authors ids
+     *
+     * @param integer $first
+     * @param integer $count
+     * @return array
+     */
+    public function findLatestAlbumsAuthorsIds($first, $count)
+    {
+        $sql = 'SELECT `' . self::USER_ID . '`
+            FROM `' . $this->getTableName() . '`
+            GROUP BY `' . self::USER_ID . '` ORDER BY `createDatetime` DESC LIMIT :f, :c';
+
+        return $this->dbo->queryForColumnList($sql, array(
+            'f' => $first,
+            'c' => $count
+        ));
+    }
+
+    /**
      * Get albums to be deleted
      *
      * @param int $limit

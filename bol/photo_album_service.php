@@ -107,6 +107,18 @@ final class PHOTO_BOL_PhotoAlbumService
     }
 
     /**
+     * Find latest albums authors ids
+     *
+     * @param integer $first
+     * @param integer $count
+     * @return array
+     */
+    public function findLatestAlbumsAuthorsIds($first, $count)
+    {
+        return $this->photoAlbumDao->findLatestAlbumsAuthorsIds($first, $count);
+    }
+
+    /**
      * Finds album by name
      *
      * @param string $name

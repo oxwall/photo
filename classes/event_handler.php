@@ -2080,12 +2080,19 @@ class PHOTO_CLASS_EventHandler
             {
                 case 'photo_users' :
                     $urls   = [];
-                    $users  = BOL_UserService::getInstance()->findList(0, $params['limit'], true);
+                    $users  = PHOTO_BOL_PhotoService::getInstance()->findLatestPublicPhotosAuthorsIds(0, $params['limit']);
 
-                    foreach ( $users as $user )
+                    foreach ( $users as $userId )
                     {
+                        $userName = BOL_UserService::getInstance()->getUsername($userId);
+
+                        if ( !$userName )
+                        {
+                            continue;
+                        }
+
                         $urls[] = OW::getRouter()->urlForRoute('photo.user_photos', array(
-                            'user' =>  $user->getUsername()
+                            'user' =>  $userName
                         ));
                     }
 
@@ -2094,12 +2101,19 @@ class PHOTO_CLASS_EventHandler
 
                 case 'photo_user_albums' :
                     $urls   = [];
-                    $users  = BOL_UserService::getInstance()->findList(0, $params['limit'], true);
+                    $users  = PHOTO_BOL_PhotoAlbumService::getInstance()->findLatestAlbumsAuthorsIds(0, $params['limit']);
 
-                    foreach ( $users as $user )
+                    foreach ( $users as $userId )
                     {
+                        $userName = BOL_UserService::getInstance()->getUsername($userId);
+
+                        if ( !$userName )
+                        {
+                            continue;
+                        }
+
                         $urls[] = OW::getRouter()->urlForRoute('photo_user_albums', array(
-                            'user' =>  $user->getUsername()
+                            'user' =>  $userName
                         ));
                     }
 
@@ -2155,8 +2169,15 @@ class PHOTO_CLASS_EventHandler
 
                     foreach ( $albums as $album )
                     {
+                        $userName = BOL_UserService::getInstance()->getUsername($album->userId);
+
+                        if ( !$userName )
+                        {
+                            continue;
+                        }
+
                         $urls[] = OW::getRouter()->urlForRoute('photo_user_album', array(
-                            'user' =>  BOL_UserService::getInstance()->getUserName($album->userId),
+                            'user' =>  $userName,
                             'album' => $album->id
                         ));
                     }
