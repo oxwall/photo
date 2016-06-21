@@ -2080,17 +2080,11 @@ class PHOTO_CLASS_EventHandler
             {
                 case 'photo_users' :
                     $urls   = [];
-                    $users  = PHOTO_BOL_PhotoService::getInstance()->findLatestPublicPhotosAuthorsIds(0, $params['limit']);
+                    $usersIds  = PHOTO_BOL_PhotoService::getInstance()->findLatestPublicPhotosAuthorsIds(0, $params['limit']);
+                    $userNames = BOL_UserService::getInstance()->getUserNamesForList($usersIds);
 
-                    foreach ( $users as $userId )
+                    foreach ( array_filter($userNames) as $userName )
                     {
-                        $userName = BOL_UserService::getInstance()->getUsername($userId);
-
-                        if ( !$userName )
-                        {
-                            continue;
-                        }
-
                         $urls[] = OW::getRouter()->urlForRoute('photo.user_photos', array(
                             'user' =>  $userName
                         ));
@@ -2101,17 +2095,11 @@ class PHOTO_CLASS_EventHandler
 
                 case 'photo_user_albums' :
                     $urls   = [];
-                    $users  = PHOTO_BOL_PhotoAlbumService::getInstance()->findLatestAlbumsAuthorsIds(0, $params['limit']);
+                    $usersIds  = PHOTO_BOL_PhotoAlbumService::getInstance()->findLatestAlbumsAuthorsIds(0, $params['limit']);
+                    $userNames = BOL_UserService::getInstance()->getUserNamesForList($usersIds);
 
-                    foreach ( $users as $userId )
+                    foreach ( array_filter($userNames) as $userName )
                     {
-                        $userName = BOL_UserService::getInstance()->getUsername($userId);
-
-                        if ( !$userName )
-                        {
-                            continue;
-                        }
-
                         $urls[] = OW::getRouter()->urlForRoute('photo_user_albums', array(
                             'user' =>  $userName
                         ));
