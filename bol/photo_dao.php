@@ -405,8 +405,8 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
         return $this->dbo->queryForColumnList($sql, array(
             'status' => self::STATUS_APPROVED,
             'privacy' => self::PRIVACY_EVERYBODY,
-            'f' => $first,
-            'c' => $count
+            'f' => (int) $first,
+            'c' => (int) $count
         ));
     }
 

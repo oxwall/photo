@@ -270,12 +270,13 @@ final class PHOTO_BOL_PhotoService
     /**
      * Find last public photos
      *
+     * @param integer $offset
      * @param integer $limit
      * @return array
      */
-    public function findLastPublicPhotos($limit)
+    public function findLastPublicPhotos($offset, $limit)
     {
-        return $this->photoDao->getPhotoList('latest', 0, $limit, null, false);
+        return $this->photoDao->getPhotoList('latest', $offset, $limit, null, false);
     }
 
     public function findAlbumPhotoList( $albumId, $listType, $offset, $limit, $privacy = null )
