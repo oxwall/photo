@@ -2266,6 +2266,43 @@ class PHOTO_CLASS_EventHandler
         }
     }
 
+    public function onCollectMetaData( BASE_CLASS_EventCollector $e )
+    {
+        $language = OW::getLanguage();
+
+        $e->add(
+            array(
+                "sectionLabel" => $language->text("photo", "seo_meta_section"),
+                "sectionKey" => "photo",
+                "entityKey" => "taggedList",
+                "entityLabel" => $language->text("base", "seo_meta_tagged_list_label"),
+                "iconClass" => "ow_ic_tag",
+                "langs" => array(
+                    "title" => "photo+meta_title_tagged_list",
+                    "desc" => "photo+meta_desc_tagged_list",
+                    "keywords" => "photo+meta_keywords_tagged_list"
+                ),
+                "vars" => array("site_name")
+            )
+        );
+
+        $e->add(
+            array(
+                "sectionLabel" => $language->text("photo", "seo_meta_section"),
+                "sectionKey" => "photo",
+                "entityKey" => "photoList",
+                "entityLabel" => $language->text("base", "seo_meta_photo_list_label"),
+                "iconClass" => "ow_ic_picture",
+                "langs" => array(
+                    "title" => "photo+meta_title_photo_list",
+                    "desc" => "photo+meta_desc_photo_list",
+                    "keywords" => "photo+meta_keywords_photo_list"
+                ),
+                "vars" => array("site_name", "list_type")
+            )
+        );
+    }
+
     public function init()
     {
         $this->genericInit();
@@ -2281,6 +2318,7 @@ class PHOTO_CLASS_EventHandler
         $em->bind('base.avatar_change_collect_sections', array($this, 'collectAlbumsForAvatar'));
         $em->bind('base.avatar_change_get_section', array($this, 'collectAlbumPhotosForAvatar'));
         $em->bind('base.avatar_change_get_item', array($this, 'getPhotoForAvatar'));
+        $em->bind("base.collect_seo_meta_data", array($this, 'onCollectMetaData'));
     }
 
     public function genericInit()

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<prefix name="photo" label="Photo" language_tag="en" language_label="English">
+    <key name="seo_meta_section"><value>Photo</value></key>
+    <key name="seo_meta_tagged_list_label"><value>All Tagged Photos Page</value></key>
+    <key name="meta_title_tagged_list"><value>Tagged Photos | {$site_name}</value></key>
+    <key name="meta_desc_tagged_list"><value>The list of all tagged photos at {$site_name}.</value></key>
+    <key name="meta_keywords_tagged_list"><value></value></key>
+    <key name="seo_meta_photo_list_label"><value>Photos by List Type (Latest / Top Rated / Most Discussed) Page</value></key>
+    <key name="meta_title_photo_list"><value>{$list_type} photos | {$site_name}</value></key>
+    <key name="meta_desc_photo_list"><value>All {$list_type} photos at {$site_name}</value></key>
+    <key name="meta_keywords_photo_list"><value></value></key>
+    <key name="list_type_label_featured"><value>Featured</value></key>
+    <key name="list_type_label_latest"><value>Latest</value></key>
+    <key name="list_type_label_toprated"><value>Top rated</value></key>
+    <key name="list_type_label_tagged"><value>Tagged</value></key>
+    <key name="list_type_label_most_discussed"><value>Most discussed</value></key>
+    <key name=""><value></value></key>
+    <key name=""><value></value></key>
+    <key name=""><value></value></key>
+    <key name=""><value></value></key>
+    <key name=""><value></value></key>
+    <key name=""><value></value></key>
+    <key name=""><value></value></key>
+    <key name=""><value></value></key>
+    <key name=""><value></value></key>
+    <key name=""><value></value></key>
+    <key name=""><value></value></key>
+    <key name=""><value></value></key>
+    <key name=""><value></value></key>
+    <key name=""><value></value></key>
+</prefix>

@@ -271,9 +271,18 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         {
             $language->addKeyForJs('photo', 'meta_title_photo_' . $type);
         }
-        
-        OW::getDocument()->setTitle($language->text('photo', 'meta_title_photo_' . $listType));
-        OW::getDocument()->setDescription($language->text('photo', 'meta_description_photo_' . $listType));
+
+        $params = array(
+            "title" => "photo+meta_title_photo_list",
+            "desc" => "photo+meta_desc_photo_list",
+            "keywords" => "photo+meta_keywords_photo_list",
+            "vars" => array( "list_type" => $language->text("photo", "list_type_label_".$listType) )
+        );
+
+        OW::getEventManager()->trigger(new OW_Event("base.provide_page_meta_info", $params));
+
+//        OW::getDocument()->setTitle($language->text('photo', 'meta_title_photo_' . $listType));
+//        OW::getDocument()->setDescription($language->text('photo', 'meta_description_photo_' . $listType));
     }
 
     /**
@@ -284,6 +293,8 @@ class PHOTO_CTRL_Photo extends OW_ActionController
      */
     public function viewTaggedList( array $params = null )
     {
+        $language = OW::getLanguage();
+
         if ( !empty($params['tag']) )
         {
             $tag = htmlspecialchars(urldecode($params['tag']));
@@ -298,8 +309,15 @@ class PHOTO_CTRL_Photo extends OW_ActionController
             $this->assign('tag', '');
         }
 
-        OW::getDocument()->setHeading(OW::getLanguage()->text('photo', 'page_title_browse_photos'));
-        OW::getDocument()->setHeadingIconClass('ow_ic_picture');
+        $params = array(
+            "title" => "photo+meta_title_tagged_list",
+            "desc" => "photo+meta_desc_tagged_list",
+            "keywords" => "photo+meta_keywords_tagged_list"
+        );
+
+        OW::getEventManager()->trigger(new OW_Event("base.provide_page_meta_info", $params));
+        $this->setPageHeading($language->text("photo", "page_title_browse_photos"));
+        $this->setPageHeadingIconClass("ow_ic_picture");
     }
 
     /**
