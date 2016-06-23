@@ -2275,11 +2275,11 @@ class PHOTO_CLASS_EventHandler
                 "sectionLabel" => $language->text("photo", "seo_meta_section"),
                 "sectionKey" => "photo",
                 "entityKey" => "taggedList",
-                "entityLabel" => $language->text("base", "seo_meta_tagged_list_label"),
+                "entityLabel" => $language->text("photo", "seo_meta_tagged_list_label"),
                 "iconClass" => "ow_ic_tag",
                 "langs" => array(
                     "title" => "photo+meta_title_tagged_list",
-                    "desc" => "photo+meta_desc_tagged_list",
+                    "description" => "photo+meta_desc_tagged_list",
                     "keywords" => "photo+meta_keywords_tagged_list"
                 ),
                 "vars" => array("site_name")
@@ -2291,14 +2291,78 @@ class PHOTO_CLASS_EventHandler
                 "sectionLabel" => $language->text("photo", "seo_meta_section"),
                 "sectionKey" => "photo",
                 "entityKey" => "photoList",
-                "entityLabel" => $language->text("base", "seo_meta_photo_list_label"),
+                "entityLabel" => $language->text("photo", "seo_meta_photo_list_label"),
                 "iconClass" => "ow_ic_picture",
                 "langs" => array(
                     "title" => "photo+meta_title_photo_list",
-                    "desc" => "photo+meta_desc_photo_list",
+                    "description" => "photo+meta_desc_photo_list",
                     "keywords" => "photo+meta_keywords_photo_list"
                 ),
                 "vars" => array("site_name", "list_type")
+            )
+        );
+
+        $e->add(
+            array(
+                "sectionLabel" => $language->text("photo", "seo_meta_section"),
+                "sectionKey" => "photo",
+                "entityKey" => "userAlbums",
+                "entityLabel" => $language->text("photo", "seo_meta_user_albums_label"),
+                "iconClass" => "ow_ic_picture",
+                "langs" => array(
+                    "title" => "photo+meta_title_user_albums",
+                    "description" => "photo+meta_desc_user_albums",
+                    "keywords" => "photo+meta_keywords_user_albums"
+                ),
+                "vars" => array("user_name", "user_gender", "user_age", "user_location", "site_name")
+            )
+        );
+
+        $e->add(
+            array(
+                "sectionLabel" => $language->text("photo", "seo_meta_section"),
+                "sectionKey" => "photo",
+                "entityKey" => "userAlbum",
+                "entityLabel" => $language->text("photo", "seo_meta_user_album_label"),
+                "iconClass" => "ow_ic_picture",
+                "langs" => array(
+                    "title" => "photo+meta_title_user_album",
+                    "description" => "photo+meta_desc_user_album",
+                    "keywords" => "photo+meta_keywords_user_album"
+                ),
+                "vars" => array("user_name", "user_gender", "user_age", "user_location", "site_name", "album_name")
+            )
+        );
+
+        $e->add(
+            array(
+                "sectionLabel" => $language->text("photo", "seo_meta_section"),
+                "sectionKey" => "photo",
+                "entityKey" => "userPhotos",
+                "entityLabel" => $language->text("photo", "seo_meta_user_photos_label"),
+                "iconClass" => "ow_ic_picture",
+                "langs" => array(
+                    "title" => "photo+meta_title_user_photos",
+                    "description" => "photo+meta_desc_user_photos",
+                    "keywords" => "photo+meta_keywords_user_photos"
+                ),
+                "vars" => array("user_name", "user_gender", "user_age", "user_location", "site_name")
+            )
+        );
+
+        $e->add(
+            array(
+                "sectionLabel" => $language->text("photo", "seo_meta_section"),
+                "sectionKey" => "photo",
+                "entityKey" => "photoView",
+                "entityLabel" => $language->text("photo", "seo_meta_photo_view_label"),
+                "iconClass" => "ow_ic_picture",
+                "langs" => array(
+                    "title" => "photo+meta_title_photo_view",
+                    "description" => "photo+meta_desc_photo_view",
+                    "keywords" => "photo+meta_keywords_photo_view"
+                ),
+                "vars" => array("photo_id", "user_name", "site_name")
             )
         );
     }

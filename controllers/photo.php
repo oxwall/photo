@@ -212,13 +212,13 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         OW::getDocument()->setHeadingIconClass('ow_ic_picture');
 
         $imageUrl = $this->photoService->getPhotoUrl($photo->id, FALSE, $photo->hash);
-        OW::getDocument()->addMetaInfo('image', $imageUrl, 'itemprop');
-        OW::getDocument()->addMetaInfo('og:image', $imageUrl, 'property');
-
-        $description = strip_tags(str_replace(PHP_EOL, ' ', $photo->description));
-        $description = mb_strlen($description) ? $description : $photo->id;
+//        OW::getDocument()->addMetaInfo('image', $imageUrl, 'itemprop');
+//        OW::getDocument()->addMetaInfo('og:image', $imageUrl, 'property');
+//
+//        $description = strip_tags(str_replace(PHP_EOL, ' ', $photo->description));
+//        $description = mb_strlen($description) ? $description : $photo->id;
         
-        OW::getDocument()->setTitle(OW::getLanguage()->text('photo', 'meta_title_photo_view', array('title' => $description)));
+//        OW::getDocument()->setTitle(OW::getLanguage()->text('photo', 'meta_title_photo_view', array('title' => $description)));
         $tagsArr = BOL_TagService::getInstance()->findEntityTags($photo->id, 'photo');
 
         $labels = array();
@@ -226,8 +226,8 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         {
             $labels[] = $t->label;
         }
-        $tagStr = $tagsArr ? implode(', ', $labels) : '';
-        OW::getDocument()->setDescription(OW::getLanguage()->text('photo', 'meta_description_photo_view', array('title' => $description, 'tags' => $tagStr)));
+//        $tagStr = $tagsArr ? implode(', ', $labels) : '';
+//        OW::getDocument()->setDescription(OW::getLanguage()->text('photo', 'meta_description_photo_view', array('title' => $description, 'tags' => $tagStr)));
         
         $event = new OW_Event(PHOTO_CLASS_EventHandler::EVENT_INIT_FLOATBOX, array('layout' => 'page'));
         OW::getEventManager()->trigger($event);
@@ -241,6 +241,17 @@ class PHOTO_CTRL_Photo extends OW_ActionController
                 )
             )
         );
+
+        // meta info
+        $params = array(
+            "title" => "photo+meta_title_photo_view",
+            "description" => "photo+meta_desc_photo_view",
+            "keywords" => "photo+meta_keywords_photo_view",
+            "vars" => array( "user_name" => BOL_UserService::getInstance()->findUserById($album->userId)->username, "photo_id" => $photo->id ),
+            "image" => $imageUrl
+        );
+
+        OW::getEventManager()->trigger(new OW_Event("base.provide_page_meta_info", $params));
     }
 
     /**
@@ -306,13 +317,15 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         }
         else
         {
+            $tag = "";
             $this->assign('tag', '');
         }
 
         $params = array(
             "title" => "photo+meta_title_tagged_list",
             "desc" => "photo+meta_desc_tagged_list",
-            "keywords" => "photo+meta_keywords_tagged_list"
+            "keywords" => "photo+meta_keywords_tagged_list",
+            "vars" => array( "tag" => $tag)
         );
 
         OW::getEventManager()->trigger(new OW_Event("base.provide_page_meta_info", $params));
@@ -334,12 +347,25 @@ class PHOTO_CTRL_Photo extends OW_ActionController
             throw new Redirect404Exception();
         }
         
-        if ( ($user = BOL_UserService::getInstance()->findByUsername($username)) === NULL )
+        if ( ($user = BOL_UserService::getInstance()->findByUsername($username)) === null )
         {
             throw new Redirect404Exception();
         }
         
         $this->assign('userId', $user->id);
+
+        // meta info
+        $vars = BOL_SeoService::getInstance()->getUserMetaInfo($user);
+
+        $params = array(
+            "title" => "photo+meta_title_user_albums",
+            "description" => "photo+meta_desc_user_albums",
+            "keywords" => "photo+meta_keywords_user_albums",
+            "vars" => $vars,
+            "image" => BOL_AvatarService::getInstance()->getAvatarUrl($user->getId(), 2)
+        );
+
+        OW::getEventManager()->trigger(new OW_Event("base.provide_page_meta_info", $params));
     }
 
     /**
@@ -432,6 +458,20 @@ class PHOTO_CTRL_Photo extends OW_ActionController
             $lang->addKeyForJs('photo', 'newsfeed_album');
             $lang->addKeyForJs('photo', 'photo_success_moved');
         }
+
+        // meta info
+        $vars = BOL_SeoService::getInstance()->getUserMetaInfo($userDto);
+        $vars["album_name"] = $album->name;
+
+        $params = array(
+            "title" => "photo+meta_title_user_album",
+            "description" => "photo+meta_desc_user_album",
+            "keywords" => "photo+meta_keywords_user_album",
+            "vars" => $vars,
+            "image" => BOL_AvatarService::getInstance()->getAvatarUrl($userDto->getId(), 2)
+        );
+
+        OW::getEventManager()->trigger(new OW_Event("base.provide_page_meta_info", $params));
     }
 
     public function reloadAlbumCover( $params )
@@ -463,6 +503,19 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         }
         
         $this->assign('userId', $userDto->id);
+
+        // meta info
+        $vars = BOL_SeoService::getInstance()->getUserMetaInfo($userDto);
+
+        $params = array(
+            "title" => "photo+meta_title_user_photos",
+            "description" => "photo+meta_desc_user_photos",
+            "keywords" => "photo+meta_keywords_user_photos",
+            "vars" => $vars,
+            "image" => BOL_AvatarService::getInstance()->getAvatarUrl($userDto->getId(), 2)
+        );
+
+        OW::getEventManager()->trigger(new OW_Event("base.provide_page_meta_info", $params));
     }
 
     public function downloadPhoto( $params )

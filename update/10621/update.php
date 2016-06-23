@@ -22,6 +22,6 @@
  * which combines Covered Code or portions thereof with code not governed by the terms of the CPAL.
  */
 
-//Updater::getLanguageService()->importPrefixFromDir(__DIR__ . DS . 'langs', true);
+Updater::getLanguageService()->importPrefixFromDir(__DIR__ . DS . 'langs', true);
 
 
