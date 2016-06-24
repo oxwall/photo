@@ -30,6 +30,4 @@
     <key name="meta_title_photo_view"><value>View "{$photo_id}" photo by {$user_name} | {$site_name}</value></key>
     <key name="meta_desc_photo_view"><value>View photo "{$photo_id}" uploaded by {$user_name} on {$site_name}.</value></key>
     <key name="meta_keywords_photo_view"><value></value></key>
-    <key name=""><value></value></key>
-    <key name=""><value></value></key>
 </prefix>
