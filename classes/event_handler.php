@@ -2168,10 +2168,11 @@ class PHOTO_CLASS_EventHandler
                     break;
 
                 case 'photo_albums' :
-                    $albums = PHOTO_BOL_PhotoAlbumService::getInstance()->findLastAlbums($limit, $offset);
+                    $albums = PHOTO_BOL_PhotoAlbumService::getInstance()->findLastAlbumsIds($offset, $limit);
 
-                    foreach ( $albums as $album )
+                    foreach ( $albums as $albumId )
                     {
+                        $album = PHOTO_BOL_PhotoAlbumService::getInstance()->findAlbumById($albumId);
                         $userName = BOL_UserService::getInstance()->getUsername($album->userId);
 
                         // skip deleted users
