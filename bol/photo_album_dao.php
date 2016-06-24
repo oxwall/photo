@@ -387,22 +387,19 @@ class PHOTO_BOL_PhotoAlbumDao extends OW_BaseDao
     }
 
     /**
-     * Find last albums
+     * Find last albums ids
      *
-     * @param int $limit
      * @param int $offset
+     * @param int $limit
      * @return array
      */
-    public function findLastAlbums( $limit, $offset  = null )
+    public function findLastAlbumsIds( $offset, $limit )
     {
         $example = new OW_Example();
         $example->setOrder('createDatetime DESC');
+        $example->setLimitClause((int) $offset, (int) $limit);
 
-        is_null($offset)
-            ?  $example->setLimitClause(0, (int) $limit)
-            :  $example->setLimitClause((int) $offset, (int) $limit);
-
-        return $this->findListByExample($example);
+        return $this->findIdListByExample($example);
     }
 
     /**
