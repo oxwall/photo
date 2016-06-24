@@ -65,15 +65,15 @@ final class PHOTO_BOL_PhotoAlbumService
     }
 
     /**
-     * Find last albums
+     * Find last albums ids
      *
-     * @param int $limit
      * @param int $offset
+     * @param int $limit
      * @return array
      */
-    public function findLastAlbums( $limit, $offset  = null )
+    public function findLastAlbumsIds( $offset, $limit )
     {
-        return $this->photoAlbumDao->findLastAlbums($limit, $offset);
+        return $this->photoAlbumDao->findLastAlbumsIds($offset, $limit);
     }
 
     /**

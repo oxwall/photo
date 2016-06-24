@@ -2076,188 +2076,134 @@ class PHOTO_CLASS_EventHandler
 
         if ( OW::getUser()->isAuthorized('photo', 'view') )
         {
-            $urls = [];
-            $urlsCount = 0;
-            $globalLimit = (int) $params['limit'];
-            $localLimit  = 500;
-            $offset = 0;
+            $offset = (int) $params['offset'];
+            $limit  = (int) $params['limit'];
+            $urls   = array();
 
-            do
+            switch ( $params['entity'] )
             {
-                $isDataEmpty = true;
+                case 'photo_users' :
+                    $usersIds  = PHOTO_BOL_PhotoService::getInstance()->findLatestPublicPhotosAuthorsIds($offset, $limit);
+                    $userNames = BOL_UserService::getInstance()->getUserNamesForList($usersIds);
 
-                if ( $urlsCount + $localLimit > $globalLimit )
-                {
-                    $localLimit = $globalLimit < $localLimit
-                        ? $globalLimit
-                        : $globalLimit - $urlsCount;
-                }
+                    // skip deleted users
+                    foreach ( array_filter($userNames) as $userName )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('photo.user_photos', array(
+                            'user' => $userName
+                        ));
+                    }
+                    break;
 
-                switch ( $params['entity'] )
-                {
-                    case 'photo_users' :
-                        $usersIds  = PHOTO_BOL_PhotoService::getInstance()->findLatestPublicPhotosAuthorsIds($offset, $params['limit']);
-                        $userNames = BOL_UserService::getInstance()->getUserNamesForList($usersIds);
+                case 'photo_user_albums' :
+                    $usersIds  = PHOTO_BOL_PhotoAlbumService::getInstance()->findLatestAlbumsAuthorsIds($offset, $limit);
+                    $userNames = BOL_UserService::getInstance()->getUserNamesForList($usersIds);
 
-                        if ( $usersIds )
+                    // skip deleted users
+                    foreach ( array_filter($userNames) as $userName )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('photo_user_albums', array(
+                            'user' => $userName
+                        ));
+                    }
+
+                    break;
+
+                case 'photo_tags' :
+                    $tags = BOL_TagService::getInstance()->findMostPopularTags('photo', $limit, $offset);
+
+                    foreach ( $tags as $tag )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('view_tagged_photo_list', array(
+                            'tag' => $tag['label']
+                        ));
+                    }
+                    break;
+
+                case 'photos_latest' :
+                    $photos  = PHOTO_BOL_PhotoService::getInstance()->findLastPublicPhotos($offset, $limit);
+
+                    foreach ( $photos as $photo )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('view_photo_type', array(
+                            'id' => $photo['id'],
+                            'listType' => 'latest'
+                        ));
+                    }
+                    break;
+
+                case 'photos_toprated' :
+                    $photos  = PHOTO_BOL_PhotoService::getInstance()->findLastPublicPhotos($offset, $limit);
+
+                    foreach ( $photos as $photo )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('view_photo_type', array(
+                            'id' => $photo['id'],
+                            'listType' => 'toprated'
+                        ));
+                    }
+                    break;
+
+                case 'photos_most_discussed' :
+                    $photos  = PHOTO_BOL_PhotoService::getInstance()->findLastPublicPhotos($offset, $limit);
+
+                    foreach ( $photos as $photo )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('view_photo_type', array(
+                            'id' => $photo['id'],
+                            'listType' => 'most_discussed'
+                        ));
+                    }
+                    break;
+
+                case 'photos' :
+                    $photos  = PHOTO_BOL_PhotoService::getInstance()->findLastPublicPhotos($offset, $limit);
+
+                    foreach ( $photos as $photo )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('view_photo', array(
+                            'id' => $photo['id']
+                        ));
+                    }
+                    break;
+
+                case 'photo_albums' :
+                    $albums = PHOTO_BOL_PhotoAlbumService::getInstance()->findLastAlbumsIds($offset, $limit);
+
+                    foreach ( $albums as $albumId )
+                    {
+                        $album = PHOTO_BOL_PhotoAlbumService::getInstance()->findAlbumById($albumId);
+                        $userName = BOL_UserService::getInstance()->getUsername($album->userId);
+
+                        // skip deleted users
+                        if ( !$userName )
                         {
-                            foreach ( array_filter($userNames) as $userName )
-                            {
-                                $urls[] = OW::getRouter()->urlForRoute('photo.user_photos', array(
-                                    'user' => $userName
-                                ));
-                            }
-
-                            $isDataEmpty = count($usersIds) != $localLimit;
+                            continue;
                         }
-                        break;
 
-                    case 'photo_user_albums' :
-                        $usersIds  = PHOTO_BOL_PhotoAlbumService::getInstance()->findLatestAlbumsAuthorsIds($offset, $params['limit']);
-                        $userNames = BOL_UserService::getInstance()->getUserNamesForList($usersIds);
+                        $urls[] = OW::getRouter()->urlForRoute('photo_user_album', array(
+                            'user' => $userName,
+                            'album' => $album->id
+                        ));
+                    }
+                    break;
 
-                        if ( $usersIds )
-                        {
-                            // skip deleted users
-                            foreach ( array_filter($userNames) as $userName )
-                            {
-                                $urls[] = OW::getRouter()->urlForRoute('photo_user_albums', array(
-                                    'user' => $userName
-                                ));
-                            }
+                case 'photo_list' :
+                    $urls[] = OW::getRouter()->urlForRoute('view_photo_list', array(
+                        'listType' => 'latest'
+                    ));
 
-                            $isDataEmpty = count($usersIds) != $localLimit;
-                        }
-                        break;
+                    $urls[] = OW::getRouter()->urlForRoute('view_photo_list', array(
+                        'listType' => 'toprated'
+                    ));
 
-                    case 'photo_tags' :
-                        $tags = BOL_TagService::getInstance()->findMostPopularTags('photo', $localLimit, $offset);
+                    $urls[] = OW::getRouter()->urlForRoute('view_photo_list', array(
+                        'listType' => 'most_discussed'
+                    ));
 
-                        if ( $tags )
-                        {
-                            foreach ( $tags as $tag )
-                            {
-                                $urls[] = OW::getRouter()->urlForRoute('view_tagged_photo_list', array(
-                                    'tag' => $tag['label']
-                                ));
-                            }
-
-                            $isDataEmpty = count($tags) != $localLimit;
-                        }
-                        break;
-
-                    case 'photos_latest' :
-                        $photos  = PHOTO_BOL_PhotoService::getInstance()->findLastPublicPhotos($offset, $localLimit);
-
-                        if ( $photos )
-                        {
-                            foreach ( $photos as $photo )
-                            {
-                                $urls[] = OW::getRouter()->urlForRoute('view_photo_type', array(
-                                    'id' => $photo['id'],
-                                    'listType' => 'latest'
-                                ));
-                            }
-
-                            $isDataEmpty = count($photos) != $localLimit;
-                        }
-                        break;
-
-                    case 'photos_toprated' :
-                        $photos  = PHOTO_BOL_PhotoService::getInstance()->findLastPublicPhotos($offset, $localLimit);
-
-                        if ( $photos )
-                        {
-                            foreach ( $photos as $photo )
-                            {
-                                $urls[] = OW::getRouter()->urlForRoute('view_photo_type', array(
-                                    'id' => $photo['id'],
-                                    'listType' => 'toprated'
-                                ));
-                            }
-
-                            $isDataEmpty = count($photos) != $localLimit;
-                        }
-                        break;
-
-                    case 'photos_most_discussed' :
-                        $photos  = PHOTO_BOL_PhotoService::getInstance()->findLastPublicPhotos($offset, $localLimit);
-
-                        if ( $photos )
-                        {
-                            foreach ( $photos as $photo )
-                            {
-                                $urls[] = OW::getRouter()->urlForRoute('view_photo_type', array(
-                                    'id' => $photo['id'],
-                                    'listType' => 'most_discussed'
-                                ));
-                            }
-
-                            $isDataEmpty = count($photos) != $localLimit;
-                        }
-                        break;
-
-                    case 'photos' :
-                        $photos  = PHOTO_BOL_PhotoService::getInstance()->findLastPublicPhotos($offset, $localLimit);
-
-                        if ( $photos )
-                        {
-                            foreach ( $photos as $photo )
-                            {
-                                $urls[] = OW::getRouter()->urlForRoute('view_photo', array(
-                                    'id' => $photo['id']
-                                ));
-                            }
-
-                            $isDataEmpty = count($photos) != $localLimit;
-                        }
-                        break;
-
-                    case 'photo_albums' :
-                        $albums = PHOTO_BOL_PhotoAlbumService::getInstance()->findLastAlbums($localLimit, $offset);
-
-                        if ( $albums )
-                        {
-                            foreach ( $albums as $album )
-                            {
-                                $userName = BOL_UserService::getInstance()->getUsername($album->userId);
-
-                                // skip deleted users
-                                if ( !$userName )
-                                {
-                                    continue;
-                                }
-
-                                $urls[] = OW::getRouter()->urlForRoute('photo_user_album', array(
-                                    'user' => $userName,
-                                    'album' => $album->id
-                                ));
-                            }
-
-                            $isDataEmpty = count($albums) != $localLimit;
-                        }
-                        break;
-
-                    case 'photo_list' :
-                        $urls = array(
-                            OW::getRouter()->urlForRoute('view_photo_list', array(
-                                'listType' => 'latest'
-                            )),
-                            OW::getRouter()->urlForRoute('view_photo_list', array(
-                                'listType' => 'toprated'
-                            )),
-                            OW::getRouter()->urlForRoute('view_photo_list', array(
-                                'listType' => 'most_discussed'
-                            )),
-                            OW::getRouter()->urlForRoute('view_tagged_photo_list_st')
-                        );
-                        break;
-                }
-
-                $urlsCount = count($urls);
-                $offset += $localLimit;
+                    $urls[] = OW::getRouter()->urlForRoute('view_tagged_photo_list_st');
+                    break;
             }
-            while ($urlsCount < $globalLimit && !$isDataEmpty);
 
             if ( $urls )
             {
