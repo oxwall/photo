@@ -244,6 +244,8 @@ class PHOTO_CTRL_Photo extends OW_ActionController
 
         // meta info
         $params = array(
+            "sectionKey" => "photo",
+            "entityKey" => "photoView",
             "title" => "photo+meta_title_photo_view",
             "description" => "photo+meta_desc_photo_view",
             "keywords" => "photo+meta_keywords_photo_view",
@@ -284,8 +286,10 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         }
 
         $params = array(
+            "sectionKey" => "photo",
+            "entityKey" => "photoList",
             "title" => "photo+meta_title_photo_list",
-            "desc" => "photo+meta_desc_photo_list",
+            "description" => "photo+meta_desc_photo_list",
             "keywords" => "photo+meta_keywords_photo_list",
             "vars" => array( "list_type" => $language->text("photo", "list_type_label_".$listType) )
         );
@@ -322,8 +326,10 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         }
 
         $params = array(
+            "sectionKey" => "photo",
+            "entityKey" => "taggedList",
             "title" => "photo+meta_title_tagged_list",
-            "desc" => "photo+meta_desc_tagged_list",
+            "description" => "photo+meta_desc_tagged_list",
             "keywords" => "photo+meta_keywords_tagged_list",
             "vars" => array( "tag" => $tag)
         );
@@ -358,6 +364,8 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         $vars = BOL_SeoService::getInstance()->getUserMetaInfo($user);
 
         $params = array(
+            "sectionKey" => "photo",
+            "entityKey" => "userAlbums",
             "title" => "photo+meta_title_user_albums",
             "description" => "photo+meta_desc_user_albums",
             "keywords" => "photo+meta_keywords_user_albums",
@@ -464,6 +472,8 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         $vars["album_name"] = $album->name;
 
         $params = array(
+            "sectionKey" => "photo",
+            "entityKey" => "userAlbum",
             "title" => "photo+meta_title_user_album",
             "description" => "photo+meta_desc_user_album",
             "keywords" => "photo+meta_keywords_user_album",
@@ -508,6 +518,8 @@ class PHOTO_CTRL_Photo extends OW_ActionController
         $vars = BOL_SeoService::getInstance()->getUserMetaInfo($userDto);
 
         $params = array(
+            "sectionKey" => "photo",
+            "entityKey" => "userPhotos",
             "title" => "photo+meta_title_user_photos",
             "description" => "photo+meta_desc_user_photos",
             "keywords" => "photo+meta_keywords_user_photos",
