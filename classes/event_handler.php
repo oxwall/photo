@@ -2212,6 +2212,88 @@ class PHOTO_CLASS_EventHandler
         }
     }
 
+    public function onCollectMetaData( BASE_CLASS_EventCollector $e )
+    {
+        $language = OW::getLanguage();
+
+        $items = array(
+            array(
+                "entityKey" => "taggedList",
+                "entityLabel" => $language->text("photo", "seo_meta_tagged_list_label"),
+                "iconClass" => "ow_ic_tag",
+                "langs" => array(
+                    "title" => "photo+meta_title_tagged_list",
+                    "description" => "photo+meta_desc_tagged_list",
+                    "keywords" => "photo+meta_keywords_tagged_list"
+                ),
+                "vars" => array("site_name")
+            ),
+            array(
+                "entityKey" => "photoList",
+                "entityLabel" => $language->text("photo", "seo_meta_photo_list_label"),
+                "iconClass" => "ow_ic_picture",
+                "langs" => array(
+                    "title" => "photo+meta_title_photo_list",
+                    "description" => "photo+meta_desc_photo_list",
+                    "keywords" => "photo+meta_keywords_photo_list"
+                ),
+                "vars" => array("site_name", "list_type")
+            ),
+            array(
+                "entityKey" => "userAlbums",
+                "entityLabel" => $language->text("photo", "seo_meta_user_albums_label"),
+                "iconClass" => "ow_ic_picture",
+                "langs" => array(
+                    "title" => "photo+meta_title_user_albums",
+                    "description" => "photo+meta_desc_user_albums",
+                    "keywords" => "photo+meta_keywords_user_albums"
+                ),
+                "vars" => array("user_name", "user_gender", "user_age", "user_location", "site_name")
+            ),
+            array(
+                "entityKey" => "userAlbum",
+                "entityLabel" => $language->text("photo", "seo_meta_user_album_label"),
+                "iconClass" => "ow_ic_picture",
+                "langs" => array(
+                    "title" => "photo+meta_title_user_album",
+                    "description" => "photo+meta_desc_user_album",
+                    "keywords" => "photo+meta_keywords_user_album"
+                ),
+                "vars" => array("user_name", "user_gender", "user_age", "user_location", "site_name", "album_name")
+            ),
+            array(
+                "entityKey" => "userPhotos",
+                "entityLabel" => $language->text("photo", "seo_meta_user_photos_label"),
+                "iconClass" => "ow_ic_picture",
+                "langs" => array(
+                    "title" => "photo+meta_title_user_photos",
+                    "description" => "photo+meta_desc_user_photos",
+                    "keywords" => "photo+meta_keywords_user_photos"
+                ),
+                "vars" => array("user_name", "user_gender", "user_age", "user_location", "site_name")
+            ),
+            array(
+                "entityKey" => "photoView",
+                "entityLabel" => $language->text("photo", "seo_meta_photo_view_label"),
+                "iconClass" => "ow_ic_picture",
+                "langs" => array(
+                    "title" => "photo+meta_title_photo_view",
+                    "description" => "photo+meta_desc_photo_view",
+                    "keywords" => "photo+meta_keywords_photo_view"
+                ),
+                "vars" => array("photo_id", "user_name", "site_name")
+            )
+        );
+
+
+        foreach ($items as &$item)
+        {
+            $item["sectionLabel"] = $language->text("photo", "seo_meta_section");
+            $item["sectionKey"] = "photo";
+            $e->add($item);
+        }
+    }
+
     public function init()
     {
         $this->genericInit();
@@ -2227,6 +2309,7 @@ class PHOTO_CLASS_EventHandler
         $em->bind('base.avatar_change_collect_sections', array($this, 'collectAlbumsForAvatar'));
         $em->bind('base.avatar_change_get_section', array($this, 'collectAlbumPhotosForAvatar'));
         $em->bind('base.avatar_change_get_item', array($this, 'getPhotoForAvatar'));
+        $em->bind("base.collect_seo_meta_data", array($this, 'onCollectMetaData'));
     }
 
     public function genericInit()

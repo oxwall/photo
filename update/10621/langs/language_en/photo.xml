@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<prefix name="photo" label="Photo" language_tag="en" language_label="English">
+    <key name="seo_meta_section"><value>Photo</value></key>
+    <key name="seo_meta_tagged_list_label"><value>All Tagged Photos Page</value></key>
+    <key name="meta_title_tagged_list"><value>{$tag} photos | {$site_name}</value></key>
+    <key name="meta_desc_tagged_list"><value>The list of all photos tagged "{$tag}" at {$site_name}.</value></key>
+    <key name="meta_keywords_tagged_list"><value></value></key>
+    <key name="seo_meta_photo_list_label"><value>Photos by List Type (Latest / Top Rated / Most Discussed) Page</value></key>
+    <key name="meta_title_photo_list"><value>{$list_type} photos | {$site_name}</value></key>
+    <key name="meta_desc_photo_list"><value>All {$list_type} photos at {$site_name}</value></key>
+    <key name="meta_keywords_photo_list"><value></value></key>
+    <key name="list_type_label_featured"><value>Featured</value></key>
+    <key name="list_type_label_latest"><value>Latest</value></key>
+    <key name="list_type_label_toprated"><value>Top rated</value></key>
+    <key name="list_type_label_tagged"><value>Tagged</value></key>
+    <key name="list_type_label_most_discussed"><value>Most discussed</value></key>
+    <key name="seo_meta_user_albums_label"><value>Individual Member's Photo Albums Page</value></key>
+    <key name="meta_title_user_albums"><value>Photo albums by {$user_name}, {$user_age} | {$site_name}</value></key>
+    <key name="meta_desc_user_albums"><value>View all photo albums uploaded by {$user_name}, {$user_age} on {$site_name}.</value></key>
+    <key name="meta_keywords_user_albums"><value></value></key>
+    <key name="seo_meta_user_album_label"><value>Individual Member's Specific Photo Album Page</value></key>
+    <key name="meta_title_user_album"><value>"{$album_name}" photo album by {$user_name}, {$user_age} | {$site_name}</value></key>
+    <key name="meta_desc_user_album"><value>View all photos in "{$album_name}" uploaded by {$user_name}, {$user_age} on {$site_name}.</value></key>
+    <key name="meta_keywords_user_album"><value></value></key>
+    <key name="seo_meta_user_photos_label"><value>Individual Member's Specific Photo Album Page</value></key>
+    <key name="meta_title_user_photos"><value>All photos by {$user_name}, {$user_age} | {$site_name}</value></key>
+    <key name="meta_desc_user_photos"><value>View all photos uploaded by {$user_name}, {$user_age} on {$site_name}.</value></key>
+    <key name="meta_keywords_user_photos"><value></value></key>
+    <key name="seo_meta_photo_view_label"><value>Specific Photo Page</value></key>
+    <key name="meta_title_photo_view"><value>View "{$photo_id}" photo by {$user_name} | {$site_name}</value></key>
+    <key name="meta_desc_photo_view"><value>View photo "{$photo_id}" uploaded by {$user_name} on {$site_name}.</value></key>
+    <key name="meta_keywords_photo_view"><value></value></key>
+</prefix>
