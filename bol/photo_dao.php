@@ -374,6 +374,42 @@ class PHOTO_BOL_PhotoDao extends OW_BaseDao
         return $this->dbo->queryForList($query, array_merge($params, $condition['params']));
     }
 
+    /**
+     * Find latest public photos authors ids
+     *
+     * @param integer $first
+     * @param integer $count
+     * @return array
+     */
+    public function findLatestPublicPhotosAuthorsIds($first, $count)
+    {
+        $sql = 'SELECT
+                `a`.`userId`
+            FROM
+                `' . $this->getTableName() . '` AS `p`
+            INNER JOIN
+                `' . PHOTO_BOL_PhotoAlbumDao::getInstance()->getTableName() . '` AS `a`
+            ON
+                `p`.`albumId` = `a`.`id`
+            WHERE
+                `p`.`status` = :status
+                    AND
+                `p`.`privacy` = :privacy
+            GROUP BY
+                `a`.`userId`
+            ORDER BY
+                `p`.`addDatetime` DESC
+            LIMIT
+                :f, :c';
+
+        return $this->dbo->queryForColumnList($sql, array(
+            'status' => self::STATUS_APPROVED,
+            'privacy' => self::PRIVACY_EVERYBODY,
+            'f' => (int) $first,
+            'c' => (int) $count
+        ));
+    }
+
     public function findAlbumPhotoList( $albumId, $listType, $offset, $limit, $privacy = null )
     {
         $condition = PHOTO_BOL_PhotoService::getInstance()->getQueryCondition(sprintf('findAlbumPhotoList.%s', $listType),

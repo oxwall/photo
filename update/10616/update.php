@@ -28,12 +28,18 @@
  * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-OW::getNavigation()->deleteMenuItem('photo', 'photo');
-OW::getNavigation()->deleteMenuItem('photo', 'mobile_photo');
 
-BOL_ComponentAdminService::getInstance()->deleteWidget('PHOTO_CMP_PhotoListWidget');
-BOL_ComponentAdminService::getInstance()->deleteWidget('PHOTO_CMP_UserPhotoAlbumsWidget');
-BOL_ComponentAdminService::getInstance()->deleteWidget('PHOTO_MCMP_PhotoListWidget');
+// register sitemap entities
+Updater::getSeoService()->addSitemapEntity('photo', 'photo_sitemap', 'photos', array(
+    'photo_list',
+    'photos',
+    'photos_latest',
+    'photos_toprated',
+    'photos_most_discussed',
+    'photo_albums',
+    'photo_tags',
+    'photo_user_albums',
+    'photo_users'
+));
 
-// remove from sitemap
-BOL_SeoService::getInstance()->removeSitemapEntity('photos');
+Updater::getLanguageService()->importPrefixFromZip(__DIR__ . DS . 'langs.zip', 'photo');
