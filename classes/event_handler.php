@@ -977,7 +977,31 @@ class PHOTO_CLASS_EventHandler
             OW::getEventManager()->trigger($event);
         }
     }
-    
+
+    public function photoContentFilter( BASE_CLASS_QueryBuilderEvent $event )
+    {
+        $params = $event->getParams();
+        if ($params['type'] == 'photo_comments' || $params['type'] == 'photo_rates')
+        {
+            if ($params['type'] == 'photo_rates')
+            {
+                $params['listType'] = 'toprated';
+                $aliases = array('alias' => 'r');
+            }
+            elseif ($params['type'] == 'photo_comments')
+            {
+                $params['listType'] = 'most_discussed';
+                $aliases = array('alias' => 'ce');
+            }
+
+            $join = 'INNER JOIN `' . PHOTO_BOL_PhotoDao::getInstance()->getTableName() . '` AS `p` ON (`'. $aliases['alias'] .'`.`entityId` = `p`.`id`)
+            INNER JOIN `' . PHOTO_BOL_PhotoAlbumDao::getInstance()->getTableName() . '` AS `a` ON (`p`.`albumId` = `a`.`id`)';
+
+            $event->addJoin($join);
+            $event->addWhere('`p`.`status` = \'approved\'');
+        }
+    }
+
     public function feedBeforeStatusUpdate( OW_Event $e )
     {
         $params = $e->getParams();
@@ -2111,6 +2135,7 @@ class PHOTO_CLASS_EventHandler
         $em->bind('plugin.privacy.on_change_action_privacy', array($this, 'onChangePrivacy'));
         $em->bind('notifications.collect_actions', array($this, 'collectNotificationActions'));
         $em->bind('base_add_comment', array($this, 'notifyOnNewComment'));
+        $em->bind('base.query.content_filter', array($this, 'photoContentFilter'));
         $em->bind('feed.on_entity_action', array($this, 'feedOnEntityAction'));
         $em->bind('feed.collect_configurable_activity', array($this, 'feedCollectConfigurableActivity'));
         $em->bind('feed.collect_privacy', array($this, 'feedCollectPrivacy'));
