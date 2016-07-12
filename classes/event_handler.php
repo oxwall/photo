@@ -994,11 +994,11 @@ class PHOTO_CLASS_EventHandler
                 $aliases = array('alias' => 'ce');
             }
 
-            $join = 'INNER JOIN `' . PHOTO_BOL_PhotoDao::getInstance()->getTableName() . '` AS `p` ON (`'. $aliases['alias'] .'`.`entityId` = `p`.`id`)
-            INNER JOIN `' . PHOTO_BOL_PhotoAlbumDao::getInstance()->getTableName() . '` AS `a` ON (`p`.`albumId` = `a`.`id`)';
+            $join = 'INNER JOIN `' . PHOTO_BOL_PhotoDao::getInstance()->getTableName() . '` AS `ph` ON (`'. $aliases['alias'] .'`.`entityId` = `ph`.`id`)
+            INNER JOIN `' . PHOTO_BOL_PhotoAlbumDao::getInstance()->getTableName() . '` AS `a` ON (`ph`.`albumId` = `a`.`id`)';
 
             $event->addJoin($join);
-            $event->addWhere('`p`.`status` = \'approved\'');
+            $event->addWhere('`ph`.`status` = \'approved\'');
         }
     }
 
