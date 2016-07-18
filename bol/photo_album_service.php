@@ -65,6 +65,18 @@ final class PHOTO_BOL_PhotoAlbumService
     }
 
     /**
+     * Find last albums ids
+     *
+     * @param int $offset
+     * @param int $limit
+     * @return array
+     */
+    public function findLastAlbumsIds( $offset, $limit )
+    {
+        return $this->photoAlbumDao->findLastAlbumsIds($offset, $limit);
+    }
+
+    /**
      * Returns class instance
      *
      * @return PHOTO_BOL_PhotoAlbumService
@@ -93,6 +105,18 @@ final class PHOTO_BOL_PhotoAlbumService
     public function countAlbums()
     {
         return $this->photoAlbumDao->countAll();
+    }
+
+    /**
+     * Find latest albums authors ids
+     *
+     * @param integer $first
+     * @param integer $count
+     * @return array
+     */
+    public function findLatestAlbumsAuthorsIds($first, $count)
+    {
+        return $this->photoAlbumDao->findLatestAlbumsAuthorsIds($first, $count);
     }
 
     /**

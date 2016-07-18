@@ -2087,6 +2087,237 @@ class PHOTO_CLASS_EventHandler
         return $event->getData();
     }
 
+
+    /**
+     * Get sitemap urls
+     *
+     * @param OW_Event $event
+     * @return void
+     */
+    public function onSitemapGetUrls( OW_Event $event )
+    {
+        $params = $event->getParams();
+
+        if ( BOL_AuthorizationService::getInstance()->isActionAuthorizedForGuest('photo', 'view') )
+        {
+            $offset = (int) $params['offset'];
+            $limit  = (int) $params['limit'];
+            $urls   = array();
+
+            switch ( $params['entity'] )
+            {
+                case 'photo_users' :
+                    $usersIds  = PHOTO_BOL_PhotoService::getInstance()->findLatestPublicPhotosAuthorsIds($offset, $limit);
+                    $userNames = BOL_UserService::getInstance()->getUserNamesForList($usersIds);
+
+                    // skip deleted users
+                    foreach ( array_filter($userNames) as $userName )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('photo.user_photos', array(
+                            'user' => $userName
+                        ));
+                    }
+                    break;
+
+                case 'photo_user_albums' :
+                    $usersIds  = PHOTO_BOL_PhotoAlbumService::getInstance()->findLatestAlbumsAuthorsIds($offset, $limit);
+                    $userNames = BOL_UserService::getInstance()->getUserNamesForList($usersIds);
+
+                    // skip deleted users
+                    foreach ( array_filter($userNames) as $userName )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('photo_user_albums', array(
+                            'user' => $userName
+                        ));
+                    }
+
+                    break;
+
+                case 'photo_tags' :
+                    $tags = BOL_TagService::getInstance()->findMostPopularTags('photo', $limit, $offset);
+
+                    foreach ( $tags as $tag )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('view_tagged_photo_list', array(
+                            'tag' => $tag['label']
+                        ));
+                    }
+                    break;
+
+                case 'photos_latest' :
+                    $photos  = PHOTO_BOL_PhotoService::getInstance()->findLastPublicPhotos($offset, $limit);
+
+                    foreach ( $photos as $photo )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('view_photo_type', array(
+                            'id' => $photo['id'],
+                            'listType' => 'latest'
+                        ));
+                    }
+                    break;
+
+                case 'photos_toprated' :
+                    $photos  = PHOTO_BOL_PhotoService::getInstance()->findLastPublicPhotos($offset, $limit);
+
+                    foreach ( $photos as $photo )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('view_photo_type', array(
+                            'id' => $photo['id'],
+                            'listType' => 'toprated'
+                        ));
+                    }
+                    break;
+
+                case 'photos_most_discussed' :
+                    $photos  = PHOTO_BOL_PhotoService::getInstance()->findLastPublicPhotos($offset, $limit);
+
+                    foreach ( $photos as $photo )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('view_photo_type', array(
+                            'id' => $photo['id'],
+                            'listType' => 'most_discussed'
+                        ));
+                    }
+                    break;
+
+                case 'photos' :
+                    $photos  = PHOTO_BOL_PhotoService::getInstance()->findLastPublicPhotos($offset, $limit);
+
+                    foreach ( $photos as $photo )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('view_photo', array(
+                            'id' => $photo['id']
+                        ));
+                    }
+                    break;
+
+                case 'photo_albums' :
+                    $albums = PHOTO_BOL_PhotoAlbumService::getInstance()->findLastAlbumsIds($offset, $limit);
+
+                    foreach ( $albums as $albumId )
+                    {
+                        $album = PHOTO_BOL_PhotoAlbumService::getInstance()->findAlbumById($albumId);
+                        $userName = BOL_UserService::getInstance()->getUsername($album->userId);
+
+                        // skip deleted users
+                        if ( !$userName )
+                        {
+                            continue;
+                        }
+
+                        $urls[] = OW::getRouter()->urlForRoute('photo_user_album', array(
+                            'user' => $userName,
+                            'album' => $album->id
+                        ));
+                    }
+                    break;
+
+                case 'photo_list' :
+                    $urls[] = OW::getRouter()->urlForRoute('view_photo_list', array(
+                        'listType' => 'latest'
+                    ));
+
+                    $urls[] = OW::getRouter()->urlForRoute('view_photo_list', array(
+                        'listType' => 'toprated'
+                    ));
+
+                    $urls[] = OW::getRouter()->urlForRoute('view_photo_list', array(
+                        'listType' => 'most_discussed'
+                    ));
+
+                    $urls[] = OW::getRouter()->urlForRoute('view_tagged_photo_list_st');
+                    break;
+            }
+
+            if ( $urls )
+            {
+                $event->setData($urls);
+            }
+        }
+    }
+
+    public function onCollectMetaData( BASE_CLASS_EventCollector $e )
+    {
+        $language = OW::getLanguage();
+
+        $items = array(
+            array(
+                "entityKey" => "taggedList",
+                "entityLabel" => $language->text("photo", "seo_meta_tagged_list_label"),
+                "iconClass" => "ow_ic_tag",
+                "langs" => array(
+                    "title" => "photo+meta_title_tagged_list",
+                    "description" => "photo+meta_desc_tagged_list",
+                    "keywords" => "photo+meta_keywords_tagged_list"
+                ),
+                "vars" => array("site_name")
+            ),
+            array(
+                "entityKey" => "photoList",
+                "entityLabel" => $language->text("photo", "seo_meta_photo_list_label"),
+                "iconClass" => "ow_ic_picture",
+                "langs" => array(
+                    "title" => "photo+meta_title_photo_list",
+                    "description" => "photo+meta_desc_photo_list",
+                    "keywords" => "photo+meta_keywords_photo_list"
+                ),
+                "vars" => array("site_name", "list_type")
+            ),
+            array(
+                "entityKey" => "userAlbums",
+                "entityLabel" => $language->text("photo", "seo_meta_user_albums_label"),
+                "iconClass" => "ow_ic_picture",
+                "langs" => array(
+                    "title" => "photo+meta_title_user_albums",
+                    "description" => "photo+meta_desc_user_albums",
+                    "keywords" => "photo+meta_keywords_user_albums"
+                ),
+                "vars" => array("user_name", "user_gender", "user_age", "user_location", "site_name")
+            ),
+            array(
+                "entityKey" => "userAlbum",
+                "entityLabel" => $language->text("photo", "seo_meta_user_album_label"),
+                "iconClass" => "ow_ic_picture",
+                "langs" => array(
+                    "title" => "photo+meta_title_user_album",
+                    "description" => "photo+meta_desc_user_album",
+                    "keywords" => "photo+meta_keywords_user_album"
+                ),
+                "vars" => array("user_name", "user_gender", "user_age", "user_location", "site_name", "album_name")
+            ),
+            array(
+                "entityKey" => "userPhotos",
+                "entityLabel" => $language->text("photo", "seo_meta_user_photos_label"),
+                "iconClass" => "ow_ic_picture",
+                "langs" => array(
+                    "title" => "photo+meta_title_user_photos",
+                    "description" => "photo+meta_desc_user_photos",
+                    "keywords" => "photo+meta_keywords_user_photos"
+                ),
+                "vars" => array("user_name", "user_gender", "user_age", "user_location", "site_name")
+            ),
+            array(
+                "entityKey" => "photoView",
+                "entityLabel" => $language->text("photo", "seo_meta_photo_view_label"),
+                "iconClass" => "ow_ic_picture",
+                "langs" => array(
+                    "title" => "photo+meta_title_photo_view",
+                    "description" => "photo+meta_desc_photo_view",
+                    "keywords" => "photo+meta_keywords_photo_view"
+                ),
+                "vars" => array("photo_id", "user_name", "site_name")
+            )
+        );
+
+
+        foreach ($items as &$item)
+        {
+            $item["sectionLabel"] = $language->text("photo", "seo_meta_section");
+            $item["sectionKey"] = "photo";
+            $e->add($item);
+        }
+    }
+
     public function init()
     {
         $this->genericInit();
@@ -2102,6 +2333,7 @@ class PHOTO_CLASS_EventHandler
         $em->bind('base.avatar_change_collect_sections', array($this, 'collectAlbumsForAvatar'));
         $em->bind('base.avatar_change_get_section', array($this, 'collectAlbumPhotosForAvatar'));
         $em->bind('base.avatar_change_get_item', array($this, 'getPhotoForAvatar'));
+        $em->bind("base.collect_seo_meta_data", array($this, 'onCollectMetaData'));
     }
 
     public function genericInit()
@@ -2164,6 +2396,7 @@ class PHOTO_CLASS_EventHandler
 
         $em->bind(self::EVENT_GET_ALBUM_COVER_URL, array($this, 'getAlbumCoverUrl'));
         $em->bind(self::EVENT_GET_ALBUM_NAMES, array($this, 'getAlbumNames'));
+        $em->bind("base.sitemap.get_urls", array($this, 'onSitemapGetUrls'));
 
         PHOTO_CLASS_ContentProvider::getInstance()->init();
     }

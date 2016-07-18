@@ -385,7 +385,42 @@ class PHOTO_BOL_PhotoAlbumDao extends OW_BaseDao
 
         return $this->findListByExample($example);
     }
-    
+
+    /**
+     * Find last albums ids
+     *
+     * @param int $offset
+     * @param int $limit
+     * @return array
+     */
+    public function findLastAlbumsIds( $offset, $limit )
+    {
+        $example = new OW_Example();
+        $example->setOrder('createDatetime DESC');
+        $example->setLimitClause((int) $offset, (int) $limit);
+
+        return $this->findIdListByExample($example);
+    }
+
+    /**
+     * Find latest albums authors ids
+     *
+     * @param integer $first
+     * @param integer $count
+     * @return array
+     */
+    public function findLatestAlbumsAuthorsIds($first, $count)
+    {
+        $sql = 'SELECT `' . self::USER_ID . '`
+            FROM `' . $this->getTableName() . '`
+            GROUP BY `' . self::USER_ID . '` ORDER BY `createDatetime` DESC LIMIT :f, :c';
+
+        return $this->dbo->queryForColumnList($sql, array(
+            'f' => (int) $first,
+            'c' => (int) $count
+        ));
+    }
+
     /**
      * Get albums to be deleted
      *

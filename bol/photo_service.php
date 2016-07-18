@@ -116,6 +116,18 @@ final class PHOTO_BOL_PhotoService
     }
 
     /**
+     * Find latest public photos authors ids
+     *
+     * @param integer $first
+     * @param integer $count
+     * @return array
+     */
+    public function findLatestPublicPhotosAuthorsIds($first, $count)
+    {
+        return $this->photoDao->findLatestPublicPhotosAuthorsIds($first, $count);
+    }
+
+    /**
      * Adds photo
      *
      * @param PHOTO_BOL_Photo $photo
@@ -253,6 +265,18 @@ final class PHOTO_BOL_PhotoService
         }
 
         return $photos;
+    }
+
+    /**
+     * Find last public photos
+     *
+     * @param integer $offset
+     * @param integer $limit
+     * @return array
+     */
+    public function findLastPublicPhotos($offset, $limit)
+    {
+        return $this->photoDao->getPhotoList('latest', $offset, $limit, null, false);
     }
 
     public function findAlbumPhotoList( $albumId, $listType, $offset, $limit, $privacy = null )
