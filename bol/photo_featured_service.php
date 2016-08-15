@@ -100,9 +100,9 @@ final class PHOTO_BOL_PhotoFeaturedService
             PHOTO_BOL_PhotoService::getInstance()->cleanListCache();
         }
 
-        $event = new OW_Event(PHOTO_CLASS_EventHandler::EVENT_ON_PHOTO_EDIT, array('photoId' => $photoId));
+        $event = new OW_Event(PHOTO_CLASS_EventHandler::EVENT_ON_PHOTO_EDIT, array('id' => $photoId));
         OW::getEventManager()->trigger($event);
-        
+
         return $marked;
     }
 
@@ -121,9 +121,9 @@ final class PHOTO_BOL_PhotoFeaturedService
             PHOTO_BOL_PhotoService::getInstance()->cleanListCache();
         }
 
-        $event = new OW_Event(PHOTO_CLASS_EventHandler::EVENT_ON_PHOTO_EDIT, array('photoId' => $photoId));
+        $event = new OW_Event(PHOTO_CLASS_EventHandler::EVENT_ON_PHOTO_EDIT, array('id' => $photoId));
         OW::getEventManager()->trigger($event);
-        
+
         return $marked;
     }
 }
