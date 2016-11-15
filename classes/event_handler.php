@@ -771,8 +771,8 @@ class PHOTO_CLASS_EventHandler
         );
         
         $document->addOnloadScript(';window.photoView.init();');
-        
-        $cmp = new PHOTO_CMP_PhotoFloatbox($layout, $photoViewStatus);
+
+        $cmp = OW::getClassInstance('PHOTO_CMP_PhotoFloatbox', $layout, $photoViewStatus);
         $document->appendBody($cmp->render());
         
         $isInitialized = TRUE;
