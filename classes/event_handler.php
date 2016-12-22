@@ -1050,7 +1050,19 @@ class PHOTO_CLASS_EventHandler
                 $photo = PHOTO_BOL_PhotoTemporaryService::getInstance()->moveTemporaryPhoto($tmpId, $album->id, $desc);
                 PHOTO_BOL_PhotoTemporaryService::getInstance()->deleteTemporaryPhoto($tmpId);
                 
-                BOL_AuthorizationService::getInstance()->trackAction('photo', 'upload', NULL, array('checkInterval' => FALSE));
+                if( OW::getPluginManager()->isPluginActive('moderation') )
+                {
+                    $config = json_decode(OW::getConfig()->getValue('moderation', 'content_types'), true);
+
+                    if( !isset($config['photo_comments']) || $config['photo_comments'] == false )
+                    {
+                        BOL_AuthorizationService::getInstance()->trackAction('photo', 'upload', NULL, array('checkInterval' => FALSE));
+                    }
+                }
+                else
+                {
+                    BOL_AuthorizationService::getInstance()->trackAction('photo', 'upload', NULL, array('checkInterval' => FALSE));
+                }
                 
                 $this->photoService->createAlbumCover($album->id, array($photo));
 
