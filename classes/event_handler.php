@@ -1050,7 +1050,25 @@ class PHOTO_CLASS_EventHandler
                 $photo = PHOTO_BOL_PhotoTemporaryService::getInstance()->moveTemporaryPhoto($tmpId, $album->id, $desc);
                 PHOTO_BOL_PhotoTemporaryService::getInstance()->deleteTemporaryPhoto($tmpId);
                 
-                BOL_AuthorizationService::getInstance()->trackAction('photo', 'upload', NULL, array('checkInterval' => FALSE));
+                $movedArray = array();
+                $movedArray[] = array(
+                    'entityType' => 'user',
+                    'entityId' => OW::getUser()->getId(),
+                    'addTimestamp' => $photo->addDatetime,
+                    'photoId' => $photo->id,
+                    'hash' => $photo->hash,
+                    'description' => $photo->description
+                );
+
+                $event = new OW_Event(self::EVENT_ON_PHOTO_ADD, $movedArray);
+                OW::getEventManager()->trigger($event);
+
+                $newPhoto = PHOTO_BOL_PhotoDao::getInstance()->findById($photo->id);
+
+                if ( $newPhoto->status == PHOTO_BOL_PhotoDao::STATUS_APPROVED )
+                {
+                    BOL_AuthorizationService::getInstance()->trackAction('photo', 'upload', array('checkInterval' => false));
+                }
                 
                 $this->photoService->createAlbumCover($album->id, array($photo));
 
