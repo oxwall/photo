@@ -134,6 +134,9 @@ class PHOTO_CTRL_AjaxUpload extends OW_ActionController
         
         $userId = OW::getUser()->getId();
         $photoTmpService = PHOTO_BOL_PhotoTemporaryService::getInstance();
+
+        $_POST['album'] = htmlspecialchars_decode( $_POST['album'] );
+        $_POST['album-name'] = htmlspecialchars_decode( $_POST['album-name'] );
         
         if ( (!strlen($albumName = htmlspecialchars(trim($_POST['album']))) || !strlen($albumName = htmlspecialchars(trim($_POST['album-name'])))) || count($tmpList = $photoTmpService->findUserTemporaryPhotos($userId, 'order')) === 0 )
         {
