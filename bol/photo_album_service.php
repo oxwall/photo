@@ -99,7 +99,11 @@ final class PHOTO_BOL_PhotoAlbumService
      */
     public function findAlbumById( $id )
     {
-        return $this->photoAlbumDao->findById($id);
+        $album = $this->photoAlbumDao->findById($id);
+
+        $album->name = htmlspecialchars_decode($album->name);
+
+        return $album;
     }
     
     public function countAlbums()
