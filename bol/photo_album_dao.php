@@ -489,7 +489,7 @@ class PHOTO_BOL_PhotoAlbumDao extends OW_BaseDao
         
         foreach ( $rows as $row )
         {
-            $result[$row['id']] = $row[self::NAME];
+            $result[$row['id']] = htmlspecialchars_decode($row[self::NAME]);
         }
 
         return $result;
