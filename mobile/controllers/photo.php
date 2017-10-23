@@ -54,6 +54,181 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
         $this->photoAlbumService = PHOTO_BOL_PhotoAlbumService::getInstance();
     }
 
+    /**
+     * Delete album
+     *
+     * @param array $params
+     */
+    public function deleteAlbum($params)
+    {
+        $lang = OW::getLanguage();
+        $albumId = $params['id'];
+        $album = $this->photoAlbumService->findAlbumById($albumId);
+
+        if ( $album && OW::getRequest()->isPost() )
+        {
+            if ( strcasecmp($album->name, OW::getLanguage()->text('photo', 'newsfeed_album')) === 0 )
+            {
+                $url = OW_Router::getInstance()->urlForRoute(
+                    'photo_user_album',
+                    array('user' => BOL_UserService::getInstance()->getUserName($album->userId), 'album' => $album->id)
+                );
+
+
+                OW::getFeedback()->error($lang->text('photo', 'delete_newsfeed_album_error'));
+                $this->redirect($url);
+            }
+
+            $canEdit = $album->userId == OW::getUser()->getId();
+            $canModerate = OW::getUser()->isAuthorized('photo');
+
+            $authorized = $canEdit || $canModerate;
+
+            if ( $authorized )
+            {
+                $delResult = $this->photoAlbumService->deleteAlbum($albumId);
+
+                if ( $delResult )
+                {
+                    $url = OW_Router::getInstance()->urlForRoute(
+                        'photo_user_albums',
+                        array('user' => BOL_UserService::getInstance()->getUserName($album->userId))
+                    );
+
+                    OW::getFeedback()->info($lang->text('photo', 'album_deleted'));
+                    $this->redirect($url);
+                }
+                else
+                {
+                    $url = OW_Router::getInstance()->urlForRoute(
+                        'photo_user_album',
+                        array('user' => BOL_UserService::getInstance()->getUserName($album->userId), 'album' => $album->id)
+                    );
+
+                    OW::getFeedback()->error($lang->text('photo', 'album_delete_not_allowed'));
+                    $this->redirect($url);
+                }
+            }
+            else
+            {
+                $url = OW_Router::getInstance()->urlForRoute(
+                    'photo_user_album',
+                    array('user' => BOL_UserService::getInstance()->getUserName($album->userId), 'album' => $album->id)
+                );
+
+                OW::getFeedback()->error($lang->text('photo', 'album_delete_not_allowed'));
+                $this->redirect($url);
+            }
+        }
+
+        OW::getFeedback()->error($lang->text('photo', 'album_delete_not_allowed'));
+        $this->redirect(OW::getRouter()->urlForRoute('base_index'));
+    }
+
+    /**
+     * Create album
+     */
+    public function createAlbum()
+    {
+        if ( !OW::getUser()->isAuthenticated() )
+        {
+            throw new AuthorizationException();
+        }
+
+        if ( !OW::getUser()->isAdmin() && !OW::getUser()->isAuthorized('photo', 'upload') )
+        {
+            $status = BOL_AuthorizationService::getInstance()->getActionStatus('photo', 'upload');
+            throw new AuthorizationException($status['msg']);
+        }
+
+        $lang = OW::getLanguage();
+        $config = OW::getConfig();
+        $userQuota = (int) $config->getValue('photo', 'user_quota');
+        $userId = OW::getUser()->getId();
+        $displayName = BOL_UserService::getInstance()->getDisplayName($userId);
+        $user = BOL_UserService::getInstance()->findUserById($userId);
+
+        if ( !($this->photoService->countUserPhotos($userId) <= $userQuota) )
+        {
+            $this->assign('auth_msg', $lang->text('photo', 'quota_exceeded', array('limit' => $userQuota)));
+        }
+        else {
+            // init form
+            $form = new PHOTO_MCLASS_AlbumAddForm();
+            $this->addForm($form);
+
+            // validate form
+            if ( OW::getRequest()->isPost() && $form->isValid($_POST + $_FILES) )
+            {
+                $file = $_FILES['photo'];
+
+                // delete old tmp file
+                PHOTO_BOL_PhotoTemporaryService::getInstance()->deleteUserTemporaryPhotos($userId);
+                $accepted = floatval($config->getValue('photo', 'accepted_filesize') * 1024 * 1024);
+
+                // validate photo
+                if ( !UTIL_File::validateImage($file['name']) || $file['size'] > $accepted )
+                {
+                    OW::getFeedback()->warning($lang->text('photo', 'no_photo_uploaded'));
+                    $this->redirect();
+                }
+
+                $photo = $form->process($userId, $file);
+
+                if ( !$photo )
+                {
+                    OW::getFeedback()->warning($lang->text('photo', 'no_photo_uploaded'));
+                    $this->redirect();
+                }
+
+                if ( $photo->status != PHOTO_BOL_PhotoDao::STATUS_APPROVED )
+                {
+                    OW::getFeedback()->info(OW::getLanguage()->text('photo', 'photo_uploaded_pending_approval'));
+
+                    $this->redirect(OW::getRouter()->urlForRoute('photo_user_albums', array(
+                        'user' => $user->getUsername()
+                    )));
+                }
+
+                OW::getFeedback()->info($lang->text('photo', 'photos_uploaded', array('count' => 1)));
+
+                $this->redirect(OW::getRouter()->urlForRoute('photo_user_albums', array(
+                    'user' => $user->getUsername()
+                )));
+
+                return;
+            }
+
+            $script = '$("#upload-file-field").change(function(){
+                var img = $("#photo-file-prevew");
+                var name = $(".owm_upload_img_name_label span");
+
+                img.hide();
+                name.text("");
+
+                if (!this.files || !this.files[0]) return;
+
+                if ( window.FileReader ) {
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        img.show().attr("src", e.target.result);
+                    }
+                    reader.readAsDataURL(this.files[0]);
+                } else {
+                    name.text(this.files[0].name);
+                }
+                $(".owm_upload_photo_browse_wrap").addClass("owm_upload_photo_attach_wrap");
+            });';
+            OW::getDocument()->addOnloadScript($script);
+        }
+
+        OW::getDocument()->setHeading($lang->text('photo', 'create_album'));
+        OW::getDocument()->setTitle($lang->text('photo', 'meta_title_photo_useralbums', array('displayName' => $displayName)));
+
+        // init view vars
+        $this->assign('userName' , $user->getUsername());
+    }
+
     public function viewList($params)
     {
         // is moderator
@@ -176,29 +351,6 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
         $total = $this->photoAlbumService->countUserAlbums($user->id);
         $this->assign('loadMore', $total > $limit);
 
-        if ( OW::getUser()->isAuthenticated() && !OW::getUser()->isAuthorized('photo', 'upload') )
-        {
-            $id = uniqid('photo_add');
-            $status = BOL_AuthorizationService::getInstance()->getActionStatus('photo', 'upload');
-
-            OW::getDocument()->addScriptDeclaration(UTIL_JsGenerator::composeJsString(
-                ';$("#" + {$btn}).on("click", function()
-                {
-                    OWM.authorizationLimitedFloatbox({$msg});
-                });',
-                array(
-                    'btn' => $id,
-                    'msg' => $status['msg']
-                )
-            ));
-
-            $this->assign('id', $id);
-        }
-        else
-        {
-            $this->assign('uploadUrl', OW::getRouter()->urlForRoute('photo_upload'));
-        }
-
         $script = '
         OWM.bind("photo.hide_load_more", function(){
             $("#btn-photo-load-more").hide();
@@ -222,9 +374,70 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
 
         OW::getDocument()->addOnloadScript($script);
 
+        // add page info
         $displayName = BOL_UserService::getInstance()->getDisplayName($user->id);
-        OW::getDocument()->setHeading($lang->text('photo', 'page_title_user_albums', array('user' => $displayName)));
+        OW::getDocument()->setHeading($ownerMode ? $lang->text('photo', 'my_albums') : $lang->text('photo', 'photo_albums'));
         OW::getDocument()->setTitle($lang->text('photo', 'meta_title_photo_useralbums', array('displayName' => $displayName)));
+        $this->assign('displayName', $displayName);
+
+        //--  add context menu --//
+        if ( $ownerMode ) {
+            $uploadItemId = uniqid('photo_add');
+            $isUploadPhotoAllowed = true;
+
+            if (!OW::getUser()->isAuthorized('photo', 'upload')) {
+                $status = BOL_AuthorizationService::getInstance()->getActionStatus('photo', 'upload');
+                $isPromoted = !empty($status['status'])
+                    && $status['status'] == BOL_AuthorizationService::STATUS_PROMOTED;
+
+                if (!$isPromoted) {
+                    $isUploadPhotoAllowed = false;
+                } else {
+                    OW::getDocument()->addScriptDeclaration(UTIL_JsGenerator::composeJsString(
+                        ';$("#" + {$btn}).on("click", function(e)
+                    {
+                        e.preventDefault();
+                        OWM.authorizationLimitedFloatbox({$msg});
+                    });',
+                        array(
+                            'btn' => $uploadItemId,
+                            'msg' => $status['msg']
+                        )
+                    ));
+                }
+            }
+
+            if ( $isUploadPhotoAllowed )
+            {
+                $contextMenu = [];
+
+                $contextMenu[] = array(
+                    'group' => 'photo',
+                    'label' => OW::getLanguage()->text('photo', 'upload_photos'),
+                    'order' => 1,
+                    'class' => null,
+                    'href' => OW::getRouter()->urlForRoute('photo_upload'),
+                    'id' => $uploadItemId
+                );
+
+
+                $contextMenu[] = array(
+                    'group' => 'photo',
+                    'label' => OW::getLanguage()->text('photo', 'create_album'),
+                    'order' => 2,
+                    'class' => null,
+                    'href' => OW::getRouter()->urlForRoute('photo_user_create_album')
+                );
+
+                $this->addComponent('contextMenu', new BASE_MCMP_ContextAction($contextMenu));
+            }
+        }
+
+        //--
+
+        $this->assign('username', $user->getUsername());
+        $this->assign('totalAlbums', $total);
+        $this->assign('isOwner', $ownerMode);
     }
 
     public function album( array $params )
@@ -286,28 +499,6 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
 
         $total = $this->photoAlbumService->countAlbumPhotos($albumId);
         $this->assign('loadMore', $total > $limit);
-        if ( OW::getUser()->isAuthenticated() && !OW::getUser()->isAuthorized('photo', 'upload') )
-        {
-            $id = uniqid('photo_add');
-            $status = BOL_AuthorizationService::getInstance()->getActionStatus('photo', 'upload');
-
-            OW::getDocument()->addScriptDeclaration(UTIL_JsGenerator::composeJsString(
-                ';$("#" + {$btn}).on("click", function()
-                {
-                    OWM.authorizationLimitedFloatbox({$msg});
-                });',
-                array(
-                    'btn' => $id,
-                    'msg' => $status['msg']
-                )
-            ));
-
-            $this->assign('id', $id);
-        }
-        else
-        {
-            $this->assign('uploadUrl', OW::getRouter()->urlForRoute('photo_upload_album', array('album' => $albumId)));
-        }
 
         $script = '
         OWM.bind("photo.hide_load_more", function(){
@@ -330,6 +521,8 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
             );
         });';
 
+        $this->assign('ownerMode', $ownerMode);
+        $this->assign('userName', $userDto->getUsername());
         OW::getDocument()->addOnloadScript($script);
 
         $displayName = BOL_UserService::getInstance()->getDisplayName($album->userId);
@@ -342,6 +535,89 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
         OW::getDocument()->setDescription(
             $lang->text('photo', 'meta_description_photo_useralbum', array('displayName' => $displayName, 'number' => $total))
         );
+
+        //--  add context menu --//
+        if ( $ownerMode ) {
+            $uploadItemId = uniqid('photo_add');
+            $isUploadPhotoAllowed = true;
+
+            if (!OW::getUser()->isAuthorized('photo', 'upload')) {
+                $status = BOL_AuthorizationService::getInstance()->getActionStatus('photo', 'upload');
+                $isPromoted = !empty($status['status'])
+                    && $status['status'] == BOL_AuthorizationService::STATUS_PROMOTED;
+
+                if (!$isPromoted) {
+                    $isUploadPhotoAllowed = false;
+                } else {
+                    OW::getDocument()->addScriptDeclaration(UTIL_JsGenerator::composeJsString(
+                        ';$("#" + {$btn}).on("click", function(e)
+                    {
+                        e.preventDefault();
+                        OWM.authorizationLimitedFloatbox({$msg});
+                    });',
+                        array(
+                            'btn' => $uploadItemId,
+                            'msg' => $status['msg']
+                        )
+                    ));
+                }
+            }
+
+            $contextMenu = [];
+
+            if ( $isUploadPhotoAllowed )
+            {
+                $contextMenu[] = array(
+                    'group' => 'photo',
+                    'label' => OW::getLanguage()->text('photo', 'upload_photos'),
+                    'order' => 1,
+                    'class' => null,
+                    'href' => OW::getRouter()->urlForRoute('photo_upload'),
+                    'id' => $uploadItemId
+                );
+            }
+
+            if ( $ownerMode )
+            {
+                $contextMenu[] = array(
+                    'group' => 'photo',
+                    'label' => OW::getLanguage()->text('photo', 'edit_album'),
+                    'order' => 2,
+                    'class' => null,
+                    'href' => OW::getRouter()->urlForRoute('photo_upload')
+                );
+
+                $deleteAlbumId = uniqid('delete_album');
+
+                $contextMenu[] = array(
+                    'group' => 'photo',
+                    'label' => OW::getLanguage()->text('photo', 'delete_album'),
+                    'order' => 3,
+                    'class' => null,
+                    'href' => OW::getRouter()->urlForRoute('photo_upload'),
+                    'click' => "return confirm('" . OW::getLanguage()->text('base', 'are_you_sure') . "');",
+                    'id' => $deleteAlbumId
+                );
+
+                OW::getDocument()->addScriptDeclaration(UTIL_JsGenerator::composeJsString(
+                    ';$("#" + {$btn}).on("click", function(e)
+                    {
+                        e.preventDefault();
+
+                        if ( confirm("' . OW::getLanguage()->text('base', 'are_you_sure') . '") ) {
+                            OWM.postRequest("' .  OW::getRouter()->urlForRoute('photo_user_delete_album', array('id' => $albumId)) . '", {});
+                        }
+                    });',
+                    array(
+                        'btn' => $deleteAlbumId
+                    )
+                ));
+            }
+
+            $this->addComponent('contextMenu', new BASE_MCMP_ContextAction($contextMenu));
+        }
+
+        //--
     }
 
     public function view( array $params )
@@ -413,6 +689,7 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
 
         $avatar = BOL_AvatarService::getInstance()->getDataForUserAvatars(array($contentOwner), true, true, true, false);
         $this->assign('avatar', $avatar[$contentOwner]);
+        $this->assign('isOwner', $ownerMode);
 
         $cmtParams = new BASE_CommentsParams('photo', 'photo_comments');
         $cmtParams->setEntityId($photo->id);

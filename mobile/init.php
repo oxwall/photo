@@ -35,6 +35,8 @@
  * @package ow.plugin.photo.mobile
  * @since 1.6.0
  */
+OW::getRouter()->addRoute(new OW_Route('photo_user_delete_album', 'photo/delete-album/:id/', 'PHOTO_MCTRL_Photo', 'deleteAlbum'));
+OW::getRouter()->addRoute(new OW_Route('photo_user_create_album', 'photo/create-album', 'PHOTO_MCTRL_Photo', 'createAlbum'));
 OW::getRouter()->addRoute(new OW_Route('photo_user_albums', 'photo/useralbums/:user/', 'PHOTO_MCTRL_Photo', 'albums'));
 OW::getRouter()->addRoute(new OW_Route('photo_user_album', 'photo/useralbum/:user/:album', 'PHOTO_MCTRL_Photo', 'album'));
 OW::getRouter()->addRoute(new OW_Route('photo_list_index', 'photo/', 'PHOTO_MCTRL_Photo', 'viewList'));

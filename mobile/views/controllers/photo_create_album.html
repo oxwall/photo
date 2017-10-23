@@ -1,0 +1,54 @@
+<div class="owm_nav_cap owm_nav_cap_left_cont owm_nav_cap_right_cont owm_bg_color_3 owm_border clearfix">
+    <div class="owm_float_left">
+        <a class="owm_nav_cap_left" href="{url_for_route for="photo_user_albums:[user=>`$userName`]"}"></a>
+    </div>
+    <h3>{text key='photo+my_albums'}</h3>
+</div>
+
+{if $auth_msg}
+    <div class="owm_padding">
+        <div class="owm_info owm_anno">{$auth_msg}</div>
+    </div>
+{else}
+
+    {form name='add-album'}
+
+        <div class="owm_field_container owm_std_margin_bottom">
+            <div class="owm_form_label owm_small_margin_bottom">{label name='album-name'}</div>
+            <div class="owm_field_wrap">{input name='album-name'}</div>
+            <div class="owm_error_txt">{error name='album-name'}</div>
+        </div>
+
+        <div class="owm_field_container owm_std_margin_bottom">
+            <div class="owm_form_label owm_small_margin_bottom">{label name='desc'}</div>
+            <div class="owm_field_wrap">{input name='desc'}</div>
+            <div class="owm_error_txt">{error name='desc'}</div>
+        </div>
+
+        <div class="owm_upload_photo_browse_wrap clearfix owm_bg_color_3">
+            <div class="owm_upload_photo_left_label">
+                <span class="owm_upload_choose_label"><span>{text key='photo+mobile_choose_photo'}</span></span>
+                <span class="owm_upload_replace_label"><span>{text key='photo+mobile_replace_photo'}</span></span>
+            </div>
+            <div class="owm_upload_photo_right_label">
+                <span class="owm_upload_img_name_label"><img id="photo-file-prevew" style="height: 44px; display: none;" /><span></span></span>
+            </div>
+            <div class="owm_upload_photo_btn">
+                <a class="owm_upload_photo_choose_btn" href="javascript://">{input name='photo' accept='image/*' id='upload-file-field'}</a>
+            </div>
+        </div>
+        <div class="owm_error_txt">{error name='photo'}</div>
+
+        <div class="owm_field_container owm_std_margin_bottom">
+            <div class="owm_form_label owm_small_margin_bottom">{label name='photodesc'}</div>
+            <div class="owm_field_wrap">{input name='photodesc'}</div>
+            <div class="owm_error_txt">{error name='photodesc'}</div>
+        </div>
+
+        <div class="owm_btn_wide owm_std_margin_top">
+            {submit name='add'}
+        </div>
+
+    {/form}
+
+{/if}

@@ -1,3 +1,21 @@
+<div class="owm_nav_cap owm_nav_cap_left_cont owm_nav_cap_right_cont owm_bg_color_3 owm_border clearfix">
+    {if $contextMenu}
+        <div class="owm_view_more owm_float_right">
+            {$contextMenu}
+        </div>
+    {/if}
+    <div class="owm_float_left">
+        <a class="owm_nav_cap_left" href="{url_for_route for="photo_user_albums:[user=>`$userName`]"}"></a>
+    </div>
+    <h3>
+        {if $ownerMode}
+            {text key='photo+my_albums'}
+        {else}
+            {text key='photo+photo_albums'}
+        {/if}
+    </h3>
+</div>
+
 <div class="owm_photo_block">
     <div class="clearfix owm_align_right owm_padding owm_add_photo_wrap">
         {if !empty($uploadUrl)}
