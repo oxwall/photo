@@ -36,6 +36,8 @@
  */
 class PHOTO_MCTRL_Photo extends OW_MobileActionController
 {
+    const ALBUM_SHORT_DESC_LENGTH = 100;
+
     /**
      * @var PHOTO_BOL_PhotoService
      */
@@ -52,6 +54,64 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
 
         $this->photoService = PHOTO_BOL_PhotoService::getInstance();
         $this->photoAlbumService = PHOTO_BOL_PhotoAlbumService::getInstance();
+    }
+
+    /**
+     * Edit album
+     *
+     * @param $params
+     * @throws Exception
+     * @reutrn void
+     */
+    public function editAlbum($params)
+    {
+        if ( !OW::getUser()->isAuthenticated() )
+        {
+            throw new AuthorizationException();
+        }
+
+        $lang = OW::getLanguage();
+        $albumId = $params['id'];
+        $album = $this->photoAlbumService->findAlbumById($albumId);
+
+        if ( !$album || ($album->userId != OW::getUser()->getId() && !OW::getUser()->isAuthorized('photo')) )
+        {
+            throw new Redirect404Exception();
+        }
+
+        $albumUser = BOL_UserService::getInstance()->findUserById($album->userId);
+        $form = new PHOTO_MCLASS_AlbumEditForm();
+        $this->addForm($form);
+
+        $form->getElement('album-name')->setValue($album->name);
+        $form->getElement('desc')->setValue($album->description);
+
+        // validate form
+        if ( OW::getRequest()->isPost() && $form->isValid($_POST) )
+        {
+            $form->process($albumId);
+
+            OW::getFeedback()->info($lang->text('photo', 'photo_album_updated'));
+
+            $this->redirect(OW::getRouter()->urlForRoute('photo_user_album', array(
+                'user' => $albumUser->getUsername(),
+                'album' => $albumId
+            )));
+        }
+
+        $this->assign('album', $album);
+        $this->assign('albumUserName', $albumUser->getUsername());
+
+        $displayName = BOL_UserService::getInstance()->getDisplayName($album->userId);
+        OW::getDocument()->setHeading($lang->text('photo', 'edit_album'));
+
+        OW::getDocument()->setTitle(
+            $lang->text('photo', 'meta_title_photo_useralbum_edit', array('displayName' => $displayName, 'albumName' => $album->name))
+        );
+
+        OW::getDocument()->setDescription(
+            $lang->text('photo', 'meta_description_photo_useralbum_edit', array('displayName' => $displayName, 'albumName' => $album->name))
+        );
     }
 
     /**
@@ -521,6 +581,16 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
             );
         });';
 
+        $shortDesc = mb_strlen($album->description) > self::ALBUM_SHORT_DESC_LENGTH
+            ? mb_substr($album->description, 0, self::ALBUM_SHORT_DESC_LENGTH) . '...'
+            : $album->description;
+
+        $longDesc = mb_strlen($album->description) > self::ALBUM_SHORT_DESC_LENGTH
+            ? $album->description
+            : '';
+
+        $this->assign('albumShortDesc', $shortDesc);
+        $this->assign('albumLongDesc', $longDesc);
         $this->assign('ownerMode', $ownerMode);
         $this->assign('userName', $userDto->getUsername());
         OW::getDocument()->addOnloadScript($script);
@@ -577,14 +647,16 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
                 );
             }
 
-            if ( $ownerMode )
+            if ( $ownerMode || OW::getUser()->isAuthorized('photo') )
             {
                 $contextMenu[] = array(
                     'group' => 'photo',
                     'label' => OW::getLanguage()->text('photo', 'edit_album'),
                     'order' => 2,
                     'class' => null,
-                    'href' => OW::getRouter()->urlForRoute('photo_upload')
+                    'href' => OW::getRouter()->urlForRoute('photo_user_edit_album', array(
+                        'id' => $albumId
+                    ))
                 );
 
                 $deleteAlbumId = uniqid('delete_album');

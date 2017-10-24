@@ -101,7 +101,10 @@ final class PHOTO_BOL_PhotoAlbumService
     {
         $album = $this->photoAlbumDao->findById($id);
 
-        $album->name = htmlspecialchars_decode($album->name);
+        if ( $album )
+        {
+            $album->name = htmlspecialchars_decode($album->name);
+        }
 
         return $album;
     }

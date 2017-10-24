@@ -17,11 +17,14 @@
 </div>
 
 <div class="owm_photo_block">
-    <div class="clearfix owm_align_right owm_padding owm_add_photo_wrap">
-        {if !empty($uploadUrl)}
-            <a href="{$uploadUrl}" class="owm_add_photo"></a><span class="owm_add_photo_label">{text key='photo+upload_photos'}</span>
-        {elseif !empty($id)}
-            <a href="javascript://" class="owm_add_photo" id="{$id}"></a><span class="owm_add_photo_label">{text key='photo+upload_photos'}</span>
+    <div class="clearfi owm_padding owm_add_photo_wrap">
+        <div id="short-desc">{$albumShortDesc}</div>
+
+        {if $albumLongDesc}
+            <a id="read-more" href="#">{text key='photo+read_more'}</a>
+            <div id="long-desc" style="display: none">
+                {$albumLongDesc}
+            </div>
         {/if}
     </div>
     {if !empty($authError)}
@@ -39,3 +42,9 @@
         {/if}
     {/if}
 </div>
+{script}
+    $("#read-more").click(function(e){
+        $("#short-desc, #read-more").hide();
+        $("#long-desc").show();
+    });
+{/script}
