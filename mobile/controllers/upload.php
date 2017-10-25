@@ -55,6 +55,36 @@ class PHOTO_MCTRL_Upload extends OW_MobileActionController
             throw new AuthenticateException();
         }
 
+        $selectedAlbum = null;
+        $selectedAlbumId = !empty($_GET['albumId']) ? (int) $_GET['albumId'] : 0;
+        $albumOwnerId = !empty($_GET['albumOwnerId']) ? (int) $_GET['albumOwnerId'] : 0;
+
+        // get selected album info
+        if ( $selectedAlbumId )
+        {
+            $selectedAlbum = PHOTO_BOL_PhotoAlbumService::getInstance()->findAlbumById($selectedAlbumId);
+
+            if ( $selectedAlbum )
+            {
+                $albumUser = BOL_UserService::getInstance()->findUserById($selectedAlbum->userId);
+
+                $this->assign('selectedAlbum', $selectedAlbum);
+                $this->assign('albumUserName', $albumUser->getUsername());
+            }
+        }
+
+        // get album owner info
+        if ( $albumOwnerId && !$selectedAlbum )
+        {
+            $albumOwner = BOL_UserService::getInstance()->findUserById($albumOwnerId);
+
+            if ( $albumOwner )
+            {
+                $this->assign('albumOwner', $albumOwner);
+            }
+        }
+
+        $this->assign('userId', OW::getUser()->getId());
         $language = OW::getLanguage();
 
         if ( !OW::getUser()->isAuthorized('photo', 'upload') )
@@ -79,6 +109,12 @@ class PHOTO_MCTRL_Upload extends OW_MobileActionController
             $this->assign('auth_msg', null);
 
             $form = new PHOTO_MCLASS_UploadForm();
+
+            if ( $selectedAlbum )
+            {
+                $form->getElement('album')->setValue($selectedAlbum->name);
+            }
+
             $this->addForm($form);
 
             $photoAlbumService = PHOTO_BOL_PhotoAlbumService::getInstance();

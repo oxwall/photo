@@ -476,7 +476,7 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
                     'label' => OW::getLanguage()->text('photo', 'upload_photos'),
                     'order' => 1,
                     'class' => null,
-                    'href' => OW::getRouter()->urlForRoute('photo_upload'),
+                    'href' => OW::getRouter()->urlForRoute('photo_upload') . '?albumOwnerId=' . $user->id,
                     'id' => $uploadItemId
                 );
 
@@ -606,8 +606,11 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
             $lang->text('photo', 'meta_description_photo_useralbum', array('displayName' => $displayName, 'number' => $total))
         );
 
+        $isUploadPhotoAllowed = false;
+
         //--  add context menu --//
-        if ( $ownerMode ) {
+        if ( $ownerMode )
+        {
             $uploadItemId = uniqid('photo_add');
             $isUploadPhotoAllowed = true;
 
@@ -632,63 +635,62 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
                     ));
                 }
             }
-
-            $contextMenu = [];
-
-            if ( $isUploadPhotoAllowed )
-            {
-                $contextMenu[] = array(
-                    'group' => 'photo',
-                    'label' => OW::getLanguage()->text('photo', 'upload_photos'),
-                    'order' => 1,
-                    'class' => null,
-                    'href' => OW::getRouter()->urlForRoute('photo_upload'),
-                    'id' => $uploadItemId
-                );
-            }
-
-            if ( $ownerMode || OW::getUser()->isAuthorized('photo') )
-            {
-                $contextMenu[] = array(
-                    'group' => 'photo',
-                    'label' => OW::getLanguage()->text('photo', 'edit_album'),
-                    'order' => 2,
-                    'class' => null,
-                    'href' => OW::getRouter()->urlForRoute('photo_user_edit_album', array(
-                        'id' => $albumId
-                    ))
-                );
-
-                $deleteAlbumId = uniqid('delete_album');
-
-                $contextMenu[] = array(
-                    'group' => 'photo',
-                    'label' => OW::getLanguage()->text('photo', 'delete_album'),
-                    'order' => 3,
-                    'class' => null,
-                    'href' => OW::getRouter()->urlForRoute('photo_upload'),
-                    'click' => "return confirm('" . OW::getLanguage()->text('base', 'are_you_sure') . "');",
-                    'id' => $deleteAlbumId
-                );
-
-                OW::getDocument()->addScriptDeclaration(UTIL_JsGenerator::composeJsString(
-                    ';$("#" + {$btn}).on("click", function(e)
-                    {
-                        e.preventDefault();
-
-                        if ( confirm("' . OW::getLanguage()->text('base', 'are_you_sure') . '") ) {
-                            OWM.postRequest("' .  OW::getRouter()->urlForRoute('photo_user_delete_album', array('id' => $albumId)) . '", {});
-                        }
-                    });',
-                    array(
-                        'btn' => $deleteAlbumId
-                    )
-                ));
-            }
-
-            $this->addComponent('contextMenu', new BASE_MCMP_ContextAction($contextMenu));
         }
 
+        $contextMenu = [];
+
+        if ( $isUploadPhotoAllowed && $ownerMode )
+        {
+            $contextMenu[] = array(
+                'group' => 'photo',
+                'label' => OW::getLanguage()->text('photo', 'upload_photos'),
+                'order' => 1,
+                'class' => null,
+                'href' => OW::getRouter()->urlForRoute('photo_upload') . '?albumId=' . $album->id,
+                'id' => $uploadItemId
+            );
+        }
+
+        if ( OW::getUser()->isAuthorized('photo') )
+        {
+            $contextMenu[] = array(
+                'group' => 'photo',
+                'label' => OW::getLanguage()->text('photo', 'edit_album'),
+                'order' => 2,
+                'class' => null,
+                'href' => OW::getRouter()->urlForRoute('photo_user_edit_album', array(
+                    'id' => $albumId
+                ))
+            );
+
+            $deleteAlbumId = uniqid('delete_album');
+
+            $contextMenu[] = array(
+                'group' => 'photo',
+                'label' => OW::getLanguage()->text('photo', 'delete_album'),
+                'order' => 3,
+                'class' => null,
+                'href' => OW::getRouter()->urlForRoute('photo_upload'),
+                'click' => "return confirm('" . OW::getLanguage()->text('base', 'are_you_sure') . "');",
+                'id' => $deleteAlbumId
+            );
+
+            OW::getDocument()->addScriptDeclaration(UTIL_JsGenerator::composeJsString(
+                ';$("#" + {$btn}).on("click", function(e)
+                {
+                    e.preventDefault();
+
+                    if ( confirm("' . OW::getLanguage()->text('base', 'are_you_sure') . '") ) {
+                        OWM.postRequest("' .  OW::getRouter()->urlForRoute('photo_user_delete_album', array('id' => $albumId)) . '", {});
+                    }
+                });',
+                array(
+                    'btn' => $deleteAlbumId
+                )
+            ));
+        }
+
+        $this->addComponent('contextMenu', new BASE_MCMP_ContextAction($contextMenu));
         //--
     }
 
