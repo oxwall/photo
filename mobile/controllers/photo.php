@@ -115,12 +115,61 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
     }
 
     /**
+     * Change album cover
+     *
+     * @param array $params
+     * @throws Exception
+     * @return void
+     */
+    public function changeAlbumCover($params)
+    {
+        if ( !OW::getUser()->isAuthenticated() )
+        {
+            throw new AuthorizationException();
+        }
+
+        $photoId = $params['id'];
+        $photo = $this->photoService->findPhotoById($photoId);
+
+        if ( $photo && OW::getRequest()->isPost() )
+        {
+            $album = $this->photoAlbumService->findAlbumById($photo->albumId);
+
+            if ( $album && $album->userId == OW::getUser()->getId() )
+            {
+                PHOTO_BOL_PhotoAlbumCoverDao::getInstance()->deleteCoverByAlbumId($album->id);
+
+                if ( $this->photoService->createAlbumCover($album->id, array($photo)) )
+                {
+                    OW::getFeedback()->info(OW::getLanguage()->text('photo', 'mobile_album_cover_changed'));
+                }
+                else {
+                    OW::getFeedback()->error(OW::getLanguage()->text('photo', 'mobile_album_cover_not_changed'));
+                }
+
+                $this->redirect(OW::getRouter()->urlForRoute('view_photo', array(
+                    'id' => $photo->id
+                )));
+            }
+        }
+
+        $this->redirect(OW::getRouter()->urlForRoute('base_index'));
+    }
+
+    /**
      * Delete album
      *
      * @param array $params
+     * @throws Exception
+     * @return void
      */
     public function deleteAlbum($params)
     {
+        if ( !OW::getUser()->isAuthenticated() )
+        {
+            throw new AuthorizationException();
+        }
+
         $lang = OW::getLanguage();
         $albumId = $params['id'];
         $album = $this->photoAlbumService->findAlbumById($albumId);
@@ -779,6 +828,37 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
         $description = mb_strlen($description) ? $description : $photo->id;
 
         OW::getDocument()->setTitle($lang->text('photo', 'meta_title_photo_view', array('title' => $description)));
+
+        $contextMenu = [];
+
+        if ( $ownerMode )
+        {
+            $changeCoverId = uniqid('change_album_cover');
+
+            $contextMenu[] = array(
+                'group' => 'photo',
+                'label' => OW::getLanguage()->text('photo', 'save_as_cover'),
+                'order' => 1,
+                'class' => null,
+                'href' => '#',
+                'id' => $changeCoverId
+            );
+
+            OW::getDocument()->addScriptDeclaration(UTIL_JsGenerator::composeJsString(
+                ';$("#" + {$btn}).on("click", function(e)
+                {
+                    e.preventDefault();
+
+                    OWM.postRequest("' .  OW::getRouter()->urlForRoute('photo_user_change_album_cover', array('id' => $photoId)) . '", {});
+                });',
+                array(
+                    'btn' => $changeCoverId
+                )
+            ));
+        }
+
+        $this->addComponent('contextMenu', new BASE_MCMP_ContextAction($contextMenu));
+        //--
     }
 
     private function getMenu()
