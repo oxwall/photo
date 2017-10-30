@@ -8,6 +8,7 @@
     <key name="mobile_album_cover_changed"><value>Album cover has changed</value></key>
     <key name="mobile_album_cover_not_changed"><value>This image cannot be used as the album's cover</value></key>
     <key name="mobile_view_photo"><value>View photo</value></key>
+    <key name="mobile_photo_avatar_set"><value>You have set new avatar</value></key>
     <key name="mobile_meta_title_photo_edit"><value>Edit "{$photo_id}" photo by {$user_name} | {$site_name}</value></key>
 
 

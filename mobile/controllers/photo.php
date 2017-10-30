@@ -192,6 +192,67 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
     }
 
     /**
+     * Set as avatar
+     *
+     * @param $params
+     * @throws AuthorizationException
+     */
+    public function setAsAvatar($params)
+    {
+        if ( !OW::getUser()->isAuthenticated() )
+        {
+            throw new AuthorizationException();
+        }
+
+        $userId = OW::getUser()->getId();
+        $lang = OW::getLanguage();
+        $photoId = (int) $params['id'];
+        $photo = $this->photoService->findPhotoById($photoId);
+
+        if ( $photo && OW::getRequest()->isPost() )
+        {
+            $album = $this->photoAlbumService->findAlbumById($photo->albumId);
+
+            if ( $album && $album->userId == $userId )
+            {
+                $avatarService = BOL_AvatarService::getInstance();
+                $oldAvatar = $avatarService->findByUserId($userId);
+
+                // apply new avatar
+                OW::getEventManager()->trigger(new OW_Event('base.before_avatar_change', [
+                    'userId' => $userId,
+                    'avatarId' => $oldAvatar ? $oldAvatar->id : null,
+                    'upload' => false,
+                    'crop' => true
+                ]));
+
+                $avatarService->deleteUserAvatar($userId);
+                $avatarService->clearCahche($userId);
+                $avatarService->setUserAvatar($userId, $this->
+                        photoService->getPhotoPath($photoId, $photo->hash, PHOTO_BOL_PhotoService::TYPE_ORIGINAL));
+
+                // get new avatar dto
+                $newAvatar = $avatarService->findByUserId($userId, false);
+
+                OW::getEventManager()->trigger(new OW_Event('base.after_avatar_change', array(
+                    'userId' => $userId,
+                    'avatarId' => $newAvatar ? $newAvatar->id : null,
+                    'upload' => false,
+                    'crop' => true
+                )));
+
+                OW::getFeedback()->info($lang->text('photo', 'mobile_photo_avatar_set'));
+                $this->redirect(OW::getRouter()->urlForRoute('view_photo', [
+                    'id' => $photo->id
+                ]));
+            }
+        }
+
+        OW::getFeedback()->error($lang->text('photo', 'no_photo_found'));
+        $this->redirect(OW::getRouter()->urlForRoute('base_index'));
+    }
+
+    /**
      * Change album cover
      *
      * @param array $params
@@ -205,7 +266,7 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
             throw new AuthorizationException();
         }
 
-        $photoId = $params['id'];
+        $photoId = (int) $params['id'];
         $photo = $this->photoService->findPhotoById($photoId);
 
         if ( $photo && OW::getRequest()->isPost() )
@@ -296,52 +357,6 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
 
         OW::getFeedback()->error($lang->text('photo', 'no_photo_found'));
         $this->redirect(OW::getRouter()->urlForRoute('base_index'));
-
-        //{text key='photo+no_photo_found'}
-        // {text key='photo+photo_deleted'}
-        /*
-
-        $return = array();
-
-        if ( !empty($params['entityId']) && ($photo = $this->photoService->findPhotoById($params['entityId'])) !== NULL )
-        {
-            $ownerId = $this->photoService->findPhotoOwner($photo->id);
-            $isOwner = $ownerId == OW::getUser()->getId();
-            $isModerator = OW::getUser()->isAuthorized('photo');
-
-            if ( !$isOwner && !$isModerator )
-            {
-                throw new Redirect404Exception();
-            }
-
-            if ( $this->photoService->deletePhoto($photo->id) )
-            {
-                $cover = PHOTO_BOL_PhotoAlbumCoverDao::getInstance()->findByAlbumId($photo->albumId);
-
-                if ( $cover === NULL || (int)$cover->auto )
-                {
-                    PHOTO_BOL_PhotoAlbumCoverDao::getInstance()->deleteCoverByAlbumId($photo->albumId);
-
-                    $this->photoService->createAlbumCover($photo->albumId, array_reverse(PHOTO_BOL_PhotoDao::getInstance()->getAlbumAllPhotos($photo->albumId)));
-                }
-
-                $url = OW_Router::getInstance()->urlForRoute(
-                    'photo_user_albums',
-                    array('user' => BOL_UserService::getInstance()->getUserName($ownerId))
-                );
-                $return = array(
-                    'result' => TRUE,
-                    'msg' => OW::getLanguage()->text('photo', 'photo_deleted'),
-                    'url' => $url,
-                    'coverUrl' => PHOTO_BOL_PhotoAlbumCoverDao::getInstance()->getAlbumCoverUrlByAlbumId($photo->albumId),
-                    'isHasCover' => PHOTO_BOL_PhotoAlbumCoverDao::getInstance()->isAlbumCoverExist($photo->albumId)
-                );
-            }
-            else
-            {
-                $return = array('result' => FALSE, 'error' => OW::getLanguage()->text('photo', 'photo_not_deleted'));
-            }
-         */
     }
 
     /**
@@ -1043,6 +1058,28 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
                     'btn' => $changeCoverId
                 )
             ));
+
+            $saveAsAvatarId = uniqid('save_as_avatar');
+
+            $contextMenu[] = array(
+                'group' => 'photo',
+                'label' => OW::getLanguage()->text('photo', 'save_as_avatar'),
+                'order' => 2,
+                'class' => null,
+                'href' => OW::getRouter()->urlForRoute('photo_user_set_as_avatar', array('id' => $photo->id)),
+                'id' => $saveAsAvatarId
+            );
+
+            OW::getDocument()->addScriptDeclaration(UTIL_JsGenerator::composeJsString(
+                ';$("#" + {$btn}).on("click", function(e)
+                {
+                    e.preventDefault();
+                    OWM.postRequest("' .  OW::getRouter()->urlForRoute('photo_user_set_as_avatar', array('id' => $photo->id)) . '", {});
+                });',
+                array(
+                    'btn' => $saveAsAvatarId
+                )
+            ));
         }
 
         if ( $ownerMode || $modPermissions )
@@ -1050,7 +1087,7 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
             $contextMenu[] = array(
                 'group' => 'photo',
                 'label' => OW::getLanguage()->text('photo', 'tb_edit_photo'),
-                'order' => 2,
+                'order' => 3,
                 'class' => null,
                 'href' => OW::getRouter()->urlForRoute('photo_user_edit_photo', array(
                     'id' => $photo->id
@@ -1062,7 +1099,7 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
             $contextMenu[] = array(
                 'group' => 'photo',
                 'label' => OW::getLanguage()->text('photo', 'delete_photo'),
-                'order' => 3,
+                'order' => 4,
                 'class' => null,
                 'href' => OW::getRouter()->urlForRoute('photo_user_delete_photo', array('id' => $photo->id)),
                 'click' => "return confirm('" . OW::getLanguage()->text('base', 'are_you_sure') . "');",
