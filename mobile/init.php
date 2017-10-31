@@ -35,6 +35,13 @@
  * @package ow.plugin.photo.mobile
  * @since 1.6.0
  */
+OW::getRouter()->addRoute(new OW_Route('photo_user_set_as_avatar', 'photo/set-as-avatar/:id/', 'PHOTO_MCTRL_Photo', 'setAsAvatar'));
+OW::getRouter()->addRoute(new OW_Route('photo_user_change_album_cover', 'photo/change-album-cover/:id/', 'PHOTO_MCTRL_Photo', 'changeAlbumCover'));
+OW::getRouter()->addRoute(new OW_Route('photo_user_edit_photo', 'photo/edit-photo/:id/', 'PHOTO_MCTRL_Photo', 'editPhoto'));
+OW::getRouter()->addRoute(new OW_Route('photo_user_edit_album', 'photo/edit-album/:id/', 'PHOTO_MCTRL_Photo', 'editAlbum'));
+OW::getRouter()->addRoute(new OW_Route('photo_user_delete_album', 'photo/delete-album/:id/', 'PHOTO_MCTRL_Photo', 'deleteAlbum'));
+OW::getRouter()->addRoute(new OW_Route('photo_user_delete_photo', 'photo/delete-photo/:id/', 'PHOTO_MCTRL_Photo', 'deletePhoto'));
+OW::getRouter()->addRoute(new OW_Route('photo_user_create_album', 'photo/create-album', 'PHOTO_MCTRL_Photo', 'createAlbum'));
 OW::getRouter()->addRoute(new OW_Route('photo_user_albums', 'photo/useralbums/:user/', 'PHOTO_MCTRL_Photo', 'albums'));
 OW::getRouter()->addRoute(new OW_Route('photo_user_album', 'photo/useralbum/:user/:album', 'PHOTO_MCTRL_Photo', 'album'));
 OW::getRouter()->addRoute(new OW_Route('photo_list_index', 'photo/', 'PHOTO_MCTRL_Photo', 'viewList'));

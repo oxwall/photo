@@ -1,3 +1,15 @@
+<div class="owm_nav_cap owm_nav_cap_left_cont owm_nav_cap_right_cont owm_bg_color_3 owm_border clearfix">
+    {if $contextMenu}
+        <div class="owm_view_more owm_float_right">
+            {$contextMenu}
+        </div>
+    {/if}
+    <div class="owm_float_left">
+        <a class="owm_nav_cap_left" href="{url_for_route for="base_user_profile:[username=>`$username`]"}"></a>
+    </div>
+    <h3>{$displayName}</h3>
+</div>
+
 {if !empty($authError)}
     <div class="owm_padding">
         <div class="owm_info owm_anno">{$authError}</div>

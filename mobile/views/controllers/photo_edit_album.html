@@ -1,0 +1,26 @@
+<div class="owm_nav_cap owm_nav_cap_left_cont owm_nav_cap_right_cont owm_bg_color_3 owm_border clearfix">
+    <div class="owm_float_left">
+        <a class="owm_nav_cap_left" href="{url_for_route for="photo_user_album:[user=>`$albumUserName`,album=>`$album->id`]"}"></a>
+    </div>
+    <h3>{$album->name}</h3>
+</div>
+
+{form name='edit-album'}
+
+    <div class="owm_field_container owm_std_margin_bottom">
+        <div class="owm_form_label owm_small_margin_bottom">{label name='album-name'}</div>
+        <div class="owm_field_wrap">{input name='album-name'}</div>
+        <div class="owm_error_txt">{error name='album-name'}</div>
+    </div>
+
+    <div class="owm_field_container owm_std_margin_bottom">
+        <div class="owm_form_label owm_small_margin_bottom">{label name='desc'}</div>
+        <div class="owm_field_wrap">{input name='desc'}</div>
+        <div class="owm_error_txt">{error name='desc'}</div>
+    </div>
+
+    <div class="owm_btn_wide owm_std_margin_top">
+        {submit name='save'}
+    </div>
+
+{/form}

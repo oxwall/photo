@@ -1,0 +1,35 @@
+<div class="owm_nav_cap owm_nav_cap_left_cont owm_nav_cap_right_cont owm_bg_color_3 owm_border clearfix">
+    <div class="owm_float_left">
+        <a class="owm_nav_cap_left" href="{url_for_route for="view_photo:[id=>`$photo->id`]"}"></a>
+    </div>
+    <h3>{text key='photo+mobile_view_photo'}</h3>
+</div>
+
+{form name='edit-photo'}
+
+    <div class="owm_upload_photo_album_wrap owm_input_wrap">
+        <div class="owm_fake_input">
+            {input name='album'}
+            {if $albums}
+            <div class="owm_choose_album owm_float_right">
+                {text key='photo+choose_album'}
+                <select id="album_select">
+                    <option value="" disabled="disabled" {if !$selectedAlbum}selected="selected"{/if}>{text key='photo+choose_album'}</option>
+                    {foreach from=$albums item='a' name='album'}
+                    <option value="{$a.dto->name}" {if $selectedAlbum && $selectedAlbum->id == $a.dto->id}selected="selected"{/if}>{$a.dto->name}</option>
+                    {/foreach}
+                </select>
+            </div>
+            {/if}
+        </div>
+    </div>
+
+    <div class="owm_input_wrap">
+        {input name='description'}
+    </div>
+
+    <div class="owm_btn_wide owm_std_margin_top">
+        {submit name='save'}
+    </div>
+
+{/form}
