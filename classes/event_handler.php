@@ -981,24 +981,39 @@ class PHOTO_CLASS_EventHandler
     public function photoContentFilter( BASE_CLASS_QueryBuilderEvent $event )
     {
         $params = $event->getParams();
-        if ($params['type'] == 'photo_comments' || $params['type'] == 'photo_rates')
+
+        if ( isset($params['type']) )
         {
-            if ($params['type'] == 'photo_rates')
+            switch ($params['type'])
             {
-                $params['listType'] = 'toprated';
-                $aliases = array('alias' => 'r');
-            }
-            elseif ($params['type'] == 'photo_comments')
-            {
-                $params['listType'] = 'most_discussed';
-                $aliases = array('alias' => 'ce');
+                case 'photo_rates':
+
+                    $aliases = array('alias' => 'r');
+
+                    break;
+
+                case 'photo_comments';
+
+                    switch ( $params['method'] )
+                    {
+                        case 'BOL_CommentDao::findMostCommentedEntityList':
+
+                            $aliases = array('alias' => 'ce');
+
+                            break;
+                    }
+
+                    break;
             }
 
-            $join = 'INNER JOIN `' . PHOTO_BOL_PhotoDao::getInstance()->getTableName() . '` AS `ph` ON (`'. $aliases['alias'] .'`.`entityId` = `ph`.`id`)
+            if ( isset($aliases) )
+            {
+                $join = 'INNER JOIN `' . PHOTO_BOL_PhotoDao::getInstance()->getTableName() . '` AS `ph` ON (`'. $aliases['alias'] .'`.`entityId` = `ph`.`id`)
             INNER JOIN `' . PHOTO_BOL_PhotoAlbumDao::getInstance()->getTableName() . '` AS `a` ON (`ph`.`albumId` = `a`.`id`)';
 
-            $event->addJoin($join);
-            $event->addWhere('`ph`.`status` = \'approved\'');
+                $event->addJoin($join);
+                $event->addWhere('`ph`.`status` = \'approved\'');
+            }
         }
     }
 
