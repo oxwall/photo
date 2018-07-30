@@ -570,7 +570,7 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
         $el->setActive(true);
         $this->addComponent('menu', $menu);
 
-        $initialCmp = new PHOTO_MCMP_PhotoList($type, $limit, array());
+        $initialCmp = OW::getClassInstanceArray('PHOTO_MCMP_PhotoList', array($type, $limit, array()));
         $this->addComponent('photos', $initialCmp);
 
         $checkPrivacy = !OW::getUser()->isAuthorized('photo');
@@ -806,7 +806,7 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
         $type = 'user';
         $limit = 12;
 
-        $initialCmp = new PHOTO_MCMP_PhotoList($type, $limit, array(), $albumId);
+        $initialCmp = OW::getClassInstanceArray('PHOTO_MCMP_PhotoList', array($type, $limit, array(), $albumId));
         $this->addComponent('photos', $initialCmp);
 
         $total = $this->photoAlbumService->countAlbumPhotos($albumId);
