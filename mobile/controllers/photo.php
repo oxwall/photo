@@ -558,13 +558,14 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
         $limit = 12;
         
         $validLists = array('latest','toprated','featured');
-        
-        if ( !in_array($type, $validLists) )
+
+        $menu = $this->getMenu();
+
+        if ( !in_array($type, $validLists) || !$menu->getElement($type) )
         {
             $this->redirect(OW::getRouter()->urlForRoute('view_photo_list', array('listType' => 'latest')));
         }
-        
-        $menu = $this->getMenu();
+
         $el = $menu->getElement($type);
         
         $el->setActive(true);
