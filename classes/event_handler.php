@@ -1377,8 +1377,6 @@ class PHOTO_CLASS_EventHandler
                     )
                 );
                 break;
-
-            default: return;
         }
         
         OW::getEventManager()->trigger(new OW_Event(self::EVENT_INIT_FLOATBOX));
