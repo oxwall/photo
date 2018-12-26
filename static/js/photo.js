@@ -1432,7 +1432,7 @@
                 }
                 else
                 {
-                    elem[_vars.fullScreen.requestFullscreen](keyboardAllowed && Element.ALLOW_KEYBOARD_INPUT);
+                    elem[_vars.fullScreen.requestFullscreen]({keyboardAllowed});
                 }
             },
             exit: function()
