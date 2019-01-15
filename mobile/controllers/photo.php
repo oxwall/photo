@@ -1031,7 +1031,11 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
         $description = strip_tags($photo->description);
         $description = mb_strlen($description) ? $description : $photo->id;
 
-        OW::getDocument()->setTitle($lang->text('photo', 'meta_title_photo_view', array('title' => $description)));
+        OW::getDocument()->setTitle($lang->text('photo', 'meta_title_photo_view', array(
+            'photo_id' => $params['id'],
+            'user_name' => $ownerName,
+            'site_name' => OW::getConfig()->getValue('base', 'site_name')
+        )));
 
         $contextMenu = [];
 
