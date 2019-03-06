@@ -835,16 +835,7 @@ class PHOTO_CTRL_Photo extends OW_ActionController
             }
 
             if ( $this->photoService->deletePhoto($photo->id) )
-            {
-                $cover = PHOTO_BOL_PhotoAlbumCoverDao::getInstance()->findByAlbumId($photo->albumId);
-        
-                if ( $cover === NULL || (int)$cover->auto )
-                {
-                    PHOTO_BOL_PhotoAlbumCoverDao::getInstance()->deleteCoverByAlbumId($photo->albumId);
-
-                    $this->photoService->createAlbumCover($photo->albumId, array_reverse(PHOTO_BOL_PhotoDao::getInstance()->getAlbumAllPhotos($photo->albumId)));
-                }
-        
+            {        
                 $url = OW_Router::getInstance()->urlForRoute(
                     'photo_user_albums',
                     array('user' => BOL_UserService::getInstance()->getUserName($ownerId))

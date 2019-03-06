@@ -829,7 +829,8 @@ final class PHOTO_BOL_PhotoService
             $this->cleanListCache();
 
             OW::getEventManager()->trigger(new OW_Event(PHOTO_CLASS_EventHandler::EVENT_ON_PHOTO_DELETE, array(
-                'id' => $id
+                'id' => $id,
+                'albumId' => $photo->albumId
             )));
             
             return TRUE;
