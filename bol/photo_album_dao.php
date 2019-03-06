@@ -177,7 +177,7 @@ class PHOTO_BOL_PhotoAlbumDao extends OW_BaseDao
         $sql = 'SELECT `a`.*
             FROM `%s` AS `a`
                 INNER JOIN `%s` AS `p`
-                    ON(`p`.`albumId` = `a`.`id`)
+                    ON(`p`.`albumId` = `a`.`id` AND `p`.`status` = :status)
                 %s
             WHERE `a`.`userId` = :userId AND
                 %s AND
@@ -196,7 +196,8 @@ class PHOTO_BOL_PhotoAlbumDao extends OW_BaseDao
             array(
                 'userId' => $userId,
                 'first' => (int) $first,
-                'limit' => (int) $limit
+                'limit' => (int) $limit,
+                'status' => PHOTO_BOL_PhotoDao::STATUS_APPROVED
             ),
             $condition['params']
         ));

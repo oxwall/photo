@@ -524,6 +524,15 @@ class PHOTO_CLASS_EventHandler
     public function onPhotoDelete( OW_Event $event )
     {
         $params = $event->getParams();
+
+        $cover = PHOTO_BOL_PhotoAlbumCoverDao::getInstance()->findByAlbumId($params['albumId']);
+
+        if ( $cover === NULL || (int)$cover->auto )
+        {
+            PHOTO_BOL_PhotoAlbumCoverDao::getInstance()->deleteCoverByAlbumId($params['albumId']);
+
+            PHOTO_BOL_PhotoService::getInstance()->createAlbumCover($params['albumId'], array_reverse(PHOTO_BOL_PhotoDao::getInstance()->getAlbumAllPhotos($params['albumId'])));
+        }
         
         PHOTO_BOL_SearchService::getInstance()->deleteSearchItem(PHOTO_BOL_SearchService::ENTITY_TYPE_PHOTO, $params['id']);
 
