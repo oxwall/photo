@@ -130,7 +130,7 @@ class PHOTO_CLASS_EventHandler
         $albumName = trim($params['name']);
         $userId = !empty($params['userId']) ? (int) $params['userId'] : null;
         $entityId = !empty($params['entityId']) ? (int) $params['entityId'] : $userId;
-        $entityType = !empty($params['entityType']) ? (int) $params['entityType'] : 'user';
+        $entityType = !empty($params['entityType']) ? $params['entityType'] : 'user';
 
         $album = $this->albumService->findEntityAlbumByName($albumName, $entityId, $entityType);
         
