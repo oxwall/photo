@@ -92,7 +92,7 @@ class PHOTO_CLASS_ContentProvider
             $info['id'] = $photo['id'];
             $info['userId'] = $photo['userId'];
             $info['description'] = $photo['description'];
-            $info['url'] = $route->urlForRoute('view_photo', array('id' => $photo['id']));
+            $info['url'] = $route->urlForRoute('view_photo_type', array('id' => $photo['id'], 'listType' => 'userPhotos'));
             $info['timeStamp'] = $photo['addDatetime'];
             $info['image'] = array(
                 'thumbnail' => PHOTO_BOL_PhotoService::getInstance()->getPhotoUrlByPhotoInfo($photo['id'], PHOTO_BOL_PhotoService::TYPE_SMALL, $photo),
