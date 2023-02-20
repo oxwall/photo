@@ -1,3 +1,7 @@
+# Version 1.9.0 (11000)
+- php 8 support
+- fixed link to user photo album for premoderation data provider
+
 # Version 1.8.3 (10600)
 - photo description is no longer cut due to tag presence
 - added ALT HTML attribute for photo thumbs within photo widget on profile view page, as well as photo lists (latest, top rated, most discussed)
