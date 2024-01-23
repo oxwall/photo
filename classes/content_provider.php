@@ -41,6 +41,8 @@ class PHOTO_CLASS_ContentProvider
     const ENTITY_TYPE = 'photo_comments';
     const CONTENT_GROUP = 'photo';
 
+    const CUSTOM_ENTITY_TYPE = 'custom_photo_comments';
+
     private static $classInstance;
 
     public static function getInstance()
@@ -71,7 +73,19 @@ class PHOTO_CLASS_ContentProvider
             'displayFormat' => 'image_content'
         ));
     }
-    
+
+    public function onCustomCommentCollectTypes( BASE_CLASS_EventCollector $event )
+    {
+        $event->add(array(
+            'pluginKey' => 'photo',
+            'group' => 'customphotocomments',
+            'groupLabel' => OW::getLanguage()->text('photo', 'custom_photo_comments_group_label'),
+            'entityType' => self::CUSTOM_ENTITY_TYPE,
+            'entityLabel' => OW::getLanguage()->text('photo', 'custom_photo_comments_entity_label'),
+            'displayFormat' => 'custom_photo_comments'
+        ));
+    }
+
     public function onGetInfo( OW_Event $event )
     {
         $params = $event->getParams();
@@ -161,6 +175,87 @@ class PHOTO_CLASS_ContentProvider
         }
     }
 
+    // comments
+    public function onCustomCommentsGetInfo( OW_Event $event )
+    {
+        $params = $event->getParams();
+
+        if ( $params['entityType'] != self::CUSTOM_ENTITY_TYPE )
+        {
+            return;
+        }
+
+        $photoComments = $this->service->findCommentsByIdList($params['entityIds']);
+        $out = array();
+
+        foreach ( $photoComments as $photoComment )
+        {
+            $info = array();
+
+            $info["id"] = $photoComment->id;
+            $info["userId"] = $photoComment->userId;
+            $info["commentEntityId"] = $photoComment->commentEntityId;
+            $info["message"] = $photoComment->message;
+            $info["status"] = $photoComment->status;
+            $info["createStamp"] = $photoComment->createStamp;
+
+            $commentEntity = BOL_CommentEntityDao::getInstance()->findById($photoComment->commentEntityId);
+
+            $info["photoUrl"] = PHOTO_BOL_PhotoService::getInstance()->getPhotoUrl($commentEntity->entityId);
+            $info["photoPage"] = OW::getRouter()->urlForRoute('view_photo_type', ['id' => $commentEntity->entityId]);
+
+            $out[$photoComment->id] = $info;
+        }
+
+        $event->setData($out);
+
+        return $out;
+    }
+
+    public function onCustomCommentsUpdateInfo( OW_Event $event )
+    {
+        $params = $event->getParams();
+        $data = $event->getData();
+
+        if ( $params['entityType'] != self::CUSTOM_ENTITY_TYPE )
+        {
+            return;
+        }
+
+        foreach ( $data as $photoCommentId => $info ) {
+            if ($info['status'] == BOL_ContentService::STATUS_ACTIVE) {
+                $this->service->changeCommentStatus($photoCommentId, PHOTO_BOL_PhotoService::CUSTOM_APPROVED);
+            }
+        }
+    }
+
+    public function onCustomCommentsDelete( OW_Event $event )
+    {
+        $params = $event->getParams();
+
+        if ( $params['entityType'] != self::CUSTOM_ENTITY_TYPE )
+        {
+            return;
+        }
+
+        foreach ( $params["entityIds"] as $photoCommentId )
+        {
+            $this->service->deleteCommentById($photoCommentId);
+        }
+    }
+
+    public function onCustomCommentAfterAdd( OW_Event $event )
+    {
+        $params = $event->getParams();
+
+        OW::getEventManager()->trigger(new OW_Event(BOL_ContentService::EVENT_AFTER_ADD, array(
+            "entityType" => self::CUSTOM_ENTITY_TYPE,
+            "entityId" => $params["photoCommentId"],
+        ), array(
+            "string" => array("key" => "photo+added_photo_comment_label")
+        )));
+    }
+
     // Photo events
 
     public function onBeforePhotoDelete( OW_Event $event )
@@ -235,6 +330,13 @@ class PHOTO_CLASS_ContentProvider
         OW::getEventManager()->bind(BOL_ContentService::EVENT_GET_INFO, array($this, 'onGetInfo'));
         OW::getEventManager()->bind(BOL_ContentService::EVENT_UPDATE_INFO, array($this, 'onUpdateInfo'));
         OW::getEventManager()->bind(BOL_ContentService::EVENT_DELETE, array($this, 'onDelete'));
+
+        // comments
+        OW::getEventManager()->bind(BOL_ContentService::EVENT_COLLECT_TYPES, array($this, 'onCustomCommentCollectTypes'));
+        OW::getEventManager()->bind(PHOTO_BOL_PhotoService::CUSTOM_EVENT_AFTER_ADD, array($this, "onCustomCommentAfterAdd"));
+        OW::getEventManager()->bind(BOL_ContentService::EVENT_GET_INFO, array($this, 'onCustomCommentsGetInfo'));
+        OW::getEventManager()->bind(BOL_ContentService::EVENT_UPDATE_INFO, array($this, 'onCustomCommentsUpdateInfo'));
+        OW::getEventManager()->bind(BOL_ContentService::EVENT_DELETE, array($this, 'onCustomCommentsDelete'));
 
         OW::getEventManager()->bind('moderation.after_content_approve', array($this, 'afterContentApprove'));
     }

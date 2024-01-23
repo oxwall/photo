@@ -30,3 +30,28 @@
  */
 
 OW::getDbo()->query("DROP TABLE `".OW_DB_PREFIX."photo`;");
+
+try {
+    $customGroupName = 'customphotocomments';
+
+    $group = BOL_AuthorizationGroupDao::getInstance()->findByName($customGroupName);
+
+    if (!empty($group)) {
+        BOL_AuthorizationModeratorPermissionDao::getInstance()->deleteByGroupId($group->id);
+    }
+
+    OW::getAuthorization()->deleteGroup($customGroupName);
+
+    $sqls = [
+        "ALTER TABLE `" . OW_DB_PREFIX . "base_comment` DROP `status`"
+    ];
+
+    foreach ($sqls as $sql) {
+        try {
+            OW::getDbo()->query($sql);
+        } catch (Exception $exception) {
+
+        }
+    }
+
+} catch (Exception $exception) {}

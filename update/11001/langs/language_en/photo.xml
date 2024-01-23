@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<prefix name="photo" label="Photo" language_tag="en" language_label="English">
+    <key name="custom_photo_comments_group_label"><value>Photo Comments</value></key>
+    <key name="custom_photo_comments_entity_label"><value>Photo Comment</value></key>
+    <key name="added_photo_comment_label"><value>added photo comment</value></key>
+    <key name="moderation_status_pending_approval"><value>Pending Approval</value></key>
+</prefix>

@@ -79,6 +79,14 @@ final class PHOTO_BOL_PhotoService
      */
     private static $classInstance;
 
+    public $commentInstance;
+    public $commentEntityInstance;
+
+    const PLUGIN_KEY = 'photo';
+    const CUSTOM_EVENT_AFTER_ADD = 'photo.custom_photo_comments';
+    const CUSTOM_APPROVED = 'approved';
+    const CUSTOM_APPROVAL = 'approval';
+
     /**
      * Class constructor
      *
@@ -87,6 +95,9 @@ final class PHOTO_BOL_PhotoService
     {
         $this->photoDao = PHOTO_BOL_PhotoDao::getInstance();
         $this->photoFeaturedDao = PHOTO_BOL_PhotoFeaturedDao::getInstance();
+
+        $this->commentInstance = BOL_CommentDao::getInstance();
+        $this->commentEntityInstance = BOL_CommentEntityDao::getInstance();
     }
 
     /**
@@ -1478,4 +1489,36 @@ final class PHOTO_BOL_PhotoService
             return $photo;
         }, $this->photoDao->findPhotosInAlbum($albumId, $photos));
     }
+
+    public function findCommentsByIdList( $idList ){
+        return $this->commentInstance->findByIdList($idList);
+    }
+
+    public function findCommentById( $id ) {
+        return $this->commentInstance->findById($id);
+    }
+    public function deleteCommentById($id) {
+        $photoComment = $this->findCommentById($id);
+
+        if (!empty($photoComment)) {
+            $this->commentInstance->deleteById($id);
+
+            $commentExample = new OW_Example();
+            $commentExample->andFieldEqual('commentEntityId', $photoComment->commentEntityId);
+
+            if ($this->commentInstance->countByExample($commentExample) <= 0) {
+                $this->commentEntityInstance->deleteById($photoComment->commentEntityId);
+            }
+        }
+    }
+
+    public function changeCommentStatus($photoCommentId, $status) {
+        $photoComment = BOL_CommentDao::getInstance()->findById($photoCommentId);
+
+        if (!empty($photoComment)) {
+            $photoComment->status = $status;
+            BOL_CommentDao::getInstance()->save($photoComment);
+        }
+    }
+
 }

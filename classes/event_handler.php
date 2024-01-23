@@ -859,6 +859,13 @@ class PHOTO_CLASS_EventHandler
                 )
             )
         );
+        $event->add(
+            array(
+                'customphotocomments' => array(
+                    'label' => $language->text('photo', 'custom_photo_comments_group_label'),
+                )
+            )
+        );
     }
 
     /**
@@ -2358,6 +2365,37 @@ class PHOTO_CLASS_EventHandler
         }
     }
 
+    public function onBeforePluginUninstall( OW_Event $event ) {
+        if (OW::getPluginManager()->isPluginActive('moderation')) {
+            MODERATION_BOL_Service::getInstance()->deleteEntityList(PHOTO_CLASS_ContentProvider::CUSTOM_ENTITY_TYPE);
+        }
+    }
+
+    public function onAddComment( OW_Event $e ) {
+        $params = $e->getParams();
+
+        $photoCommentId = $params['commentId'];
+
+        if ( empty($params['entityType']) || $params['entityType'] != 'photo_comments' )
+        {
+            return;
+        }
+
+        if (!OW::getPluginManager()->isPluginActive('moderation')) {
+            return;
+        }
+
+        OW::getEventManager()->trigger(new OW_Event(PHOTO_BOL_PhotoService::CUSTOM_EVENT_AFTER_ADD, array(
+            'photoCommentId' => $photoCommentId
+        )));
+
+        $entity = MODERATION_BOL_EntityDao::getInstance()->findEntity(PHOTO_CLASS_ContentProvider::CUSTOM_ENTITY_TYPE, $photoCommentId);
+
+        if (!empty($entity)) {
+            PHOTO_BOL_PhotoService::getInstance()->changeCommentStatus($photoCommentId, PHOTO_BOL_PhotoService::CUSTOM_APPROVAL);
+        }
+    }
+
     public function init()
     {
         $this->genericInit();
@@ -2374,6 +2412,9 @@ class PHOTO_CLASS_EventHandler
         $em->bind('base.avatar_change_get_section', array($this, 'collectAlbumPhotosForAvatar'));
         $em->bind('base.avatar_change_get_item', array($this, 'getPhotoForAvatar'));
         $em->bind("base.collect_seo_meta_data", array($this, 'onCollectMetaData'));
+
+        OW::getEventManager()->bind(OW_EventManager::ON_BEFORE_PLUGIN_UNINSTALL, array($this, 'onBeforePluginUninstall'));
+        OW::getEventManager()->bind('base_add_comment', array($this, 'onAddComment'));
     }
 
     public function genericInit()
