@@ -134,7 +134,7 @@ class PHOTO_CMP_PhotoList extends OW_Component
             $event = new OW_Event(PHOTO_CLASS_EventHandler::EVENT_INIT_FLOATBOX, $photoParams);
             OW::getEventManager()->trigger($event);
 
-            $language->addKeyForJs('photo', 'tb_edit_photo');
+//             $language->addKeyForJs('photo', 'tb_edit_photo');
             $language->addKeyForJs('photo', 'confirm_delete');
             $language->addKeyForJs('photo', 'mark_featured');
             $language->addKeyForJs('photo', 'remove_from_featured');

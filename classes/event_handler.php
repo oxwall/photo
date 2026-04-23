@@ -744,7 +744,7 @@ class PHOTO_CLASS_EventHandler
 
         $language = OW::getLanguage();
         
-        $language->addKeyForJs('photo', 'tb_edit_photo');
+//         $language->addKeyForJs('photo', 'tb_edit_photo');
         $language->addKeyForJs('photo', 'confirm_delete');
         $language->addKeyForJs('photo', 'mark_featured');
         $language->addKeyForJs('photo', 'remove_from_featured');

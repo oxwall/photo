@@ -115,7 +115,7 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
         $description = mb_strlen($description) ? $description : $photo->id;
 
         OW::getDocument()->setTitle($lang->text('photo', 'mobile_meta_title_photo_edit', array('title' => $description)));
-        OW::getDocument()->setHeading($lang->text('photo', 'tb_edit_photo'));
+//         OW::getDocument()->setHeading($lang->text('photo', 'tb_edit_photo'));
 
         $albums = PHOTO_BOL_PhotoAlbumService::getInstance()->findUserAlbumList($ownerId, 1, 100);
 
@@ -1089,15 +1089,15 @@ class PHOTO_MCTRL_Photo extends OW_MobileActionController
 
         if ( $ownerMode || $modPermissions )
         {
-            $contextMenu[] = array(
-                'group' => 'photo',
-                'label' => OW::getLanguage()->text('photo', 'tb_edit_photo'),
-                'order' => 3,
-                'class' => null,
-                'href' => OW::getRouter()->urlForRoute('photo_user_edit_photo', array(
-                    'id' => $photo->id
-                ))
-            );
+//             $contextMenu[] = array(
+//                 'group' => 'photo',
+//                 'label' => OW::getLanguage()->text('photo', 'tb_edit_photo'),
+//                 'order' => 3,
+//                 'class' => null,
+//                 'href' => OW::getRouter()->urlForRoute('photo_user_edit_photo', array(
+//                     'id' => $photo->id
+//                 ))
+//             );
 
             $deletePhotoId = uniqid('delete_photo');
 

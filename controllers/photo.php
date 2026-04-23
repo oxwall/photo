@@ -1508,13 +1508,13 @@ class PHOTO_CTRL_Photo extends OW_ActionController
 
         if ( $ownerMode || $modPermissions )
         {
-            $action = new BASE_ContextAction();
-            $action->setKey('edit');
-            $action->setParentKey('photo-moderate');
-            $action->setLabel($lang->text('base', 'edit'));
-            $action->setId('btn-photo-edit');
-            $action->addAttribute('rel', $photoId);
-            $context->addAction($action);
+//             $action = new BASE_ContextAction();
+//             $action->setKey('edit');
+//             $action->setParentKey('photo-moderate');
+//             $action->setLabel($lang->text('base', 'edit'));
+//             $action->setId('btn-photo-edit');
+//             $action->addAttribute('rel', $photoId);
+//             $context->addAction($action);
 
             $action = new BASE_ContextAction();
             $action->setKey('delete');

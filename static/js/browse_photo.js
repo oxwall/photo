@@ -1575,7 +1575,7 @@
                     if ( _params.isOwner )
                     {
                         _contextList.push(_methods.createElement('deletePhoto', OW.getLanguageText('photo', 'delete_photo')));
-                        _contextList.push(_methods.createElement('editPhoto', OW.getLanguageText('photo', 'tb_edit_photo')));
+                        // _contextList.push(_methods.createElement('editPhoto', OW.getLanguageText('photo', 'tb_edit_photo')));
 
                         var divider = _methods.createElement('divider', '', 'ow_context_action_divider_wrap');
 
@@ -1591,7 +1591,7 @@
                     else if ( _params.isModerator )
                     {
                         _contextList.push(_methods.createElement('deletePhoto', OW.getLanguageText('photo', 'delete_photo')));
-                        _contextList.push(_methods.createElement('editPhoto', OW.getLanguageText('photo', 'tb_edit_photo')));
+                        // _contextList.push(_methods.createElement('editPhoto', OW.getLanguageText('photo', 'tb_edit_photo')));
                     }
                     break;
             }
